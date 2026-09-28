@@ -1,0 +1,47 @@
+# Quarto 生成物与缓存
+/_book/
+/.quarto/
+**/*.quarto_ipynb
+
+# CMake 构建产物（仓库根与游戏阶段目录内）
+build/
+
+# C++ 直接编译产物
+*.o
+*.obj
+a.out
+
+# Python 缓存与本地环境
+__pycache__/
+*.py[cod]
+.venv/
+
+# 编辑器与操作系统临时文件（仓库根不放 .vscode，编辑器配置只放阶段等子目录内）
+/.vscode/
+/.idea/
+.DS_Store
+*.local
+
+# IDE 用户本地文件（阶段目录内允许提交 settings/extensions，其余不入库）
+.vscode/*.code-workspace
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/*.local.json
+
+# 本地依赖与缓存目录
+node_modules/
+.tmp/
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+coverage.xml
+*.coverage
+
+# ZCode 本地计划与临时区
+/.zcode/
+.zcodeignore
+
+# 临时分析、重构报告与生成产物（不入库）
+/temp/

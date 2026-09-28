@@ -1,0 +1,84 @@
+project:
+  type: book
+
+book:
+  title: "C++ 棋盘游戏实践"
+  description: "从一个可验证的终端井字棋开始，逐步学习 C++ 工程、测试和后续工具衔接。"
+  repo-url: "https://github.com/chengzhao-dev/cpp-board-games"
+  favicon: ".agents/skills/designing-theme/assets/theme/assets/favicon.svg"
+  page-navigation: true
+  sidebar:
+    collapse-level: 1
+  navbar:
+    title: "C++ 棋盘游戏实践"
+    search: true
+  chapters:
+    - index.qmd
+    - part: content/tic-tac-toe/index.qmd
+      chapters:
+        - content/tic-tac-toe/01-scope-and-principles.qmd
+        - content/tic-tac-toe/02-toolchain-probe.qmd
+        - content/tic-tac-toe/03-board-and-state.qmd
+        - content/tic-tac-toe/04-move-validation.qmd
+        - content/tic-tac-toe/05-turns-and-terminal-rules.qmd
+        - content/tic-tac-toe/06-cli-and-acceptance.qmd
+        - content/tic-tac-toe/07-incremental-roadmap.qmd
+        - content/tic-tac-toe/08-ai-and-two-player-extension.qmd
+        - content/tic-tac-toe/09-python-and-web-transition.qmd
+        - content/tic-tac-toe/10-completion-and-next-steps.qmd
+
+filters:
+  - .agents/skills/writing-quarto/scripts/answer-disclosure.lua
+
+format:
+  html:
+    theme:
+      light: [cosmo, .agents/skills/designing-theme/assets/theme/palettes/github/theme-light.scss]
+      dark: [darkly, .agents/skills/designing-theme/assets/theme/palettes/github/theme-dark.scss]
+    grid:
+      sidebar-width: 272px
+      # 略放宽正文列，减少路径和表格的无谓换行；移动端仍受 max-width 约束。
+      body-width: 920px
+      margin-width: 256px
+      gutter-width: 1rem
+    respect-user-color-scheme: true
+    toc: true
+    toc-depth: 3
+    toc-location: right
+    anchor-sections: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style:
+      # 与 palettes/github/meta.md 同步；语义色交给 Pandoc，不叠加自定义 token。
+      light: github-light
+      dark: github-dark
+    css:
+      - .agents/skills/designing-theme/assets/theme/css/fonts.css
+      - .agents/skills/designing-theme/assets/theme/css/tokens.css
+      - .agents/skills/designing-theme/assets/theme/palettes/github/tokens.css
+      - .agents/skills/designing-theme/assets/theme/css/base.css
+      - .agents/skills/designing-theme/assets/theme/css/code.css
+      - .agents/skills/designing-theme/assets/theme/css/content.css
+      - .agents/skills/designing-theme/assets/theme/css/mermaid.css
+      - .agents/skills/designing-theme/assets/theme/css/nav.css
+      - .agents/skills/designing-theme/assets/theme/css/sidebar.css
+      - .agents/skills/designing-theme/assets/theme/css/callouts.css
+      - .agents/skills/designing-theme/assets/theme/css/landing.css
+    include-in-header:
+      - .agents/skills/designing-theme/assets/theme/includes/fonts.html
+    include-after-body:
+      - .agents/skills/designing-theme/assets/theme/includes/footer.html
+    open-graph: true
+    twitter-card: true
+    number-sections: false
+    lang: zh
+
+resources:
+  - .agents/skills/designing-theme/assets/theme/assets
+
+language:
+  callout-note-title: "注意"
+  callout-tip-title: "提示"
+  callout-important-title: "重要"
+  callout-warning-title: "警告"
+  callout-caution-title: "危险"

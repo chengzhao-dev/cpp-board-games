@@ -1,0 +1,54 @@
+name: "quarto build & deploy"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+# 同一时刻只允许一个部署任务，后来者排队（不取消进行中的发布，避免 gh-pages 半更新）
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # config.toml 的 python 字段是仓库唯一解释器来源；CI 把它指到 runner 的 python3
+      - name: Point config.toml python at the runner interpreter
+        run: sed -i 's|^python = .*|python = "/usr/bin/python3"|' config.toml
+      # 渲染整本 Book 到 _book/
+      - run: quarto render
+      - name: Publish _book to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_book
+          publish_branch: gh-pages
+          # 每次部署用孤立分支覆盖 gh-pages：产物是生成物，不累积历史
+          force_orphan: true
+      # 幂等纠正 Pages 源分支：首次部署可能未设置 source，重复 PUT 会返回 409，属正常
+      - name: Ensure Pages source = gh-pages /(root)
+        run: |
+          api=https://api.github.com/repos/${{ github.repository }}/pages
+          auth="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
+          accept="Accept: application/vnd.github+json"
+          code=$(curl -s -o /tmp/pages_create.json -w "%{http_code}" -X POST -H "$auth" -H "$accept" "$api" \
+            -d '{"source":{"branch":"gh-pages","path":"/"}}')
+          echo "POST /pages (create) -> HTTP $code: $(cat /tmp/pages_create.json)"
+          code=$(curl -s -o /tmp/pages_update.json -w "%{http_code}" -X PUT -H "$auth" -H "$accept" "$api" \
+            -d '{"source":{"branch":"gh-pages","path":"/"}}')
+          echo "PUT /pages (source correction) -> HTTP $code: $(cat /tmp/pages_update.json)"
+          if [ "$code" != "200" ] && [ "$code" != "201" ] && [ "$code" != "202" ] && [ "$code" != "409" ]; then
+            echo "WARNING: Pages source update returned HTTP $code (non-fatal)."
+            echo "Check Settings -> Pages -> Deploy from a branch -> gh-pages /(root)."
+          fi
