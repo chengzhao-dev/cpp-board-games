@@ -1,0 +1,218 @@
+---
+title: "配置并运行最小工程"
+description: "在最小工程目录上走完配置、编译、测试和运行，并理解背后的构建规则。"
+---
+
+[先看清工程](01-scope-and-principles.qmd)确认了工具、项目内容与分层实现。本章不写游戏逻辑，只在[最小工程目录](https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tic-tac-toe/01-toolchain-probe)上把完整流程执行一遍；GoogleTest 在[棋盘与状态](03-board-and-state.qmd)引入。
+
+## 查看工程包含的文件
+
+最小工程目录如下，树内注释标出各文件职责。`src/main.cpp` 与 `CMakeLists.txt` 是配置与运行的两个关键文件。
+
+```{.text filename="01-toolchain-probe/"}
+games/tic-tac-toe/01-toolchain-probe/
+├── .clang-format              # 代码格式化规则
+├── .clang-tidy                # 静态检查与命名规则
+├── .clangd                    # 编辑器语言服务配置
+├── .vscode/                   # 编辑器配置
+├── build-and-run.sh           # 一键完成配置、编译、测试、运行
+├── CMakeLists.txt             # 构建规则：生成可执行目标并注册测试
+└── src/
+    └── main.cpp               # 被编译运行的最小程序
+```
+
+## 理解最小程序源码
+
+[main.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tic-tac-toe/01-toolchain-probe/src/main.cpp) 是这个工程唯一的源文件。它只向标准输出写一行固定文本并返回 0，不含任何游戏逻辑。
+
+```{.cpp filename="main.cpp"}
+#include <iostream>
+
+int main() {
+  std::cout << "Hello, World!\n";
+  return 0;
+}
+```
+
+这段程序的成功条件只有两条：标准输出含约定文本 `Hello, World!`，进程以退出码 0 结束。两条如何被自动检查，在下一节构建规则的测试注册里固定。
+
+## 理解构建规则
+
+配置这一步由 CMake 完成：读取构建规则 [CMakeLists.txt](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tic-tac-toe/01-toolchain-probe/CMakeLists.txt)，生成构建计划。这份文件回答两个问题：怎么生成可执行目标，怎么注册测试。
+
+配置改计划，构建消费计划，两者由不同工具承担：
+
+::: {.compact-table}
+| 词 | 由谁做 | 做什么 |
+| --- | --- | --- |
+| 配置（configure） | CMake | 读取构建规则，生成构建计划 |
+| 构建（build） | Ninja | 按计划把源码编译成产物 |
+:::
+
+改了 `CMakeLists.txt` 要重跑配置；只改源码时重新构建即可。
+
+### 生成可执行目标
+
+这段规则定义可执行目标 `tic_tac_toe_cli`：先规定产物目录，再列出源文件，最后声明 C++20。
+
+```{.cmake filename="CMakeLists.txt"}
+# 可执行文件统一归入 build/bin。
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+# 源文件显式列出，新增文件在这里追加。
+add_executable(tic_tac_toe_cli
+  src/main.cpp
+)
+
+# 这个目标使用 C++20。
+target_compile_features(tic_tac_toe_cli PRIVATE cxx_std_20)
+```
+
+- `set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")`：把可执行文件输出目录设为构建目录下的 `bin`，最终程序路径是 `build/bin/tic_tac_toe_cli`。
+- `add_executable(tic_tac_toe_cli src/main.cpp)`：把列出的源文件编成可执行目标 `tic_tac_toe_cli`，新增源文件在这里追加。
+- `target_compile_features(tic_tac_toe_cli PRIVATE cxx_std_20)`：要求可执行目标 `tic_tac_toe_cli` 使用 C++20；`PRIVATE` 只作用于该目标。
+
+::: {.callout-note title="为什么逐行列出源文件，而不是自动收集"}
+CMake 官方不建议用 `file(GLOB)` 自动收集源文件：新增或删除文件时构建系统不会自动感知，新文件会被静默漏编，因此这份规则逐行列出源文件。
+:::
+
+### 注册冒烟测试
+
+可执行目标之外，同一份构建规则还注册了本章唯一的自动化检查：
+
+```{.cmake filename="CMakeLists.txt"}
+# 开启 CTest：此后本目录注册的测试才能被 ctest 发现和运行。
+enable_testing()
+
+# 注册冒烟测试：返回 0 且输出含 "Hello, World!" 才通过。
+add_test(
+  NAME tic_tac_toe_cli_smoke
+  COMMAND tic_tac_toe_cli
+)
+set_tests_properties(tic_tac_toe_cli_smoke PROPERTIES
+  PASS_REGULAR_EXPRESSION "Hello, World!"
+)
+```
+
+- `enable_testing()`：开启 CTest，此后注册的测试才能被发现和运行。
+- `add_test`：把可执行目标注册成名为 `tic_tac_toe_cli_smoke` 的测试。
+- `set_tests_properties`：要求测试输出匹配 `Hello, World!`。
+
+CTest 默认要求 `COMMAND` 以退出码 0 结束；输出是否符合约定由 `PASS_REGULAR_EXPRESSION` 负责。
+
+::: {.callout-note title="术语：冒烟测试（smoke test）"}
+业界对“程序能启动且基本行为正确”这类最基础检查的叫法：进程正常退出、输出符合约定，两条同时满足才算本章的冒烟测试通过。
+:::
+
+## 配置、编译、测试、运行
+
+运行由一键脚本 [build-and-run.sh](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tic-tac-toe/01-toolchain-probe/build-and-run.sh) 完成：把完整流程固化为一次可重复执行。
+
+### 运行一键脚本
+
+在工程目录内执行 `./build-and-run.sh`。脚本先切换到自己所在目录，构建产物都留在目录内的 `build/` 下，主体依次对应配置、编译、测试、运行：
+
+```{.bash filename="build-and-run.sh"}
+header "1. 配置"
+
+# 每次重新配置，使脚本里的参数进入当前构建计划。
+cmake -S . -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+header "2. 编译"
+cmake --build build
+
+header "3. 测试"
+ctest --test-dir build --output-on-failure
+
+header "4. 运行"
+./build/bin/tic_tac_toe_cli
+```
+
+### 核对输出定位卡点
+
+脚本输出按 `==> N. 标题` 分成四个步骤标题，一眼能看出卡在哪一步。标题和错误提示统一使用纯文本，在终端和日志里保持一致。
+
+```{.text filename="运行效果"}
+==> 1. 配置
+-- The CXX compiler identification is Clang 21.1.8
+...
+
+==> 2. 编译
+[1/2] Building CXX object CMakeFiles/tic_tac_toe_cli.dir/src/main.cpp.o
+...
+
+==> 3. 测试
+1/1 Test #1: tic_tac_toe_cli_smoke ...   Passed
+...
+
+==> 4. 运行
+Hello, World!
+```
+
+成功门槛是四个步骤全部成功。失败时先看输出停在哪个步骤标题下，把问题定位到具体环节，再对照下一节的常见错误处理。
+
+## 常见错误
+
+首次配置、编译或测试失败时，排查范围限定在工具链与构建规则：本章程序只有一行输出，问题大多出在环境与配置。最常遇到三个问题。
+
+### 找不到 Ninja 或 clang++
+
+配置或编译时报 `ninja: command not found`、`clang++: error` 或 `No CMAKE_CXX_COMPILER could be found`，说明 WSL Ubuntu 中缺少对应工具。按三步处理：
+
+1. 用 `which cmake ninja clang++` 定位缺失项；
+2. 用 `sudo apt install cmake ninja-build clang` 安装；
+3. 重新运行一键脚本，四个步骤全部通过即回到主线。
+
+### 修改 CMakeLists 后行为没变
+
+修改构建规则（例如新增源文件或调整产物目录）后重新编译，改动似乎没有生效。这通常是只执行了编译、没有重新配置：CMake 在配置时生成构建计划，改了 `CMakeLists.txt` 要重跑配置。按两步处理：
+
+1. 直接重跑 `build-and-run.sh`，无需手动清理 `build/`；
+2. 确认改动出现在配置输出里，即为生效。
+
+### 测试输出断言失败
+
+CTest 报 `Failed`，`tic_tac_toe_cli_smoke` 的输出不匹配 `PASS_REGULAR_EXPRESSION`。先直接运行 `./build/bin/tic_tac_toe_cli` 观察实际输出，再按情况处理：
+
+1. 程序输出被改动时，恢复原输出；
+2. 断言文本确实需要调整时，同步修改 `CMakeLists.txt`；
+3. 重新运行 `ctest --test-dir build --output-on-failure`，直到通过。
+
+## 自测问题
+
+先不要展开答案，试着自己把回答完整说出来，再展开对照；说不出来的部分，回到对应小节对照正文。
+
+1. 为什么不先实现棋盘规则，而是先打通工具链？
+
+   ::: {.answer}
+   工具链问题和规则问题的排查手段完全不同。先让完整流程可用，后面每一章遇到失败时就能先排除工具链因素，把问题直接归因到规则代码。
+   :::
+
+2. 程序返回 0 已经能让测试通过，为什么还要用 `PASS_REGULAR_EXPRESSION` 断言输出？
+
+   ::: {.answer}
+   退出码 0 只说明进程正常结束。
+
+   - 它不能证明标准输出符合约定。
+   - `PASS_REGULAR_EXPRESSION` 拦住“返回 0 但输出异常”的假成功。
+
+   退出码与输出断言同时满足，才算本章的冒烟测试通过。
+   :::
+
+3. 配置和构建分别由哪个工具完成？各自做了什么？
+
+   ::: {.answer}
+   配置和构建是两件不同的事，由不同工具完成。
+
+   - **配置**：由 CMake 完成，读取 `CMakeLists.txt`，在 `build/` 下生成构建计划。
+   - **构建**：由 Ninja 完成，按计划把源码编译成可执行文件。
+
+   改了 `CMakeLists.txt` 要重跑配置；只改 `main.cpp` 时重新构建即可。
+   :::
+
+## 本章回顾
+
+你已经能在 WSL Ubuntu 中走完第一个 CMake 工程的完整流程。下一章[棋盘与状态](03-board-and-state.qmd)把规则核心拆成动态库组件，开始棋盘与状态的建模。

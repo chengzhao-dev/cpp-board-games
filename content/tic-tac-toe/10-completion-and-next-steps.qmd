@@ -1,0 +1,60 @@
+---
+title: "完成定义与下一步"
+description: "定义井字棋完成标准，回顾架构与修复，盘点当前成果。"
+---
+
+[渐进式路线](07-incremental-roadmap.qmd)给出了推进方式与门槛。本章定义井字棋的完成标准，回顾已实现部分的架构与修复过程，并盘点当前成果与推进顺序。
+
+## 定义完成标准
+
+井字棋完成需同时满足以下条件。当前仓库只完成最小工程与棋盘状态，其余条目仍是后续主线的完成定义：
+
+- 在 WSL Ubuntu 中可以按记录的命令配置和构建；
+- 终端可以完成双人对局并正常结束；
+- 合法、非法、回合、胜负、平局和终局保护有核心规则测试；
+- CTest 可以统一发现并运行测试；
+- CLI 有最小 smoke test；
+- C++ 格式和文档检查通过；
+- Quarto 页面与实际文件、target、命令和结果保持同步。
+
+完成的工程要能被不熟悉它的人直接跑起来，对应四项信息：依赖（WSL Ubuntu 的 C++20 工具链、CMake、Ninja，GoogleTest 由配置时自动拉取）、编译与运行（进入任一编号目录执行 `./build-and-run.sh`，脚本一键完成配置、编译、CTest 和运行）、测试（CTest 由脚本内部调用，也可在编号目录内单独执行 `ctest`）。这些信息由各章的命令记录承担，不另造根 README 替代本书。
+
+“页面写完”不等于“程序完成”；没有实际运行结果时，文档只能记录计划和预期。
+
+## 回顾架构与修复
+
+已实现的编号目录固定了三层架构：规则核心编译为动态库，CLI 与测试链接同一份产物；取值封闭的集合用 `enum class`，数据组合用 `struct` 聚合，全部定义在 `tic_tac_toe` 命名空间内；动作只从调用者流向规则接口，状态与值类型不反向依赖调用者。
+
+实现过程中的代表性问题与修复：
+
+- 可执行文件运行时报找不到 `libtic_tac_toe_core.so`：可执行目标缺 `BUILD_RPATH`，查找位置没有写进产物；补回后重新配置修复，完整定位过程见[棋盘与状态](03-board-and-state.qmd)的常见错误。
+- `ctest` 报 No tests were found：顶层规则漏了 `enable_testing()`，子目录注册的测试进不了 CTest；在 `add_subdirectory(tests)` 之前补上修复。
+- 修改 CMake 后行为没变：构建目录缓存了旧配置；按记录重新配置而不是重复编译，见[配置并运行最小工程](02-toolchain-probe.qmd)的常见错误。
+
+每类问题都按症状、定位、修复、验证的顺序记录在对应章节的常见错误里，本章不重复排查过程。
+
+## 盘点成果与推进
+
+当前可观察成果：
+
+- `01-toolchain-probe`：配置、编译、CTest、运行全部成功，最小程序稳定输出并返回 0；
+- `02-board-and-state`：规则核心编译为动态库，GoogleTest 覆盖初始状态、落子写入、越界拒绝与终局桩，CLI 能链接动态库打印初始棋盘。
+
+后续按[渐进式路线](07-incremental-roadmap.qmd)的编号目录推进，先补全落子合法性，再接入回合与终局判定。共享库提取、AI 剪枝与 WebSocket 评估的触发条件分别记在各自出处章；AI、Python、Web 和共享抽象都不能反过来成为终端规则的前置依赖。
+
+## 本章回顾
+
+本章固定了井字棋的完成标准与运行入口，回顾了已实现架构与代表性修复。完成前，各章按设计页阅读并通过验收后逐层落地。
+
+## 参考资料
+
+本章与其他章节引用过的外部资料：
+
+- [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
+- [CMake enable_testing 命令](https://cmake.org/cmake/help/latest/command/enable_testing.html)
+- [CMake add_test 命令](https://cmake.org/cmake/help/latest/command/add_test.html)
+- [CMake Tutorial](https://cmake.org/cmake/help/latest/guide/tutorial/Getting%20Started%20with%20CMake.html)
+- [Python subprocess 模块](https://docs.python.org/3/library/subprocess.html)
+- [MDN Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+- [WHATWG WebSocket Standard](https://websockets.spec.whatwg.org/)
+- [Berkeley CS188 Multi-Agent Search](https://inst.eecs.berkeley.edu/~cs188/fa24/projects/proj2/)

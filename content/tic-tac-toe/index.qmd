@@ -1,0 +1,55 @@
+---
+title: "井字棋"
+description: "从最小工程逐步建立可验证的井字棋实现。"
+number-sections: false
+body-classes: index-page
+---
+
+按顺序阅读即可。每页只完成一个目标，并为下一页留下可以继续使用的结果。
+
+::: {.feature-grid}
+::: {.landing-card}
+### [先看清工程](01-scope-and-principles.qmd)
+明确工具、项目内容与分层实现。
+:::
+::: {.landing-card}
+### [配置并运行最小工程](02-toolchain-probe.qmd)
+在最小工程目录上走完一次完整构建流程。
+:::
+::: {.landing-card}
+### [棋盘与状态](03-board-and-state.qmd)
+建立棋盘、位置与状态值类型。
+:::
+::: {.landing-card}
+### [落子合法性](04-move-validation.qmd)
+区分合法与非法落子。
+:::
+::: {.landing-card}
+### [回合与终局](05-turns-and-terminal-rules.qmd)
+处理回合切换、胜负与平局。
+:::
+::: {.landing-card}
+### [CLI 与分层验收](06-cli-and-acceptance.qmd)
+串联终端对局与分层验收。
+:::
+::: {.landing-card}
+### [渐进式路线](07-incremental-roadmap.qmd)
+回看编号目录与进入门槛。
+:::
+::: {.landing-card}
+### [AI 与双人扩展](08-ai-and-two-player-extension.qmd)
+在双人规则稳定后引入 AI。
+:::
+::: {.landing-card}
+### [Python 与 Web 过渡](09-python-and-web-transition.qmd)
+从脚本驱动过渡到浏览器。
+:::
+::: {.landing-card}
+### [完成定义与下一步](10-completion-and-next-steps.qmd)
+确认完成标准与后续顺序。
+:::
+:::
+
+::: {.callout-note title="统一开发环境"}
+命令默认在 WSL Ubuntu 中执行。代码按编号存放在[井字棋代码目录](https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tic-tac-toe)下。
+:::
