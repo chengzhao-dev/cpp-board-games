@@ -1,0 +1,7 @@
+interface:
+  display_name: "Python Tools"
+  short_description: "Edit and validate project Python tooling"
+  default_prompt: "Use $maintaining-python to add a flag to run.py and prove the checks still pass."
+
+policy:
+  allow_implicit_invocation: true

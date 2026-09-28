@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agent Governance"
+  short_description: "Maintain agent rules and .agents workspace structure"
+  default_prompt: "Use $governing-agents to restructure the .agents workspace and verify governance rules."
+
+policy:
+  allow_implicit_invocation: true

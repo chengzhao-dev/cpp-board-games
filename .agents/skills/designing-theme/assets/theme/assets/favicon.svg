@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="C++">
+  <style>:root { --bg: #22272E; --fg: #ADBAC7; --accent: #57AB5A; } @media (prefers-color-scheme: dark) { :root { --bg: #F0F6FC; --fg: #0D1117; --accent: #1F883D; } }</style>
+  <rect width="64" height="64" rx="15" fill="var(--bg)"/>
+  <path fill="var(--fg)" fill-rule="evenodd" d="M28.70 41.66 A13 13 0 1 1 28.70 22.34 L23.85 27.73 A5.75 5.75 0 1 0 23.85 36.27 Z"/>
+  <rect x="34" y="29.875" width="9" height="4.25" rx="2.125" fill="var(--accent)"/>
+  <rect x="36.375" y="27.5" width="4.25" height="9" rx="2.125" fill="var(--accent)"/>
+  <rect x="48" y="29.875" width="9" height="4.25" rx="2.125" fill="var(--accent)"/>
+  <rect x="50.375" y="27.5" width="4.25" height="9" rx="2.125" fill="var(--accent)"/>
+</svg>

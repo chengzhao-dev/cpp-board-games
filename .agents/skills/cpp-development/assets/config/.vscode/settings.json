@@ -1,0 +1,41 @@
+// C++ 工程的 VS Code 工作区设置。
+// 本文件是脚手架配置源；生成后位于工程根 .vscode/settings.json。
+{
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.formatting": "disabled",
+
+    "clangd.arguments": [
+        "--query-driver=/usr/bin/clang++",
+        "--header-insertion=never",
+        "--background-index",
+        "--clang-tidy=false"
+    ],
+
+    // 排版规则取自同一工程根目录中的 .clang-format。
+    "editor.formatOnSave": true,
+    "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+    },
+    "[c]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+    },
+    "[cmake]": {
+        "editor.formatOnSave": false
+    },
+
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "files.eol": "\n",
+    "files.encoding": "utf8",
+
+    "search.exclude": {
+        "**/build": true,
+        "**/__pycache__": true
+    },
+    "files.watcherExclude": {
+        "**/build/**": true
+    },
+
+    "cmake.configureOnOpen": false,
+    "terminal.integrated.defaultProfile.linux": "bash"
+}

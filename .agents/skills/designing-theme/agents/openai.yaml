@@ -1,0 +1,7 @@
+interface:
+  display_name: "Theme Assets"
+  short_description: "Maintain the shared Quarto theme assets"
+  default_prompt: "Use $designing-theme to adjust theme styles and re-render the book."
+
+policy:
+  allow_implicit_invocation: true

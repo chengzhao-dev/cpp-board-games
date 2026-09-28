@@ -1,0 +1,7 @@
+interface:
+  display_name: "C++ Dev"
+  short_description: "Build board-game stages with C++20 and CMake"
+  default_prompt: "Use $cpp-development to implement the next stage and run CTest."
+
+policy:
+  allow_implicit_invocation: true

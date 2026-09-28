@@ -1,0 +1,7 @@
+interface:
+  display_name: "Code Review"
+  short_description: "Review C++ and Quarto changes for real defects"
+  default_prompt: "Use $reviewing-code to review my uncommitted changes and list defects by severity."
+
+policy:
+  allow_implicit_invocation: false

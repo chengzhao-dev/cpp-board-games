@@ -1,0 +1,7 @@
+interface:
+  display_name: "GitHub Delivery"
+  short_description: "Keep README, CI plans and release boundaries aligned"
+  default_prompt: "Use $shipping-github to prepare GitHub presentation and release checks."
+
+policy:
+  allow_implicit_invocation: true

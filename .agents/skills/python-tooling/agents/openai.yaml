@@ -1,0 +1,7 @@
+interface:
+  display_name: "Python Tooling"
+  short_description: "Drive the game CLI and analyze matches with Python"
+  default_prompt: "Use $python-tooling to add Python tooling around the game CLI."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Game Design"
+  short_description: "Model board, pieces and rules as value types"
+  default_prompt: "Use $game-design to model the next rule slice before coding."
+
+policy:
+  allow_implicit_invocation: true

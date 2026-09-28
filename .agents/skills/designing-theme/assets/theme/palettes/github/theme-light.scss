@@ -1,0 +1,33 @@
+/*-- scss:defaults --*/
+
+$font-family-sans-serif: "Fixel Text", "LXGW WenKai Screen", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji" !default;
+
+$font-family-monospace: "LXGW Bright Code", "LXGW WenKai Screen", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", monospace !default;
+
+$web-font-path: false !default;
+
+$font-size-root: 16px !default;
+$line-height-base: 1.75 !default;
+$font-size-base: 1rem !default;
+
+// GitHub Light：以 GitHub 蓝色链接和绿色成功状态为主
+$primary: #0969DA !default;
+
+$body-color: #1F2328 !default;
+$link-color: #0969DA !default;
+$code-bg: #F6F8FA !default;
+$code-color: #1F2328 !default;
+$border-color: #D0D7DE !default;
+
+$navbar-bg: #FFFFFF !default;
+$navbar-fg: #1F2328 !default;
+
+// Callout 语义色（与 palettes/github/tokens.css --callout-*-border 亮色一致；驱动编译期图标 data URI）
+$callout-color-note: #2563EB !default;
+$callout-color-tip: #16A34A !default;
+$callout-color-warning: #D97706 !default;
+$callout-color-important: #7C3AED !default;
+$callout-color-caution: #DC2626 !default;
+$callout-color-danger: #DC2626 !default;
+
+/*-- scss:rules --*/

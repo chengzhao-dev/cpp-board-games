@@ -1,0 +1,22 @@
+# clangd 项目配置。
+# 构建后，clangd 会从 build/compile_commands.json 读取真实编译参数；
+# 尚未构建时使用下面的兜底参数，保证编辑体验可用。
+CompileFlags:
+  CompilationDatabase: build
+  Add:
+    - -std=c++20
+    - -stdlib=libc++
+    - -Wall
+    - -Wextra
+
+Diagnostics:
+  # 命名规则与 google 检查不在 clangd 默认开启集内，显式补上，
+  # 与阶段 .clang-tidy 的命名约束保持一致。
+  ClangTidy:
+    Add:
+      - readability-identifier-naming
+      - google-build-using-namespace
+      - google-global-names-in-headers
+      - google-explicit-constructor
+  Suppress:
+    - pp_file_not_found

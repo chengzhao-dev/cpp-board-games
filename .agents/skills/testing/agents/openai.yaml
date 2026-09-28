@@ -1,0 +1,7 @@
+interface:
+  display_name: "Testing"
+  short_description: "Layer C++, CLI and documentation verification"
+  default_prompt: "Use $testing to plan verification for the current change."
+
+policy:
+  allow_implicit_invocation: true

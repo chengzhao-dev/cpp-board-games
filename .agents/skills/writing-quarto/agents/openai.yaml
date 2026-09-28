@@ -1,0 +1,7 @@
+interface:
+  display_name: "Quarto Docs"
+  short_description: "Author readable Chinese Quarto documents"
+  default_prompt: "Use $writing-quarto to restructure this chapter and verify with quarto render."
+
+policy:
+  allow_implicit_invocation: true
