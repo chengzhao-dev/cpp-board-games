@@ -1,0 +1,29 @@
+#===------------------------------------------------------------------------===#
+# .clang-format - C++ 格式化规则
+#
+# 新编号目录把本文件复制到各自根目录；clang-format 从源文件所在目录
+# 向上查找最近的配置。
+#===------------------------------------------------------------------------===#
+
+# 基础语言与风格：Google 风格作为 C++ 基础，按 C++20 标准解析。
+BasedOnStyle: Google
+Language: Cpp
+Standard: c++20
+
+# 行宽：普通代码行限制为 80 列。
+ColumnLimit: 80
+
+# 缩进与制表符：2 个空格缩进，不输出制表符。
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+
+# 不压缩短函数和控制流，保持代码块边界清楚。
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+
+# 留白：最多保留 1 个空行，块首不留空行。
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
