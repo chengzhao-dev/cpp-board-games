@@ -103,6 +103,7 @@ CHECKS = [
     ("layout", ".agents/skills/designing-theme/scripts/check_layout.py", True, ()),
     ("callouts", ".agents/skills/writing-quarto/scripts/check_callouts.py", True, ()),
     ("dom", ".agents/skills/governing-agents/scripts/check_dom_contracts.py", True, ()),
+    ("book-output", ".agents/skills/writing-quarto/scripts/check_book_output.py", True, ()),
     ("scaffold", ".agents/skills/maintaining-python/scripts/test_scaffold_projects.py", False, ()),
     ("kb", ".agents/skills/maintaining-python/scripts/check_health.py", False, ("--gate",)),
     ("kb-eval", ".agents/skills/maintaining-python/scripts/evaluator.py", False, ("--skip-latency",)),
@@ -111,7 +112,7 @@ CHECKS = [
 
 PROFILE_CHECKS = {
     "fast": {"encoding", "agent-controls", "size", "ascii", "links", "content", "docs"},
-    "book": {"layout", "callouts", "dom"},
+    "book": {"layout", "callouts", "dom", "book-output"},
     "knowledge": {"kb", "kb-eval", "conflict"},
     "python": {"scaffold"},
 }
@@ -129,6 +130,7 @@ CHECK_LABELS = {
     "layout": "布局",
     "callouts": "提示框",
     "dom": "页面结构",
+    "book-output": "发布产物",
     "scaffold": "脚手架",
     "kb": "知识库",
     "kb-eval": "知识库评测",
