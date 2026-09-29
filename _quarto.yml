@@ -4,6 +4,7 @@ project:
 book:
   title: "C++ 棋盘游戏实践"
   description: "从一个可验证的终端井字棋开始，逐步学习 C++ 工程、测试和后续工具衔接。"
+  site-url: "https://chengzhao-dev.github.io/cpp-board-games"
   repo-url: "https://github.com/chengzhao-dev/cpp-board-games"
   favicon: ".agents/skills/designing-theme/assets/theme/assets/favicon.svg"
   page-navigation: true
