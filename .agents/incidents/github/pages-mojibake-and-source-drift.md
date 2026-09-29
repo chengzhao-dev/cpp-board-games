@@ -25,6 +25,8 @@ date: 2026-09-29
 1. `_quarto.yml` 的 `book:` 下补 `site-url: "https://chengzhao-dev.github.io/cpp-board-games"`（与 `repo-url` 同级）。
 2. 发布 workflow（`pages.yml`）按顺序执行：渲染前 `run.py check --profile fast` → `quarto render` → `defer_mermaid.py` → 渲染后 `run.py check --profile full`（含发布产物 smoke 检查 `check_book_output.py`）→ 发布 `gh-pages`。
 3. Pages 源校验步骤以**读回判定**收口：`POST`（首次创建）/`PUT`（纠正，成功返回 204）尽力而为，最后 `GET /repos/:repo/pages` 读回 source，不是 `gh-pages` `/` 即 `exit 1`，不允许降级成 warning。注意 `GITHUB_TOKEN` 首次创建可能 403（Resource not accessible by integration），需一次性用 PAT 或在 Settings → Pages 手动启用。
+4. 发布架构定为：GitHub Actions（`pages.yml`）渲染并校验后把 `_book/` 推到 `gh-pages` 分支，Pages 以 legacy 模式从 `gh-pages /` 提供 HTML；`gh-pages` 只由 Actions 更新。
+5. 已知边界（绿跑日志证据）：legacy 模式下 `GITHUB_TOKEN` 对 POST/PUT 一律 403，**Actions 无法自愈 Pages 配置漂移**，读回判定只负责检测报警；修复漂移需一次性用 PAT（如 `PUT build_type=legacy + source gh-pages /`）或到 Settings → Pages 手动改回。
 4. 仓库统一校验入口即 `run.py check`；`check_book_output.py` 检查 `_book/index.html` 存在、charset、BOM/U+FFFD/乱码特征、`sitemap.xml` 就绪（Book 项目的 site-url 生效标志）。
 
 ## 验证方法
