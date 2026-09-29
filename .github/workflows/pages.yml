@@ -26,8 +26,16 @@ jobs:
       # config.toml 的 python 字段是仓库唯一解释器来源；CI 把它指到 runner 的 python3
       - name: Point config.toml python at the runner interpreter
         run: sed -i 's|^python = .*|python = "/usr/bin/python3"|' config.toml
+      # 渲染前先跑编码与文档规则：content/ 的乱码在这里被硬性拦下，而不是发到线上
+      - name: Pre-render checks
+        run: python3 .agents/skills/governing-agents/scripts/run.py check --profile fast
       # 渲染整本 Book 到 _book/
       - run: quarto render
+      # 把 mermaid 图改为懒加载，减小首屏体积（本地 render 不自动跑，故 CI 必须执行）
+      - run: python3 .agents/skills/maintaining-python/scripts/render/defer_mermaid.py
+      # 渲染后全量校验：qmd 规则 + 布局/提示框/页面结构 + 发布产物 smoke（首页/编码/sitemap）
+      - name: Post-render checks
+        run: python3 .agents/skills/governing-agents/scripts/run.py check --profile full
       - name: Publish _book to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -36,7 +44,8 @@ jobs:
           publish_branch: gh-pages
           # 每次部署用孤立分支覆盖 gh-pages：产物是生成物，不累积历史
           force_orphan: true
-      # 幂等纠正 Pages 源分支：首次部署可能未设置 source，重复 PUT 会返回 409，属正常
+      # 幂等纠正 Pages 源分支：首次部署可能未设置 source，重复 PUT 会返回 409，属正常。
+      # 源未配置时线上就是 404，所以这里任何非预期返回都必须让 job 失败，不允许降级成 warning
       - name: Ensure Pages source = gh-pages /(root)
         run: |
           api=https://api.github.com/repos/${{ github.repository }}/pages
@@ -49,6 +58,7 @@ jobs:
             -d '{"source":{"branch":"gh-pages","path":"/"}}')
           echo "PUT /pages (source correction) -> HTTP $code: $(cat /tmp/pages_update.json)"
           if [ "$code" != "200" ] && [ "$code" != "201" ] && [ "$code" != "202" ] && [ "$code" != "409" ]; then
-            echo "WARNING: Pages source update returned HTTP $code (non-fatal)."
-            echo "Check Settings -> Pages -> Deploy from a branch -> gh-pages /(root)."
+            echo "ERROR: Pages source update returned HTTP $code."
+            echo "站点未配置源分支时线上是 404；到 Settings -> Pages 核对 Deploy from a branch = gh-pages /(root)。"
+            exit 1
           fi
