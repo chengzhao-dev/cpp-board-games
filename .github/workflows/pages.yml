@@ -44,21 +44,26 @@ jobs:
           publish_branch: gh-pages
           # 每次部署用孤立分支覆盖 gh-pages：产物是生成物，不累积历史
           force_orphan: true
-      # 幂等纠正 Pages 源分支：首次部署可能未设置 source，重复 PUT 会返回 409，属正常。
-      # 源未配置时线上就是 404，所以这里任何非预期返回都必须让 job 失败，不允许降级成 warning
-      - name: Ensure Pages source = gh-pages /(root)
+      # 幂等纠正 Pages 源分支：POST 首次创建、PUT 纠正（成功返回 204）。
+      # GITHUB_TOKEN 可能无权创建/修改（403 Resource not accessible by integration），
+      # 所以最终以读回的 GET 结果判定，源不是 gh-pages /(root) 就让 job 失败
+      - name: Verify Pages source = gh-pages /(root)
         run: |
           api=https://api.github.com/repos/${{ github.repository }}/pages
           auth="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
           accept="Accept: application/vnd.github+json"
           code=$(curl -s -o /tmp/pages_create.json -w "%{http_code}" -X POST -H "$auth" -H "$accept" "$api" \
-            -d '{"source":{"branch":"gh-pages","path":"/"}}')
+            -d '{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}')
           echo "POST /pages (create) -> HTTP $code: $(cat /tmp/pages_create.json)"
           code=$(curl -s -o /tmp/pages_update.json -w "%{http_code}" -X PUT -H "$auth" -H "$accept" "$api" \
-            -d '{"source":{"branch":"gh-pages","path":"/"}}')
+            -d '{"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}')
           echo "PUT /pages (source correction) -> HTTP $code: $(cat /tmp/pages_update.json)"
-          if [ "$code" != "200" ] && [ "$code" != "201" ] && [ "$code" != "202" ] && [ "$code" != "409" ]; then
-            echo "ERROR: Pages source update returned HTTP $code."
-            echo "站点未配置源分支时线上是 404；到 Settings -> Pages 核对 Deploy from a branch = gh-pages /(root)。"
+          get=$(curl -s -o /tmp/pages_get.json -w "%{http_code}" -H "$auth" -H "$accept" "$api")
+          branch=$(python3 -c "import json; print(json.load(open('/tmp/pages_get.json')).get('source', {}).get('branch', ''))")
+          path=$(python3 -c "import json; print(json.load(open('/tmp/pages_get.json')).get('source', {}).get('path', ''))")
+          echo "GET /pages -> HTTP $get, source = $branch $path"
+          if [ "$get" != "200" ] || [ "$branch" != "gh-pages" ] || [ "$path" != "/" ]; then
+            echo "ERROR: Pages 源不是 gh-pages /(root)（HTTP $get）。"
+            echo "POST/PUT 返回 403 表示 GITHUB_TOKEN 无权创建或修改，需一次性用 PAT 或在 Settings -> Pages 手动设置。"
             exit 1
           fi
