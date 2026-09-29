@@ -4,7 +4,8 @@
 
 | 关键词 | 案例 |
 | --- | --- |
-| （暂无） | — |
+| GitHub Desktop、Publish repository、push 失败、远端 404、connection reset、curloptResolve | github/desktop-publish-and-push-failure.md |
+| GitHub Pages、404、乱码、site-url、Pages source、gh-pages、发布前检查 | github/pages-mojibake-and-source-drift.md |
 
 ## 新增案例
 
