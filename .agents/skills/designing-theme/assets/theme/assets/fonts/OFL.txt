@@ -1,0 +1,11 @@
+Self-hosted fonts in this directory are licensed under SIL Open Font License 1.1:
+
+- Fixel Text — https://github.com/MacPaw/Fixel
+- LXGW WenKai Screen — https://github.com/lxgw/LxgwWenKai-Screen
+  Web subset source: https://github.com/CMBill/lxgw-wenkai-screen-web
+- LXGW Bright Code v2.922 — https://github.com/lxgw/LxgwBright-Code
+  Subset source commit: 6106564927bc6e1099a3eeb625d76a3e5a684595
+  Source file: LxgwBrightCode/LXGWBrightCode-Regular.ttf
+  Web subset generated with fontTools/pyftsubset for WOFF2 delivery.
+
+Full license text: https://openfontlicense.org

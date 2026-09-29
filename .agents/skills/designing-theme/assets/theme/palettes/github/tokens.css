@@ -1,0 +1,136 @@
+/* ============================================================
+   Palette: github · Primer Light / Dark 色值
+   结构尺度见 css/tokens.css；本文件只提供语义颜色。
+   ============================================================ */
+
+body {
+  /* GitHub Light 页面令牌 */
+  --body-color: #1F2328;
+  /* GitHub Light 代码块色板；语义 token 由 Pandoc/Quarto 提供。 */
+  --code-bg: #F6F8FA;
+  --code-border: #D0D7DE;
+  --code-fg: #1F2328;
+  --code-title-bg: #EAEEF2;
+  --code-title-fg: #57606A;
+  --line-num-color: #737373;
+  --inline-code-bg: rgba(175, 184, 193, 0.2);
+  --inline-code-fg: #1F2328;
+  --text-secondary: #656D76;
+  --link-color: #0969DA;
+  --link-underline: rgba(9, 105, 218, 0.35);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --table-header-bg: #F6F8FA;
+  --table-border: #D0D7DE;
+  --table-hairline: #EAECEF;
+  --quote-bg: #F6F8FA;
+  /* callout：左条色 + 浅底（Mintlify 语法） */
+  --callout-note-border: #2563EB;
+  --callout-note-bg: #EFF6FF;
+  --callout-tip-border: #16A34A;
+  --callout-tip-bg: #F0FDF4;
+  --callout-warning-border: #D97706;
+  --callout-warning-bg: #FFFBEB;
+  --callout-important-border: #7C3AED;
+  --callout-important-bg: #F5F3FF;
+  --callout-caution-border: #DC2626;
+  --callout-caution-bg: #FEF2F2;
+  --quote-border: #D0D7DE;
+  --copy-btn-bg: #FFFFFF;
+  --copy-btn-border: #E5E5E5;
+  --scrollbar-thumb: #AFB8C1;
+  --selection-bg: rgba(9, 105, 218, 0.15);
+  --mark-bg: rgba(255, 212, 0, 0.4);
+  --sidebar-hover-bg: rgba(0, 0, 0, 0.04);
+  --sidebar-active-bg: rgba(9, 105, 218, 0.10);
+  --sidebar-fg: #656D76;
+  --accent: var(--link-color);
+  --navbar-bg: #FFFFFF;
+  --navbar-fg: #1F2328;
+  --navbar-muted: #656D76;
+  --navbar-border: #D0D7DE;
+  --navbar-shadow: rgba(0, 0, 0, 0.06);
+  --navbar-input-bg: #F6F8FA;
+  --navbar-hover-bg: rgba(0, 0, 0, 0.04);
+  --navbar-secondary-bg: rgba(255, 255, 255, 0.85);
+  --btn-primary-bg: #1F883D;
+  --btn-primary-hover-bg: #1A7F37;
+  --btn-primary-fg: #FFFFFF;
+  --dot-accent: #1F883D;
+  --card-bg: #FFFFFF;
+  --card-border: #D0D7DE;
+  --card-hover-border: var(--link-color);
+  --card-shadow: 0 1px 3px rgba(31, 35, 40, 0.06), 0 4px 12px rgba(140, 149, 159, 0.08);
+  --toc-active: var(--link-color);
+  --page-bg: #FFFFFF;
+  --surface-raised: #F6F8FA;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(0, 0, 0, 0.04);
+  --line-hover-bg: rgba(9, 105, 218, 0.06);
+}
+
+body.quarto-dark {
+  /* GitHub Dark Dimmed 页面令牌（软暗色：近灰底，缓解 Dark Default 的偏黑） */
+  --body-color: #ADBAC7;
+  /* GitHub Dark Dimmed 代码块色板，与页面明暗模式同步。 */
+  --code-bg: #2D333B;
+  --code-border: #444C56;
+  --code-fg: #ADBAC7;
+  --code-title-bg: #373E47;
+  --code-title-fg: #768390;
+  --line-num-color: #768390;
+  --inline-code-bg: rgba(99, 110, 123, 0.4);
+  --inline-code-fg: #ADBAC7;
+  --text-secondary: #768390;
+  --link-color: #539BF5;
+  --link-underline: rgba(83, 155, 245, 0.45);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --table-header-bg: #2D333B;
+  --table-border: #444C56;
+  --table-hairline: #373E47;
+  --quote-bg: rgba(205, 217, 229, 0.05);
+  --callout-note-border: #6CB6FF;
+  --callout-note-bg: rgba(108, 182, 255, 0.12);
+  --callout-tip-border: #57AB5A;
+  --callout-tip-bg: rgba(87, 171, 90, 0.12);
+  --callout-warning-border: #C69026;
+  --callout-warning-bg: rgba(198, 144, 38, 0.14);
+  --callout-important-border: #986EE2;
+  --callout-important-bg: rgba(152, 110, 226, 0.12);
+  --callout-caution-border: #E5534B;
+  --callout-caution-bg: rgba(229, 83, 75, 0.12);
+  --quote-border: #444C56;
+  --copy-btn-bg: #2D333B;
+  --copy-btn-border: #444C56;
+  --scrollbar-thumb: #545D68;
+  --selection-bg: rgba(83, 155, 245, 0.30);
+  --mark-bg: rgba(198, 144, 38, 0.35);
+  --sidebar-hover-bg: rgba(205, 217, 229, 0.06);
+  --sidebar-active-bg: rgba(83, 155, 245, 0.18);
+  --sidebar-fg: #768390;
+  --accent: var(--link-color);
+  --navbar-bg: #22272E;
+  --navbar-fg: #ADBAC7;
+  --navbar-muted: #768390;
+  --navbar-border: #444C56;
+  --navbar-shadow: rgba(28, 33, 40, 0.35);
+  --navbar-input-bg: #2D333B;
+  --navbar-hover-bg: rgba(205, 217, 229, 0.07);
+  --navbar-secondary-bg: rgba(34, 39, 46, 0.90);
+  --btn-primary-bg: #347D39;
+  --btn-primary-hover-bg: #46954A;
+  --btn-primary-fg: #FFFFFF;
+  --dot-accent: #57AB5A;
+  --card-bg: #2D333B;
+  --card-border: #444C56;
+  --card-hover-border: var(--link-color);
+  --card-shadow: none;
+  --toc-active: var(--link-color);
+  --page-bg: #22272E;
+  --surface-raised: #2D333B;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(205, 217, 229, 0.05);
+  --line-hover-bg: rgba(83, 155, 245, 0.10);
+  color-scheme: dark;
+}

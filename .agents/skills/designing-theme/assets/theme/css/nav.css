@@ -1,0 +1,268 @@
+/* cpp-notes 共享主题 · 顶部导航（navbar / 搜索 / 面包屑；自 common.css 拆分） */
+
+/* ---------- 顶部 navbar（品牌栏 + 次级导航） ---------- */
+/* Quarto 书籍启用 navbar 后，#quarto-header 内含两层：
+   nav.navbar（品牌 + 搜索 + 主题切换）与 nav.quarto-secondary-nav（侧栏开关 + 面包屑）。
+   两层共用底色，仅在最底部画一条分隔线，整体视为一个 header。 */
+#quarto-header {
+  background-color: var(--navbar-bg);
+  /* 注入 Bootstrap 变量，使 navbar 内组件在明暗两态都改用我们的 token
+     （#quarto-header 为 ID 选择器，优先级高于 Quarto 的 [data-bs-theme="dark"]） */
+  --bs-body-bg: var(--navbar-bg);
+  --bs-body-color: var(--navbar-fg);
+  --bs-border-color: var(--navbar-border);
+  --bs-emphasis-color: var(--navbar-fg);
+  --bs-secondary-color: var(--navbar-muted);
+}
+nav.navbar.navbar-expand-lg {
+  background-color: var(--navbar-bg);
+  min-height: 4rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+/* 品牌左对齐（Quarto 默认 mx-auto 居中）；顶栏用 flex + order 固定顺序：品牌 | 弹性空隙 | 搜索框 | 主题切换（最右） */
+#quarto-header .navbar-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.navbar-brand-container {
+  order: 1;
+  margin-left: 0 !important;
+  margin-right: auto;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+#quarto-search {
+  order: 2;
+  margin-left: 0;
+  flex: 0 1 auto;
+}
+.quarto-navbar-tools.tools-end {
+  order: 3;
+  margin-left: 0 !important;
+  flex: 0 0 auto;
+}
+.navbar-brand,
+.navbar-title {
+  color: var(--navbar-fg);
+  font-family: var(--ui-font);
+  font-weight: 600;
+  font-size: 1.125rem;
+  letter-spacing: 0;
+}
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 2rem;
+  gap: 0.5rem;
+}
+/* 品牌图标：顶部栏使用中性文档标记，favicon 保留 C++ 标记。
+   图形墨迹只占 SVG 画布的约 78%，因此尺寸取标题字号的 1.33 倍，让墨迹略高于汉字字面高度；
+   CJK 字形的墨迹中心比行框中心高约 0.17rem，用 margin-bottom 把图标抬到同一视觉基线，
+   使图标底边与标题基线对齐，避免图标看上去比标题“坐得更低”。
+   用 mask 取 --navbar-fg 而不是直接引用 favicon：SVG 图片内部的 prefers-color-scheme
+   跟随运行环境，会在站点主题与系统偏好不一致时反转明暗，遮挡品牌形状。 */
+.navbar-brand::before {
+  content: "";
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  margin-right: 0;
+  margin-bottom: 0.375rem;
+  background-color: var(--navbar-fg);
+  -webkit-mask: url("../assets/brand-mark.svg") center / contain no-repeat;
+  mask: url("../assets/brand-mark.svg") center / contain no-repeat;
+}
+.navbar-brand:hover {
+  color: var(--navbar-fg);
+  opacity: 0.85;
+}
+.navbar-brand:focus-visible {
+  color: var(--navbar-fg);
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+/* 顶栏导航文本：紧凑 14px / 500，hover 下划线（offset 4px，docs 风） */
+.navbar-expand-lg .navbar-nav .nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--ui-font);
+}
+.navbar-expand-lg .navbar-nav .nav-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+  text-decoration-thickness: 1px;
+}
+/* 搜索框（#quarto-search 渲染的 input，由 JS 运行时注入，可能挂载在深色 navbar 内）
+   故显式用主题 token 设背景/边框/文字，避免在 dark navbar 作用域下误用暗色 Bootstrap 变量 */
+#quarto-search input,
+.quarto-navbar-search input {
+  background-color: var(--navbar-input-bg);
+  border: 1px solid var(--navbar-border);
+  border-radius: var(--radius-sm);
+  color: var(--navbar-fg);
+  height: 1.875rem;
+  width: 11rem;
+  padding-left: 1.9rem;
+  font-size: 0.8125rem;
+   transition: border-color var(--transition);
+  /* data URI 无法读取 CSS 变量；图标颜色与 --navbar-muted 同步。 */
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23656D76" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: 0.6rem center;
+  background-size: 1.125rem 1.125rem;
+}
+body.quarto-dark #quarto-search input,
+body.quarto-dark .quarto-navbar-search input {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23768390" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 1 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>');
+}
+#quarto-search input:focus,
+.quarto-navbar-search input:focus {
+  border-color: var(--accent);
+  box-shadow: none;
+}
+/* 占位符颜色：顶栏深色，占位符用 --navbar-muted */
+#quarto-search input::placeholder,
+.quarto-navbar-search input::placeholder {
+  color: var(--navbar-muted);
+  opacity: 1;
+}
+/* 搜索结果浮层跟随主题（navbar 固定 data-bs-theme=dark，浅色下需兜底） */
+#quarto-search-results {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--body-color);
+}
+#quarto-search-results a {
+  color: var(--text-link);
+}
+@media (max-width: 767.98px) {
+  #quarto-search input,
+  .quarto-navbar-search input {
+    width: clamp(6rem, 28vw, 8rem);
+    font-size: 0.75rem;
+  }
+
+  .navbar-brand-container {
+    overflow: hidden;
+  }
+
+  .navbar-brand,
+  .navbar-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 420px) {
+  #quarto-search input,
+  .quarto-navbar-search input {
+    width: 6rem;
+  }
+
+  .navbar-brand::before {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .navbar-title {
+    display: none;
+  }
+}
+/* 主题切换按钮（navbar 内，与侧栏切换复用观感）；固定尺寸与搜索框（32px）一致 */
+#quarto-header .quarto-color-scheme-toggle {
+  color: var(--navbar-fg);          /* 白色高辨识度（原 muted 灰太弱） */
+  border-radius: 50%;                /* 圆形按钮，强化可点感 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.125rem;              /* 图标放大到 18px */
+}
+#quarto-header .quarto-color-scheme-toggle:hover {
+  color: var(--navbar-fg);
+  background-color: var(--navbar-hover-bg);
+}
+/* 次级导航：gitcn 风半透明毛玻璃 + 底部 1px 发丝线（sticky 由 headroom 提供） */
+nav.quarto-secondary-nav {
+  background-color: var(--navbar-secondary-bg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--card-border);
+  min-height: 2.75rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+/* 次级导航叠在正文底色上：汉堡按钮用正文色令牌，明暗自动适配 */
+nav.quarto-secondary-nav .quarto-btn-toggle {
+  color: var(--body-color);
+}
+/* 滚动后不另加阴影：顶栏/次级导航仅靠 1px 发丝线分隔（docs 风） */
+.quarto-page-breadcrumbs .breadcrumb,
+.quarto-page-breadcrumbs .breadcrumb-item,
+.quarto-page-breadcrumbs .breadcrumb-item a {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+.quarto-page-breadcrumbs .breadcrumb-item a:hover {
+  color: var(--body-color);
+  text-decoration: none;
+}
+/* 修「>」与前后文字不在一条水平线：条目做成 flex 行（清掉 Quarto 的 .33em padding）；
+   分隔符不用 ">" 字符——Segoe UI 的 ">" 在字框内光学偏高（盒居中≠光学居中，CJK 字形
+   偏满放大观感），改用 SVG chevron（mask + currentColor，docs/GitHub 同款）几何居中、
+   与字体度量彻底解耦；箭头左右等距：左距 = 本元素 margin-left，右距 = li 的 flex gap；
+   ol 自身 margin 清零，标题块 nav→标题的间距由 .quarto-title-breadcrumbs 统一控制 */
+.quarto-page-breadcrumbs .breadcrumb {
+  align-items: center;
+  margin-bottom: 0;
+}
+.quarto-page-breadcrumbs .breadcrumb-item,
+.quarto-page-breadcrumbs .breadcrumb-item + .breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0;
+  line-height: 1.5;
+}
+.quarto-page-breadcrumbs .breadcrumb-item + .breadcrumb-item::before {
+  content: "";
+  float: none;
+  display: block;
+  flex: 0 0 auto;
+  width: 0.5em;
+  height: 0.5em;
+  margin: 0 0 0 0.4em; /* 左右对称：左距 = 本 margin，右距 = li 的 flex gap 0.4em，箭头光学居中 */
+  padding: 0;
+  background-color: currentColor;
+  opacity: 0.55;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+/* 窄屏顶栏：汉堡按钮与面包屑垂直居中 */
+nav.quarto-secondary-nav .container-fluid.d-flex {
+  align-items: center;
+}
+/* 豁免正文列表节奏（真凶修复）：面包屑本质是 li 列表，会被下方
+   #quarto-document-content li + li 的 0.625rem 上边距垫低，导致第二项
+   整体下沉约 10px、「不在一条水平线上」；此处清零（ID+class 特异性必胜） */
+#quarto-document-content .breadcrumb li + li {
+  margin-top: 0;
+}
+/* 次级导航里的重复搜索按钮隐藏（品牌栏已含搜索框） */
+nav.quarto-secondary-nav .quarto-search-button {
+  display: none;
+}
+/* 宽屏只隐藏次级导航里的面包屑（仅留汉堡）；标题块面包屑桌面端显示、与标题同栏左对齐，
+   窄屏由 Quarto 生成的 d-none 自动隐藏（改显次级导航实例） */
+@media (min-width: 992px) {
+  nav.quarto-secondary-nav .quarto-page-breadcrumbs {
+    display: none;
+  }
+}

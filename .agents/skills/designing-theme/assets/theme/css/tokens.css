@@ -1,0 +1,36 @@
+/* ============================================================
+   cpp-notes 共享主题 · 非色板结构令牌
+   颜色由 palettes/<name>/tokens.css 提供；
+   body.quarto-light / body.quarto-dark 由 Quarto 自动切换。
+   ============================================================ */
+
+body {
+  /* 代码块几何与排版（明暗共用） */
+  --code-padding: 0.75rem 1rem;
+  --code-font-size: 0.9375rem;
+  --code-line-height: 1.75;
+  --code-title-font-size: 0.8125rem;
+  --code-title-padding: 0.5rem 0.875rem;
+  --code-followup-gap: 1rem;
+  --toc-indent: 0.75rem;
+  --transition: 0.15s ease-in-out;
+  /* 结构半径：sm 用于行内小件（kbd/复制钮/侧栏项），md 用于翻页卡等容器，
+     lg 用于首页卡片与图片（2026-09 软化：6/8 → 8/12，圆角统一走令牌） */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 12px;
+  --code-radius: 8px;
+  --ui-font: "Fixel Text", "LXGW WenKai Screen", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --mono-font: "LXGW Bright Code", "LXGW WenKai Screen", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  --content-width: 800px;
+  color: var(--body-color);
+  background-color: var(--page-bg);
+  line-height: 1.75;
+  font-size: 1rem;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  text-wrap: pretty;
+  /* 显式声明浅色，使内嵌 SVG（顶栏品牌徽标）与原生控件跟随页面明暗，
+     而不是跟随系统偏好；深色由 palette 的 body.quarto-dark 覆盖。 */
+  color-scheme: light;
+}

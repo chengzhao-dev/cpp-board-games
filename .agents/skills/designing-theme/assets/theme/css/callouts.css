@@ -1,0 +1,105 @@
+/* cpp-notes 共享主题 · 提示卡片 callout（左色条 + 浅底 + 小圆角）
+ *
+ * 下面的 border: none 简写会把 border-left-color 重置为 currentColor，
+ * Bootstrap 的 div.callout-<type>.callout 又是 (0,2,1)，因此类型规则必须写成
+ * div.callout.callout-<type> 才能同特异、靠加载顺序胜出，让左条按类型着色。 */
+
+div.callout.callout-style-default,
+div.callout.callout-style-simple {
+  border: none;
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-radius: var(--radius-sm);
+  margin: 0;
+  padding: 1rem;
+  overflow-wrap: break-word;
+  display: block;
+}
+
+div.callout.callout-style-default > .callout-header,
+div.callout.callout-style-simple > .callout-header {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+  opacity: 1;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+div.callout.callout-style-default:not(.no-icon) div.callout-icon-container,
+div.callout.callout-style-simple:not(.no-icon) div.callout-icon-container {
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.callout .callout-title-container {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+div.callout .callout-body,
+div.callout.callout-style-default .callout-body {
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.75;
+  font-weight: 400;
+}
+
+div.callout.callout-style-default .callout-body > :first-child,
+.callout:not(.callout-titled) .callout-body > :first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+#quarto-document-content .callout.callout-note .callout-body a { color: var(--callout-note-border); }
+#quarto-document-content .callout.callout-tip .callout-body a { color: var(--callout-tip-border); }
+#quarto-document-content .callout.callout-warning .callout-body a { color: var(--callout-warning-border); }
+#quarto-document-content .callout.callout-important .callout-body a { color: var(--callout-important-border); }
+#quarto-document-content .callout.callout-caution .callout-body a { color: var(--callout-caution-border); }
+
+#quarto-document-content > .callout,
+#quarto-document-content section > .callout {
+  margin-top: 1.25rem;
+}
+#quarto-document-content > .callout + .callout,
+#quarto-document-content section > .callout + .callout {
+  margin-top: 2.5rem;
+}
+
+.callout.callout-note .callout-title-container,
+.callout.callout-note .callout-icon { color: var(--callout-note-border); }
+.callout.callout-tip .callout-title-container,
+.callout.callout-tip .callout-icon { color: var(--callout-tip-border); }
+.callout.callout-warning .callout-title-container,
+.callout.callout-warning .callout-icon { color: var(--callout-warning-border); }
+.callout.callout-important .callout-title-container,
+.callout.callout-important .callout-icon { color: var(--callout-important-border); }
+.callout.callout-caution .callout-title-container,
+.callout.callout-caution .callout-icon { color: var(--callout-caution-border); }
+
+div.callout.callout-note {
+  border-left-color: var(--callout-note-border);
+  background-color: var(--callout-note-bg);
+}
+div.callout.callout-tip {
+  border-left-color: var(--callout-tip-border);
+  background-color: var(--callout-tip-bg);
+}
+div.callout.callout-warning {
+  border-left-color: var(--callout-warning-border);
+  background-color: var(--callout-warning-bg);
+}
+div.callout.callout-important {
+  border-left-color: var(--callout-important-border);
+  background-color: var(--callout-important-bg);
+}
+div.callout.callout-caution {
+  border-left-color: var(--callout-caution-border);
+  background-color: var(--callout-caution-bg);
+}

@@ -1,0 +1,680 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "C++ 棋盘游戏实践",
+    "section": "",
+    "text": "井字棋\n学习沿渐进路线推进：从最小可运行程序开始，每次只增加一个可观察、可验证的行为，直到完成一局可验证的终端井字棋。",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>C++ 棋盘游戏实践</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#井字棋",
+    "href": "index.html#井字棋",
+    "title": "C++ 棋盘游戏实践",
+    "section": "",
+    "text": "先看清工程\n确认工具、项目内容与三层实现，理解每个编号目录都是一个完整项目。\n查看准备 →\n\n\n配置并运行最小工程\n在最小工程目录上走完一次完整构建流程，理解 CMake 构建规则与一键脚本。\n开始实践 →\n\n\nCLI 与分层验收\n用终端双人闭环串联规则核心，按改动所在分层划定验证范围。\n查看验收 →\n\n\nAI 与 Python/Web 扩展\n双人规则稳定后引入 Minimax AI，再经 Python 脚本与 HTTP 过渡到浏览器。\n查看扩展 →",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>C++ 棋盘游戏实践</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#后续棋类",
+    "href": "index.html#后续棋类",
+    "title": "C++ 棋盘游戏实践",
+    "section": "后续棋类",
+    "text": "后续棋类\n\n\n四子棋\n完成井字棋后按同一渐进方式推进。\n\n\n五子棋\n复用同一套工具链与分层验收约定。\n\n\n黑白棋\n在共享抽象条件成熟后评估规则复用。",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>C++ 棋盘游戏实践</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/index.html",
+    "href": "content/tic-tac-toe/index.html",
+    "title": "井字棋",
+    "section": "",
+    "text": "按顺序阅读即可。每页只完成一个目标，并为下一页留下可以继续使用的结果。\n\n\n先看清工程\n明确工具、项目内容与分层实现。\n\n\n配置并运行最小工程\n在最小工程目录上走完一次完整构建流程。\n\n\n棋盘与状态\n建立棋盘、位置与状态值类型。\n\n\n落子合法性\n区分合法与非法落子。\n\n\n回合与终局\n处理回合切换、胜负与平局。\n\n\nCLI 与分层验收\n串联终端对局与分层验收。\n\n\n渐进式路线\n回看编号目录与进入门槛。\n\n\nAI 与双人扩展\n在双人规则稳定后引入 AI。\n\n\nPython 与 Web 过渡\n从脚本驱动过渡到浏览器。\n\n\n完成定义与下一步\n确认完成标准与后续顺序。\n\n\n\n\n\n\n\n\n注意统一开发环境\n\n\n\n命令默认在 WSL Ubuntu 中执行。代码按编号存放在井字棋代码目录下。",
+    "crumbs": [
+      "井字棋"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/01-scope-and-principles.html",
+    "href": "content/tic-tac-toe/01-scope-and-principles.html",
+    "title": "先看清工程",
+    "section": "",
+    "text": "确认所需工具\n进入井字棋实现前，先固定三件事：使用哪些工具、需求写成什么样、代码按什么层次实现。后续章节都在这些边界内推进。\n实现用 C++20，构建规则由 CMake 编写、Ninja 执行，编译器是 Clang，测试由 CTest 运行。命令默认在 WSL Ubuntu 中执行；Windows 用于兼容性验证和浏览器展示。\n这些工具用在井字棋代码目录下的编号目录里：每个目录都是完整项目，能独立完成配置、编译、测试和运行。选型依据如下：",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>先看清工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/01-scope-and-principles.html#确认所需工具",
+    "href": "content/tic-tac-toe/01-scope-and-principles.html#确认所需工具",
+    "title": "先看清工程",
+    "section": "",
+    "text": "CMake 与 Ninja：一份构建规则同时服务命令行与编辑器，增量编译保持快速；\nCTest：统一发现并运行各编号目录注册的测试，不依赖手工执行；\nWSL Ubuntu：提供与部署形态一致的 Linux 工具链，编辑器补全与命令行构建在同一环境工作。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>先看清工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/01-scope-and-principles.html#写下项目需求",
+    "href": "content/tic-tac-toe/01-scope-and-principles.html#写下项目需求",
+    "title": "先看清工程",
+    "section": "写下项目需求",
+    "text": "写下项目需求\n写代码之前，先把需求压成一小段文字：输入是什么、输出是什么、分成哪些模块。两名玩家在同一个终端里轮流下井字棋，程序行为按下面四条固定：\n\n启动后显示 3×3 空棋盘，玩家按 “行 列” 输入坐标落子；\n落子后刷新棋盘，并提示等待下一位玩家；\n输入越界、占用或格式错误时给出错误提示，要求重新输入；\n一行、一列或一条对角线连成三子即获胜，棋盘填满无人连成三子为平局，终局后宣布结果并停止接受落子。\n\n这份短需求固定了验收范围：后续的规则测试与 CLI 冒烟检查都从这里取材；联机对战、AI 与图形界面不在需求内。实现划分为终端适配层、规则核心与测试三个模块。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>先看清工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/01-scope-and-principles.html#划分实现层次",
+    "href": "content/tic-tac-toe/01-scope-and-principles.html#划分实现层次",
+    "title": "先看清工程",
+    "section": "划分实现层次",
+    "text": "划分实现层次\n井字棋按职责分为三层，层与层之间只通过明确的动作交互。\n\n三层职责\n\n\n\n\n\n%%{init: {\"fontFamily\": \"Fixel Text, LXGW WenKai Screen, system-ui, sans-serif\"}}%%\nflowchart TB\n  cli[\"终端适配层\"]\n  core[\"规则核心\"]\n  test[\"测试\"]\n  cli --&gt; core\n  test --&gt; core\n\n\n\n\n\n\n\n规则核心：维护棋盘状态与不变量，判定合法动作、回合与胜负平局；\n终端适配层：读取输入、解析坐标、显示棋盘、打印错误；\n测试：直接调用规则核心，不依赖终端文本。\n\n\n\n层间数据\n模块间只传两类数据：动作（坐标加玩家）从终端适配层与测试流向规则核心；查询结果（格子内容、对局状态）从规则核心流回调用者。规则核心不反向依赖调用者，也不读写终端。\n后续章节沿这三层推进：先建立规则核心，再接入终端适配层，最后补全测试与验收。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>先看清工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/01-scope-and-principles.html#固定类型形式与命名",
+    "href": "content/tic-tac-toe/01-scope-and-principles.html#固定类型形式与命名",
+    "title": "先看清工程",
+    "section": "固定类型形式与命名",
+    "text": "固定类型形式与命名\n类型形式也在写第一行代码前固定：取值封闭的集合用 enum class（玩家、棋子、终局结果），数据组合用 struct 聚合（位置、动作），类型全部定义在 tic_tac_toe 命名空间内。\n命名遵守 Google C++ 风格指南：类型与函数用 PascalCase，如 GameState 与 Apply；变量与参数用 snake_case，如 position；常量与枚举子以 k 开头，如 kRows 与 Player::kX。两处有意偏离：头文件用 #pragma once 代替 include guard，源文件扩展名用 .cpp 代替 .cc。\n类型形式的语言机制在 cpp-notes 的枚举与命名空间与结构体与值类型两章展开，后续章节的代码示例都遵守这套约定。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>先看清工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/02-toolchain-probe.html",
+    "href": "content/tic-tac-toe/02-toolchain-probe.html",
+    "title": "配置并运行最小工程",
+    "section": "",
+    "text": "查看工程包含的文件\n先看清工程确认了工具、项目内容与分层实现。本章不写游戏逻辑，只在最小工程目录上把完整流程执行一遍；GoogleTest 在棋盘与状态引入。\n最小工程目录如下，树内注释标出各文件职责。src/main.cpp 与 CMakeLists.txt 是配置与运行的两个关键文件。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>配置并运行最小工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/02-toolchain-probe.html#查看工程包含的文件",
+    "href": "content/tic-tac-toe/02-toolchain-probe.html#查看工程包含的文件",
+    "title": "配置并运行最小工程",
+    "section": "",
+    "text": "01-toolchain-probe/\n\ngames/tic-tac-toe/01-toolchain-probe/\n├── .clang-format              # 代码格式化规则\n├── .clang-tidy                # 静态检查与命名规则\n├── .clangd                    # 编辑器语言服务配置\n├── .vscode/                   # 编辑器配置\n├── build-and-run.sh           # 一键完成配置、编译、测试、运行\n├── CMakeLists.txt             # 构建规则：生成可执行目标并注册测试\n└── src/\n    └── main.cpp               # 被编译运行的最小程序",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>配置并运行最小工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/02-toolchain-probe.html#理解最小程序源码",
+    "href": "content/tic-tac-toe/02-toolchain-probe.html#理解最小程序源码",
+    "title": "配置并运行最小工程",
+    "section": "理解最小程序源码",
+    "text": "理解最小程序源码\nmain.cpp 是这个工程唯一的源文件。它只向标准输出写一行固定文本并返回 0，不含任何游戏逻辑。\n\n\nmain.cpp\n\n#include &lt;iostream&gt;\n\nint main() {\n  std::cout &lt;&lt; \"Hello, World!\\n\";\n  return 0;\n}\n\n这段程序的成功条件只有两条：标准输出含约定文本 Hello, World!，进程以退出码 0 结束。两条如何被自动检查，在下一节构建规则的测试注册里固定。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>配置并运行最小工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/02-toolchain-probe.html#理解构建规则",
+    "href": "content/tic-tac-toe/02-toolchain-probe.html#理解构建规则",
+    "title": "配置并运行最小工程",
+    "section": "理解构建规则",
+    "text": "理解构建规则\n配置这一步由 CMake 完成：读取构建规则 CMakeLists.txt，生成构建计划。这份文件回答两个问题：怎么生成可执行目标，怎么注册测试。\n配置改计划，构建消费计划，两者由不同工具承担：\n\n\n\n\n词\n由谁做\n做什么\n\n\n\n\n配置（configure）\nCMake\n读取构建规则，生成构建计划\n\n\n构建（build）\nNinja\n按计划把源码编译成产物\n\n\n\n\n改了 CMakeLists.txt 要重跑配置；只改源码时重新构建即可。\n\n生成可执行目标\n这段规则定义可执行目标 tic_tac_toe_cli：先规定产物目录，再列出源文件，最后声明 C++20。\n\n\nCMakeLists.txt\n\n# 可执行文件统一归入 build/bin。\nset(CMAKE_RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/bin\")\n\n# 源文件显式列出，新增文件在这里追加。\nadd_executable(tic_tac_toe_cli\n  src/main.cpp\n)\n\n# 这个目标使用 C++20。\ntarget_compile_features(tic_tac_toe_cli PRIVATE cxx_std_20)\n\n\nset(CMAKE_RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/bin\")：把可执行文件输出目录设为构建目录下的 bin，最终程序路径是 build/bin/tic_tac_toe_cli。\nadd_executable(tic_tac_toe_cli src/main.cpp)：把列出的源文件编成可执行目标 tic_tac_toe_cli，新增源文件在这里追加。\ntarget_compile_features(tic_tac_toe_cli PRIVATE cxx_std_20)：要求可执行目标 tic_tac_toe_cli 使用 C++20；PRIVATE 只作用于该目标。\n\n\n\n\n\n\n\n注意为什么逐行列出源文件，而不是自动收集\n\n\n\nCMake 官方不建议用 file(GLOB) 自动收集源文件：新增或删除文件时构建系统不会自动感知，新文件会被静默漏编，因此这份规则逐行列出源文件。\n\n\n\n\n注册冒烟测试\n可执行目标之外，同一份构建规则还注册了本章唯一的自动化检查：\n\n\nCMakeLists.txt\n\n# 开启 CTest：此后本目录注册的测试才能被 ctest 发现和运行。\nenable_testing()\n\n# 注册冒烟测试：返回 0 且输出含 \"Hello, World!\" 才通过。\nadd_test(\n  NAME tic_tac_toe_cli_smoke\n  COMMAND tic_tac_toe_cli\n)\nset_tests_properties(tic_tac_toe_cli_smoke PROPERTIES\n  PASS_REGULAR_EXPRESSION \"Hello, World!\"\n)\n\n\nenable_testing()：开启 CTest，此后注册的测试才能被发现和运行。\nadd_test：把可执行目标注册成名为 tic_tac_toe_cli_smoke 的测试。\nset_tests_properties：要求测试输出匹配 Hello, World!。\n\nCTest 默认要求 COMMAND 以退出码 0 结束；输出是否符合约定由 PASS_REGULAR_EXPRESSION 负责。\n\n\n\n\n\n\n注意术语：冒烟测试（smoke test）\n\n\n\n业界对“程序能启动且基本行为正确”这类最基础检查的叫法：进程正常退出、输出符合约定，两条同时满足才算本章的冒烟测试通过。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>配置并运行最小工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/02-toolchain-probe.html#配置编译测试运行",
+    "href": "content/tic-tac-toe/02-toolchain-probe.html#配置编译测试运行",
+    "title": "配置并运行最小工程",
+    "section": "配置、编译、测试、运行",
+    "text": "配置、编译、测试、运行\n运行由一键脚本 build-and-run.sh 完成：把完整流程固化为一次可重复执行。\n\n运行一键脚本\n在工程目录内执行 ./build-and-run.sh。脚本先切换到自己所在目录，构建产物都留在目录内的 build/ 下，主体依次对应配置、编译、测试、运行：\n\n\nbuild-and-run.sh\n\nheader \"1. 配置\"\n\n# 每次重新配置，使脚本里的参数进入当前构建计划。\ncmake -S . -B build -G Ninja \\\n  -DCMAKE_BUILD_TYPE=Debug \\\n  -DCMAKE_CXX_COMPILER=clang++ \\\n  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON\n\nheader \"2. 编译\"\ncmake --build build\n\nheader \"3. 测试\"\nctest --test-dir build --output-on-failure\n\nheader \"4. 运行\"\n./build/bin/tic_tac_toe_cli\n\n\n\n核对输出定位卡点\n脚本输出按 ==&gt; N. 标题 分成四个步骤标题，一眼能看出卡在哪一步。标题和错误提示统一使用纯文本，在终端和日志里保持一致。\n\n\n运行效果\n\n==&gt; 1. 配置\n-- The CXX compiler identification is Clang 21.1.8\n...\n\n==&gt; 2. 编译\n[1/2] Building CXX object CMakeFiles/tic_tac_toe_cli.dir/src/main.cpp.o\n...\n\n==&gt; 3. 测试\n1/1 Test #1: tic_tac_toe_cli_smoke ...   Passed\n...\n\n==&gt; 4. 运行\nHello, World!\n\n成功门槛是四个步骤全部成功。失败时先看输出停在哪个步骤标题下，把问题定位到具体环节，再对照下一节的常见错误处理。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>配置并运行最小工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/02-toolchain-probe.html#常见错误",
+    "href": "content/tic-tac-toe/02-toolchain-probe.html#常见错误",
+    "title": "配置并运行最小工程",
+    "section": "常见错误",
+    "text": "常见错误\n首次配置、编译或测试失败时，排查范围限定在工具链与构建规则：本章程序只有一行输出，问题大多出在环境与配置。最常遇到三个问题。\n\n找不到 Ninja 或 clang++\n配置或编译时报 ninja: command not found、clang++: error 或 No CMAKE_CXX_COMPILER could be found，说明 WSL Ubuntu 中缺少对应工具。按三步处理：\n\n用 which cmake ninja clang++ 定位缺失项；\n用 sudo apt install cmake ninja-build clang 安装；\n重新运行一键脚本，四个步骤全部通过即回到主线。\n\n\n\n修改 CMakeLists 后行为没变\n修改构建规则（例如新增源文件或调整产物目录）后重新编译，改动似乎没有生效。这通常是只执行了编译、没有重新配置：CMake 在配置时生成构建计划，改了 CMakeLists.txt 要重跑配置。按两步处理：\n\n直接重跑 build-and-run.sh，无需手动清理 build/；\n确认改动出现在配置输出里，即为生效。\n\n\n\n测试输出断言失败\nCTest 报 Failed，tic_tac_toe_cli_smoke 的输出不匹配 PASS_REGULAR_EXPRESSION。先直接运行 ./build/bin/tic_tac_toe_cli 观察实际输出，再按情况处理：\n\n程序输出被改动时，恢复原输出；\n断言文本确实需要调整时，同步修改 CMakeLists.txt；\n重新运行 ctest --test-dir build --output-on-failure，直到通过。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>配置并运行最小工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/02-toolchain-probe.html#自测问题",
+    "href": "content/tic-tac-toe/02-toolchain-probe.html#自测问题",
+    "title": "配置并运行最小工程",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照；说不出来的部分，回到对应小节对照正文。\n\n为什么不先实现棋盘规则，而是先打通工具链？\n\n查看答案\n工具链问题和规则问题的排查手段完全不同。先让完整流程可用，后面每一章遇到失败时就能先排除工具链因素，把问题直接归因到规则代码。\n\n程序返回 0 已经能让测试通过，为什么还要用 PASS_REGULAR_EXPRESSION 断言输出？\n\n查看答案\n退出码 0 只说明进程正常结束。\n\n它不能证明标准输出符合约定。\nPASS_REGULAR_EXPRESSION 拦住“返回 0 但输出异常”的假成功。\n\n退出码与输出断言同时满足，才算本章的冒烟测试通过。\n\n配置和构建分别由哪个工具完成？各自做了什么？\n\n查看答案\n配置和构建是两件不同的事，由不同工具完成。\n\n配置：由 CMake 完成，读取 CMakeLists.txt，在 build/ 下生成构建计划。\n构建：由 Ninja 完成，按计划把源码编译成可执行文件。\n\n改了 CMakeLists.txt 要重跑配置；只改 main.cpp 时重新构建即可。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>配置并运行最小工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/02-toolchain-probe.html#本章回顾",
+    "href": "content/tic-tac-toe/02-toolchain-probe.html#本章回顾",
+    "title": "配置并运行最小工程",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经能在 WSL Ubuntu 中走完第一个 CMake 工程的完整流程。下一章棋盘与状态把规则核心拆成动态库组件，开始棋盘与状态的建模。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>配置并运行最小工程</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/03-board-and-state.html",
+    "href": "content/tic-tac-toe/03-board-and-state.html",
+    "title": "棋盘与状态",
+    "section": "",
+    "text": "查看工程组件\n配置并运行最小工程把完整流程压缩在一个可执行目标里。本章把规则核心拆成独立组件并编译成动态库，定义棋盘与状态的值类型，固定查询、落子与结果三个入口，并引入 GoogleTest 编写规则测试。对应实现在棋盘状态实现目录。\n工程从单文件变成组件目录，树内注释标出各文件职责：\n规则库组件 tic_tac_toe/、终端程序组件 apps/ 与测试目录 tests/ 各自带 CMakeLists.txt，顶层规则只做工程声明、产物目录与组件组合。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘与状态</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/03-board-and-state.html#查看工程组件",
+    "href": "content/tic-tac-toe/03-board-and-state.html#查看工程组件",
+    "title": "棋盘与状态",
+    "section": "",
+    "text": "02-board-and-state/\n\ngames/tic-tac-toe/02-board-and-state/\n├── .clang-format              # 代码格式化规则\n├── .clang-tidy                # 静态检查与命名规则\n├── .clangd                    # 编辑器语言服务配置\n├── .vscode/                   # 编辑器配置\n├── build-and-run.sh           # 一键完成配置、编译、测试、运行\n├── CMakeLists.txt             # 顶层规则：产物目录与组件组合\n├── tic_tac_toe/               # 规则库组件\n│   ├── CMakeLists.txt         # 定义动态库目标 tic_tac_toe_core\n│   ├── include/tic_tac_toe/   # 公开头文件\n│   └── src/                   # 库实现\n├── apps/                      # 终端程序组件\n│   ├── CMakeLists.txt         # 定义 CLI 目标并约定库查找\n│   └── main.cpp               # 打印初始棋盘\n└── tests/\n    ├── CMakeLists.txt         # 引入 GoogleTest 并注册测试\n    └── game_state_test.cpp    # 状态接口的行为测试",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘与状态</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/03-board-and-state.html#定义值类型与状态",
+    "href": "content/tic-tac-toe/03-board-and-state.html#定义值类型与状态",
+    "title": "棋盘与状态",
+    "section": "定义值类型与状态",
+    "text": "定义值类型与状态\n棋盘与状态的类型定义集中在规则库的公共头文件 value_types.h：取值封闭的集合用 enum class，数据组合用 struct 聚合，常量与枚举子以 k 开头，全部定义在 tic_tac_toe 命名空间内。先固定棋盘，再定义玩家与动作，最后建立状态与结果。\n\n棋盘尺寸与位置\n棋盘固定为 3 行 3 列，尺寸用编译期常量表达；位置由行号与列号组成：\n\n\nvalue_types.h\n\n// 棋盘尺寸：行数与列数，都是 3。\ninline constexpr int kRows = 3;\ninline constexpr int kCols = 3;\n\n// 棋盘位置，行与列都从 0 开始，取值 0 到 2。\nstruct Position {\n  int row;\n  int col;\n};\n\nkRows 与 kCols 是 inline constexpr 常量，编译期可见，调用方无需重复定义尺寸。Position 是纯数据聚合，不加行为。位置是否落在棋盘内由 IsValid 判定：\n\n\nvalue_types.h\n\n// 判断位置是否落在 3×3 棋盘内。\nconstexpr bool IsValid(Position position) {\n  return position.row &gt;= 0 && position.row &lt; kRows &&\n         position.col &gt;= 0 && position.col &lt; kCols;\n}\n\nconstexpr 让这个判定在编译期与运行期都可执行。\n\n\n玩家、棋子与动作\n对局的两名玩家与格子内容都用 enum class 表达：\n\n\nvalue_types.h\n\n// 对局的两名玩家。\nenum class Player {\n  kX,\n  kO,\n};\n\n// 格子内容；kEmpty 表示空格。\nenum class Mark {\n  kEmpty,\n  kX,\n  kO,\n};\n\n一次落子动作由目标位置与落子玩家组成：\n\n\nvalue_types.h\n\n// 一次落子动作：把玩家的棋子放到指定位置。\nstruct Move {\n  Position position;\n  Player player;\n};\n\n// 把玩家映射为它落下的棋子。\nconstexpr Mark MarkOf(Player player) {\n  return player == Player::kX ? Mark::kX : Mark::kO;\n}\n\nMarkOf 回答“玩家落下的棋子是什么”：Player 表达对局身份，Mark 表达格子内容，两者互不替代。类型形式的语言依据在 cpp-notes 的枚举与命名空间与结构体与值类型两章。\n\n\n状态、结果与规则接口\n终局结果与落子处理结果各用一个 enum class 表达：\n\n\nvalue_types.h\n\n// 终局结果；规则补全前固定返回 kInProgress。\nenum class GameStatus {\n  kInProgress,\n  kDraw,\n  kXWins,\n  kOWins,\n};\n\n// 落子动作的处理结果；当前只区分接受与拒绝。\nenum class ApplyResult {\n  kAccepted,\n  kRejected,\n};\n\n调用者通过规则接口提交动作并获得结果，不直接写数组：\n\n\n\n\n\n%%{init: {\"fontFamily\": \"Fixel Text, LXGW WenKai Screen, system-ui, sans-serif\"}}%%\nflowchart LR\n  cli[\"终端适配层\"] -- 提交动作 --&gt; api[\"规则接口\"]\n  test[\"测试\"] -- 提交动作 --&gt; api\n  api --&gt; state[\"GameState\"]\n\n\n\n\n\n\n\n终端适配层：把用户输入转换成动作；\n测试：直接提交动作并检查状态；\n规则接口：Apply 提交落子，MarkAt 查询格子，Status 报告结果。\n\n动作只从外部进入规则接口，状态不反向依赖调用者。接口定义在 game_state.h：\n\n\ngame_state.h\n\n// 3×3 棋盘的状态：查询格子、提交落子并报告终局结果。\nclass GameState {\n public:\n  // 初始状态：全部格子为空。\n  GameState();\n\n  // 查询格子内容；position 必须合法。\n  Mark MarkAt(Position position) const;\n\n  // 落子：越界拒绝并保持棋盘不变，合法位置写入棋子。\n  ApplyResult Apply(Move move);\n\n  // 终局结果：完整规则补全前固定返回进行中。\n  GameStatus Status() const;\n\n private:\n  // 按行优先顺序存放 9 个格子。\n  std::array&lt;Mark, kRows * kCols&gt; cells_;\n};\n\n\n\n本章实现边界\n本章的规则实现只有越界保护与占格写入：Apply 拒绝越界位置，合法位置写入棋子；Status 固定返回进行中。占用判定、回合切换与终局判定分别属于落子合法性与回合与终局。状态不变量（格子只能为空或属于一名玩家、终局后不再接受落子）在补全规则时作为测试基准。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘与状态</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/03-board-and-state.html#编写构建规则与库查找",
+    "href": "content/tic-tac-toe/03-board-and-state.html#编写构建规则与库查找",
+    "title": "棋盘与状态",
+    "section": "编写构建规则与库查找",
+    "text": "编写构建规则与库查找\n值类型与接口定义完成后，构建规则把规则库编译成动态库，并让 CLI 与测试链接它。\n\n规则库目标\ntic_tac_toe/CMakeLists.txt 把核心编译成动态库：\n\n\nCMakeLists.txt\n\n# SHARED 生成动态库，产物经顶层规则归入 build/lib。\nadd_library(tic_tac_toe_core SHARED\n  src/game_state.cpp\n)\n\n# C++20 随目标传播：链接本库的 CLI 与测试也按 C++20 编译。\ntarget_compile_features(tic_tac_toe_core PUBLIC cxx_std_20)\n\n# include/ 是公开接口目录，使用方按 tic_tac_toe/xxx.h 找到头文件。\ntarget_include_directories(tic_tac_toe_core\n  PUBLIC \"${CMAKE_CURRENT_SOURCE_DIR}/include\"\n)\n\nSHARED 让 add_library 生成动态库 libtic_tac_toe_core.so，而不是把库代码复制进使用方。PUBLIC 声明的是用法要求：C++20 与公开头文件目录随目标传播给链接它的 CLI 与测试。这层动态库划分的是单个游戏内的组件边界；跨游戏的共享库提取，要等至少两个游戏的真实实现证明棋盘、位置或规则操作语义稳定后再评估。\n\n\n产物目录\n顶层规则把产物分归两个目录：\n顶层 CMakeLists.txt\n\n\nCMakeLists.txt\n\n# 可执行文件归入 build/bin，动态库与静态库归入 build/lib。\nset(CMAKE_RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/bin\")\nset(CMAKE_LIBRARY_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/lib\")\nset(CMAKE_ARCHIVE_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/lib\")\n\n可执行文件落 build/bin/，动态库落 build/lib/。源码树没有 lib/ 目录，它是构建产物目录。\n\n\n运行时库查找\n可执行文件运行时从哪里找库，由一行目标属性固定：\napps/CMakeLists.txt\n\n\nCMakeLists.txt\n\n# 把库查找位置写进可执行文件：从 build/bin 出发找到 build/lib。\nset_target_properties(tic_tac_toe_cli PROPERTIES\n  BUILD_RPATH \"$ORIGIN/../lib\"\n)\n\nBUILD_RPATH 把查找位置写进可执行文件本身，$ORIGIN 表示可执行文件所在目录。机制、常见错误与替代方案的完整讲解在 cpp-notes 的构建动态库并运行程序一章，本仓固定采用这套约定。\n一键脚本的测试与运行步骤再用临时环境变量加固：\nbuild-and-run.sh\n\n\nbuild-and-run.sh\n\n# 只包住这条命令的库查找路径：主路径是可执行文件内的 RPATH，这里仅加固。\n# 变量展开保留调用者已有的 LD_LIBRARY_PATH，命令结束即失效。\nenv LD_LIBRARY_PATH=\"$PWD/build/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\" \\\n  ctest --test-dir build --output-on-failure\n\nenv 只在命令运行期间设置 LD_LIBRARY_PATH，命令结束即失效；查找路径不写进任何全局配置。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘与状态</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/03-board-and-state.html#用-googletest-验证状态",
+    "href": "content/tic-tac-toe/03-board-and-state.html#用-googletest-验证状态",
+    "title": "棋盘与状态",
+    "section": "用 GoogleTest 验证状态",
+    "text": "用 GoogleTest 验证状态\n规则测试从本章起用 GoogleTest 编写。首次配置时由 FetchContent 拉取源码并与工程一起编译：\ntests/CMakeLists.txt\n\n\nCMakeLists.txt\n\n# 首次配置时经 codeload 拉取源码包，与工程一起编译。\ninclude(FetchContent)\nFetchContent_Declare(googletest\n  URL https://codeload.github.com/google/googletest/tar.gz/refs/tags/v1.17.0\n)\nFetchContent_MakeAvailable(googletest)\n\n版本固定为 v1.17.0，拉取一次后离线可复用。测试可执行文件链接 GTest::gtest_main，由它提供 main 适配。\n测试文件覆盖初始状态、落子写入、越界拒绝与终局结果四类行为：\ngame_state_test.cpp\n\n\ngame_state_test.cpp\n\n// 初始状态的 9 个格子全部为空。\nTEST(GameStateTest, InitialBoardIsEmpty) {\n  GameState state;\n  for (int row = 0; row &lt; tic_tac_toe::kRows; ++row) {\n    for (int col = 0; col &lt; tic_tac_toe::kCols; ++col) {\n      EXPECT_EQ(state.MarkAt({row, col}), Mark::kEmpty);\n    }\n  }\n}\n\n// 合法落子返回 kAccepted，并把目标格子标记为落子玩家的棋子。\nTEST(GameStateTest, ApplyMarksTargetCell) {\n  GameState state;\n  const Move move{{1, 1}, Player::kX};\n  EXPECT_EQ(state.Apply(move), ApplyResult::kAccepted);\n  EXPECT_EQ(state.MarkAt(move.position), Mark::kX);\n}\n\nTEST 定义一个测试用例，EXPECT_EQ 断言两个值相等，失败时报告并继续。测试直接提交动作并检查状态，不经过终端文本。\n重跑一键脚本，测试与运行两个步骤的输出如下：\n\n\n运行效果\n\n==&gt; 3. 测试\n1/1 Test #1: tic_tac_toe_game_state_test ......   Passed\n\n==&gt; 4. 运行\n井字棋初始棋盘：\n. . .\n. . .\n. . .\n状态：进行中\n\nCTest 把测试可执行文件注册为一个测试，四类行为在它内部各自断言；程序打印初始棋盘，说明 CLI 能链接动态库并运行。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘与状态</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/03-board-and-state.html#常见错误",
+    "href": "content/tic-tac-toe/03-board-and-state.html#常见错误",
+    "title": "棋盘与状态",
+    "section": "常见错误",
+    "text": "常见错误\n\n运行时找不到 libtic_tac_toe_core.so\n直接运行 ./build/bin/tic_tac_toe_cli 报 “error while loading shared libraries: libtic_tac_toe_core.so”。先确认 build/lib/ 下已生成该文件，再检查 apps/CMakeLists.txt 是否包含 BUILD_RPATH 一行；补回后重跑 ./build-and-run.sh，配置时查找路径才会写进新构建的可执行文件。用 ldd build/bin/tic_tac_toe_cli 验证，解析结果应落在 build/bin/../lib/。\n\n\nctest 报 No tests were found\n脚本第 3 步输出 “No tests were found!!!“。原因是顶层 CMakeLists.txt 漏了 enable_testing()：没有它，子目录注册的测试不会进入 CTest。在 add_subdirectory(tests) 之前补上，重跑一键脚本后测试计数恢复为 1。\n\n\nGoogleTest 源码拉取失败\n首次配置在 FetchContent 下载源码包时超时或报网络错误。本仓固定经 codeload.github.com 下载 v1.17.0 源码包，网络恢复后重跑一键脚本即可续传；拉取完成后构建不再需要网络。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘与状态</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/03-board-and-state.html#自测问题",
+    "href": "content/tic-tac-toe/03-board-and-state.html#自测问题",
+    "title": "棋盘与状态",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照；说不出来的部分，回到对应小节对照正文。\n\n规则核心为什么单独编译成动态库，而不是把 game_state.cpp 直接编进 CLI？\n\n查看答案\nCLI 与测试都要使用规则核心。独立的库目标让两边链接同一份产物，核心改动只需构建一次，PUBLIC 用法要求也把 C++20 与头文件目录传播给使用方。这是“游戏核心不依赖终端”在构建层的落实。\n\nRPATH 与脚本里的临时 LD_LIBRARY_PATH 各解决什么问题？\n\n查看答案\nRPATH 把查找位置写进可执行文件，是随文件移动的长期主路径。临时变量只包住单条命令，用于加固与排查，命令结束即失效。两者都不改全局配置，避免影响其他程序。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘与状态</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/03-board-and-state.html#本章回顾",
+    "href": "content/tic-tac-toe/03-board-and-state.html#本章回顾",
+    "title": "棋盘与状态",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经能把规则核心编译成动态库，用值类型与规则接口固定状态模型，并用 GoogleTest 固定本章的规则行为。下一章落子合法性在 Apply 上补全合法与非法判定。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘与状态</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/04-move-validation.html",
+    "href": "content/tic-tac-toe/04-move-validation.html",
+    "title": "落子合法性",
+    "section": "",
+    "text": "明确交付行为\n棋盘与状态建立了状态模型。本章定义单次落子的合法与非法处理及其测试边界；对应实现在落子合法性实现目录，实现并通过验收前按设计页阅读。\n单次落子交付以下行为：\n回合切换、胜负与平局判断留给回合与终局；调用方获得的只是“动作成功或失败”。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>落子合法性</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/04-move-validation.html#明确交付行为",
+    "href": "content/tic-tac-toe/04-move-validation.html#明确交付行为",
+    "title": "落子合法性",
+    "section": "",
+    "text": "接受一次合法落子，把一个空格正确占用；\n拒绝越界、占用或格式错误的动作；\n非法落子不改变棋盘状态，也不污染错误信息之外的任何数据。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>落子合法性</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/04-move-validation.html#划定测试边界",
+    "href": "content/tic-tac-toe/04-move-validation.html#划定测试边界",
+    "title": "落子合法性",
+    "section": "划定测试边界",
+    "text": "划定测试边界\n规则测试直接调用核心接口：\n\n对每个非法场景（越界、占用、格式错误）断言状态不变；\n对合法落子断言目标格子被占用且其余格子不变；\n不通过终端文本间接验证规则行为。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>落子合法性</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/04-move-validation.html#选择输入协议",
+    "href": "content/tic-tac-toe/04-move-validation.html#选择输入协议",
+    "title": "落子合法性",
+    "section": "选择输入协议",
+    "text": "选择输入协议\n先选择简单、可说明且容易测试的输入协议，例如行列数字或 1 到 9 的格子编号。协议一旦确定，就在页面和测试中保持一致；字符串解析细节由终端适配层处理，规则核心只接收已解析的动作。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>落子合法性</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/04-move-validation.html#本章回顾",
+    "href": "content/tic-tac-toe/04-move-validation.html#本章回顾",
+    "title": "落子合法性",
+    "section": "本章回顾",
+    "text": "本章回顾\n本章固定了单次落子的交付行为与测试边界。下一章回合与终局补全回合切换与终局判定。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>落子合法性</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/05-turns-and-terminal-rules.html",
+    "href": "content/tic-tac-toe/05-turns-and-terminal-rules.html",
+    "title": "回合与终局",
+    "section": "",
+    "text": "判定回合与终局\n落子合法性定义了单次落子的合法与非法处理。本章补全回合切换、胜负与平局判定，规则核心由此具备完整的井字棋判断能力；终端双人闭环由CLI 与分层验收串联。对应实现在回合终局实现目录，实现并通过验收前按设计页阅读。\n对局从落子到结束依次做四个判定：\n非法落子继续遵循落子合法性的约束：不改状态，也不切换回合。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>回合与终局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/05-turns-and-terminal-rules.html#判定回合与终局",
+    "href": "content/tic-tac-toe/05-turns-and-terminal-rules.html#判定回合与终局",
+    "title": "回合与终局",
+    "section": "",
+    "text": "只有合法落子后才切换玩家；\n检查三行、三列和两条对角线的胜负；\n检查棋盘填满时的平局；\n在胜负或平局后禁止继续落子。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>回合与终局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/05-turns-and-terminal-rules.html#划定测试边界",
+    "href": "content/tic-tac-toe/05-turns-and-terminal-rules.html#划定测试边界",
+    "title": "回合与终局",
+    "section": "划定测试边界",
+    "text": "划定测试边界\n规则测试直接调用核心接口，覆盖：\n\n合法落子后的回合切换，以及非法落子不切换回合；\n三行、三列和两条对角线各至少一条获胜路径；\n平局判定；\n终局状态下任何落子都被拒绝。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>回合与终局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/05-turns-and-terminal-rules.html#本章回顾",
+    "href": "content/tic-tac-toe/05-turns-and-terminal-rules.html#本章回顾",
+    "title": "回合与终局",
+    "section": "本章回顾",
+    "text": "本章回顾\n本章固定了回合切换、胜负与平局的判定顺序。下一章CLI 与分层验收串联终端双人闭环。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>回合与终局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/06-cli-and-acceptance.html",
+    "href": "content/tic-tac-toe/06-cli-and-acceptance.html",
+    "title": "CLI 与分层验收",
+    "section": "",
+    "text": "串联终端闭环\n回合与终局补全了规则核心的判断能力。本章设计终端双人闭环与分层验收；对应实现在终端闭环实现目录，实现并通过验收前按设计页阅读。\n终端闭环把规则核心接入终端交互，从开局到正常退出的步骤如下：\n终端适配层只处理输入、输出和循环控制；胜负判断始终留在规则核心。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>CLI 与分层验收</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/06-cli-and-acceptance.html#串联终端闭环",
+    "href": "content/tic-tac-toe/06-cli-and-acceptance.html#串联终端闭环",
+    "title": "CLI 与分层验收",
+    "section": "",
+    "text": "终端闭环流程\n\n初始化\n  -&gt; 显示局面\n  -&gt; 读取当前玩家输入\n  -&gt; 解析并验证动作\n  -&gt; 非法：报告错误并保留当前回合\n  -&gt; 合法：更新状态并检查终局\n  -&gt; 未结束：切换玩家并继续\n  -&gt; 结束：显示结果并正常退出",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>CLI 与分层验收</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/06-cli-and-acceptance.html#执行分层验收",
+    "href": "content/tic-tac-toe/06-cli-and-acceptance.html#执行分层验收",
+    "title": "CLI 与分层验收",
+    "section": "执行分层验收",
+    "text": "执行分层验收\n终端双人闭环的验收只覆盖本目录职责：CLI 冒烟检查能用真实输入走完最小终端流程并正常退出；规则仍由核心测试直接验证，不用 CLI 文本覆盖所有领域行为。CTest 在一键脚本内统一运行。\n更广的改动与验证对应关系见下一节矩阵；工具链 smoke、棋盘值类型和规则矩阵分别归属对应编号目录。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>CLI 与分层验收</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/06-cli-and-acceptance.html#圈定验证范围",
+    "href": "content/tic-tac-toe/06-cli-and-acceptance.html#圈定验证范围",
+    "title": "CLI 与分层验收",
+    "section": "圈定验证范围",
+    "text": "圈定验证范围\n改动落在哪一层，就验证哪一层。下表是全书分层验证矩阵：\n\n\n\n\n\n\n\n改动\n对应验证\n\n\n\n\n构建规则或工具链\n该目录 build-and-run.sh（配置、编译、CTest、运行）\n\n\n棋盘和值类型\n初始状态、边界、位置转换\n\n\n规则\n合法/非法动作、回合、胜负、平局\n\n\nCLI\n少量端到端输入、输出和返回码\n\n\nAI\n必胜、防守、合法动作、确定性\n\n\nPython subprocess\n启动、输入输出、退出码、超时\n\n\nJSON\n合法消息、非法消息、错误结构\n\n\nHTTP\n状态码、response.ok、JSON 内容\n\n\nWebSocket\n建连、消息、错误、正常关闭\n\n\nQuarto、主题或代码块标题\nverify_content.py 与根目录 quarto render\n\n\nC++、CMake、Bash 或格式注释\nbash -n、该目录 build-and-run.sh、clang-format --dry-run --Werror，命名检查用该目录 .clang-tidy\n\n\n\n改 Quarto 时额外抽查链接、结构、filename 和响应式布局。改注释时确认注释与真实代码同步。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>CLI 与分层验收</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/06-cli-and-acceptance.html#守住测试边界",
+    "href": "content/tic-tac-toe/06-cli-and-acceptance.html#守住测试边界",
+    "title": "CLI 与分层验收",
+    "section": "守住测试边界",
+    "text": "守住测试边界\nAI、Python、JSON、HTTP 和 WebSocket 都要在各自目录增加独立测试；它们不能成为降低核心规则测试质量的替代品。核心规则测试用 GoogleTest 编写，在棋盘与状态引入；CLI 冒烟检查继续由 CTest 直接注册。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>CLI 与分层验收</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/06-cli-and-acceptance.html#本章回顾",
+    "href": "content/tic-tac-toe/06-cli-and-acceptance.html#本章回顾",
+    "title": "CLI 与分层验收",
+    "section": "本章回顾",
+    "text": "本章回顾\n本章固定了终端闭环步骤与分层验收矩阵。下一章渐进式路线给出目录门槛与执行纪律。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>CLI 与分层验收</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/07-incremental-roadmap.html",
+    "href": "content/tic-tac-toe/07-incremental-roadmap.html",
+    "title": "渐进式路线",
+    "section": "",
+    "text": "查看推进路线\n前面的章节沿主线逐个推进。本章给出从最小工程到 WebSocket 评估的完整推进顺序、每个编号目录的进入门槛与执行纪律；目录只有在真实实现并通过对应验收后才算存在。\n十个编号目录从最小工程推进到 WebSocket 评估，每个箭头都以上一个目录的验收通过为门槛：\n%%{init: {\"fontFamily\": \"Fixel Text, LXGW WenKai Screen, system-ui, sans-serif\"}}%%\nflowchart LR\n    A[\"01 最小工程\"] --&gt; B[\"02 棋盘和值类型\"]\n    B --&gt; C[\"03 落子合法性\"]\n    C --&gt; D[\"04 回合与终局\"]\n    D --&gt; E[\"05 CLI 与分层验收\"]\n    E --&gt; F[\"06 Minimax AI\"]\n    F --&gt; G[\"07 Python subprocess\"]\n    G --&gt; H[\"08 逐行 JSON 协议\"]\n    H --&gt; I[\"09 HTTP/Fetch Web 原型\"]\n    I --&gt; J[\"10 按需评估 WebSocket\"]",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>渐进式路线</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/07-incremental-roadmap.html#对照目录与章节",
+    "href": "content/tic-tac-toe/07-incremental-roadmap.html#对照目录与章节",
+    "title": "渐进式路线",
+    "section": "对照目录与章节",
+    "text": "对照目录与章节\n井字棋代码目录下的每个编号目录都是一个完整项目：独立拥有 .clang-format、.vscode/、CMake、源码和测试，可以单独打开、构建和验证。章节编号与目录编号相差 1：章节 02 对应目录 01，此后逐项对应；先看清工程和本页是横向说明页。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>渐进式路线</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/07-incremental-roadmap.html#守住目录门槛",
+    "href": "content/tic-tac-toe/07-incremental-roadmap.html#守住目录门槛",
+    "title": "渐进式路线",
+    "section": "守住目录门槛",
+    "text": "守住目录门槛\n下表列出每个目录的可观察行为、主要验证与进入下一层的条件。\n\n\n\n代码目录\n章节\n可观察行为\n主要验证\n进入门槛 / 下一层条件\n\n\n\n\n01-toolchain-probe\n配置并运行最小工程\n稳定输出和返回 0\n配置、构建、CTest\n工具链闭环通过；规则库、AI、Python 放在后续编号目录\n\n\n02-board-and-state\n棋盘与状态\n初始状态可观察\nGoogleTest 值类型与状态桩测试\n不变量明确；终端解析放在 05\n\n\n03-move-validation\n落子合法性\n合法动作占用空格、非法动作不改状态\n规则单测\n合法与非法分支稳定；回合循环放在 04\n\n\n04-turns-and-terminal-rules\n回合与终局\n回合稳定切换、正确终局结果\n流程与规则矩阵测试\n终局不可继续；AI、Python 放在对应编号目录\n\n\n05-cli-and-acceptance\nCLI 与分层验收\n两人可完成一局，验收可重复\nCLI smoke、ctest、格式、渲染\n井字棋完成定义满足；共享引擎、JSON/HTTP 等真实需求出现后再评估\n\n\n06-ai\nAI 与双人扩展\n选择合法且合理动作\n必胜、防守、稳定性\n双人规则稳定；Web 交互等真实需求出现后再评估\n\n\n07-python-subprocess\nPython 与 Web 过渡\n可记录一局或批量运行\n退出码、输出、超时\nCLI 协议稳定；网络服务等真实需求出现后再评估\n\n\n08-json-protocol\n同上\n可机器读取状态和结果\n合法/非法消息\n文本边界不足以支撑自动化；UI 细节等真实需求出现后再评估\n\n\n09-http-fetch\n同上\n浏览器可请求和提交动作\n状态码、ok、JSON\n协议可独立测试；实时推送确有必要时再评估 WebSocket\n\n\n10-websocket\n同上\n推送消息和关闭状态可控\nopen/message/error/close\nHTTP 已不足以满足需求\n\n\n\n06 到 10 的目录只在真实开始实现时创建，不提前建立空目录。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>渐进式路线</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/07-incremental-roadmap.html#遵守执行纪律",
+    "href": "content/tic-tac-toe/07-incremental-roadmap.html#遵守执行纪律",
+    "title": "渐进式路线",
+    "section": "遵守执行纪律",
+    "text": "遵守执行纪律\n每个目录都记录目标、路径、命令、预期输出、失败定位和完成状态。一个目录未通过时，不继续叠加后续层。target、文件和测试在实际创建并运行后，才能记录为已完成。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>渐进式路线</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/07-incremental-roadmap.html#延伸到其他棋类",
+    "href": "content/tic-tac-toe/07-incremental-roadmap.html#延伸到其他棋类",
+    "title": "渐进式路线",
+    "section": "延伸到其他棋类",
+    "text": "延伸到其他棋类\n四子棋、五子棋、黑白棋等后续项目采用同一渐进方式；当前只维护井字棋，工具与分层约定见先看清工程。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>渐进式路线</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/08-ai-and-two-player-extension.html",
+    "href": "content/tic-tac-toe/08-ai-and-two-player-extension.html",
+    "title": "AI 与双人扩展",
+    "section": "",
+    "text": "确认前置条件\nCLI 与分层验收完成终端双人闭环后，AI 才有稳定的地基。本章确定引入 AI 的前置条件、Minimax 基本思想与验收标准；对应实现在AI 实现目录，实现并通过验收前按设计页阅读。\nAI 只能在双人规则、终局状态和测试边界稳定后加入。加入前先确认：玩家身份明确、合法动作唯一改变状态、非法动作不换回合、终局停止继续操作。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>AI 与双人扩展</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/08-ai-and-two-player-extension.html#理解-minimax-基础",
+    "href": "content/tic-tac-toe/08-ai-and-two-player-extension.html#理解-minimax-基础",
+    "title": "AI 与双人扩展",
+    "section": "理解 Minimax 基础",
+    "text": "理解 Minimax 基础\n参考 Berkeley CS188 Multi-Agent Search 的基本思想：\n\nMAX 在合法后继中选择价值最大的动作；\nMIN 假设对手选择价值最小的动作；\n终局直接返回胜、负、和对应的 utility；\n非终局递归枚举合法后继，并交替 MAX/MIN；\n达到搜索深度时使用 evaluation function；\nalpha-beta pruning 只跳过不改变搜索结果的分支，不改变 minimax 的最终值。\n\n井字棋状态空间较小，建议先实现正确、完整的搜索，再讨论动作排序、深度偏好和剪枝。搜索、终端显示和规则状态分属策略层、终端适配层与规则核心，不写在同一个函数中。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>AI 与双人扩展</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/08-ai-and-two-player-extension.html#验收-ai-行为",
+    "href": "content/tic-tac-toe/08-ai-and-two-player-extension.html#验收-ai-行为",
+    "title": "AI 与双人扩展",
+    "section": "验收 AI 行为",
+    "text": "验收 AI 行为\n至少覆盖：\n\n有立即获胜动作时选择获胜动作；\n对手下一步可获胜时优先防守；\n任意局面下都返回合法空位；\n相同局面和策略产生稳定结果；\n双方采取最优策略时结果符合预期。\n\nAI 是规则核心之上的策略层。终端只负责选择“人类输入”或“AI 动作”的来源，不直接修改 AI 内部搜索状态。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>AI 与双人扩展</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/08-ai-and-two-player-extension.html#本章回顾",
+    "href": "content/tic-tac-toe/08-ai-and-two-player-extension.html#本章回顾",
+    "title": "AI 与双人扩展",
+    "section": "本章回顾",
+    "text": "本章回顾\n本章固定了 AI 的前置条件、Minimax 思想与验收标准。下一章Python 与 Web 过渡安排向外衔接的顺序。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>AI 与双人扩展</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/09-python-and-web-transition.html",
+    "href": "content/tic-tac-toe/09-python-and-web-transition.html",
+    "title": "Python 与 Web 过渡",
+    "section": "",
+    "text": "确定过渡顺序\nAI 与双人扩展确定了 AI 策略层的设计。本章安排向外衔接的顺序与各层边界；对应实现目录从Python subprocess 实现目录起按需创建，实现并通过验收前按设计页阅读。\nC++ CLI 稳定后，先使用 Python 标准库观察和驱动它，再定义机器协议，最后才增加浏览器和网络层：\n每一步都先让上一步的边界稳定，再引入下一层工具；顺序颠倒会让调试同时面对两个未验证的层。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Python 与 Web 过渡</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/09-python-and-web-transition.html#确定过渡顺序",
+    "href": "content/tic-tac-toe/09-python-and-web-transition.html#确定过渡顺序",
+    "title": "Python 与 Web 过渡",
+    "section": "",
+    "text": "接入顺序\n\n稳定 C++ CLI\n    -&gt; Python subprocess\n    -&gt; 逐行 JSON\n    -&gt; Python HTTP 服务\n    -&gt; 浏览器 Fetch\n    -&gt; 只有确有实时需求时再评估 WebSocket",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Python 与 Web 过渡</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/09-python-and-web-transition.html#圈定进程边界",
+    "href": "content/tic-tac-toe/09-python-and-web-transition.html#圈定进程边界",
+    "title": "Python 与 Web 过渡",
+    "section": "圈定进程边界",
+    "text": "圈定进程边界\n参考 Python subprocess 文档：\n\n一次性调用优先使用 subprocess.run()；\n需要持续交互时再使用 Popen；\n显式检查退出码，必要时捕获 stdout 和 stderr；\n设置超时并处理超时、异常退出和编码问题；\nPython 只负责进程边界、记录和分析，不把规则复制一份。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Python 与 Web 过渡</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/09-python-and-web-transition.html#定义-json-协议",
+    "href": "content/tic-tac-toe/09-python-and-web-transition.html#定义-json-协议",
+    "title": "Python 与 Web 过渡",
+    "section": "定义 JSON 协议",
+    "text": "定义 JSON 协议\n当纯文本不再适合脚本自动化时，再定义逐行 JSON 请求/响应。每条消息包含明确的边界、类型、版本、动作、状态、结果和错误表示。JSON 解析器位于协议适配层，规则核心仍只接收结构化动作和值类型。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Python 与 Web 过渡</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/09-python-and-web-transition.html#接入-http-与-fetch",
+    "href": "content/tic-tac-toe/09-python-and-web-transition.html#接入-http-与-fetch",
+    "title": "Python 与 Web 过渡",
+    "section": "接入 HTTP 与 Fetch",
+    "text": "接入 HTTP 与 Fetch\nPython Web 服务可以先提供创建对局、查询状态和提交动作等请求—响应接口。浏览器使用 MDN Fetch API 时，先检查 response.ok 或 response.status 再调用 response.json()：HTTP 404/500 不会自动使 fetch() 的 Promise reject。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Python 与 Web 过渡</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/09-python-and-web-transition.html#按需评估-websocket",
+    "href": "content/tic-tac-toe/09-python-and-web-transition.html#按需评估-websocket",
+    "title": "Python 与 Web 过渡",
+    "section": "按需评估 WebSocket",
+    "text": "按需评估 WebSocket\nHTTP 请求—响应无法覆盖实时推送需求时，再评估 WebSocket。依据 WHATWG WebSocket Standard，需要明确处理 open、message、error 和 close 生命周期、文本或二进制消息边界、重连、关闭原因、队列背压和应用层协议。它不是把规则核心直接暴露给浏览器的理由。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Python 与 Web 过渡</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/09-python-and-web-transition.html#本章回顾",
+    "href": "content/tic-tac-toe/09-python-and-web-transition.html#本章回顾",
+    "title": "Python 与 Web 过渡",
+    "section": "本章回顾",
+    "text": "本章回顾\n本章固定了过渡顺序与各层边界。下一章完成定义与下一步定义井字棋的完成标准。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Python 与 Web 过渡</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/10-completion-and-next-steps.html",
+    "href": "content/tic-tac-toe/10-completion-and-next-steps.html",
+    "title": "完成定义与下一步",
+    "section": "",
+    "text": "定义完成标准\n渐进式路线给出了推进方式与门槛。本章定义井字棋的完成标准，回顾已实现部分的架构与修复过程，并盘点当前成果与推进顺序。\n井字棋完成需同时满足以下条件。当前仓库只完成最小工程与棋盘状态，其余条目仍是后续主线的完成定义：\n完成的工程要能被不熟悉它的人直接跑起来，对应四项信息：依赖（WSL Ubuntu 的 C++20 工具链、CMake、Ninja，GoogleTest 由配置时自动拉取）、编译与运行（进入任一编号目录执行 ./build-and-run.sh，脚本一键完成配置、编译、CTest 和运行）、测试（CTest 由脚本内部调用，也可在编号目录内单独执行 ctest）。这些信息由各章的命令记录承担，不另造根 README 替代本书。\n“页面写完”不等于“程序完成”；没有实际运行结果时，文档只能记录计划和预期。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>完成定义与下一步</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/10-completion-and-next-steps.html#定义完成标准",
+    "href": "content/tic-tac-toe/10-completion-and-next-steps.html#定义完成标准",
+    "title": "完成定义与下一步",
+    "section": "",
+    "text": "在 WSL Ubuntu 中可以按记录的命令配置和构建；\n终端可以完成双人对局并正常结束；\n合法、非法、回合、胜负、平局和终局保护有核心规则测试；\nCTest 可以统一发现并运行测试；\nCLI 有最小 smoke test；\nC++ 格式和文档检查通过；\nQuarto 页面与实际文件、target、命令和结果保持同步。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>完成定义与下一步</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/10-completion-and-next-steps.html#回顾架构与修复",
+    "href": "content/tic-tac-toe/10-completion-and-next-steps.html#回顾架构与修复",
+    "title": "完成定义与下一步",
+    "section": "回顾架构与修复",
+    "text": "回顾架构与修复\n已实现的编号目录固定了三层架构：规则核心编译为动态库，CLI 与测试链接同一份产物；取值封闭的集合用 enum class，数据组合用 struct 聚合，全部定义在 tic_tac_toe 命名空间内；动作只从调用者流向规则接口，状态与值类型不反向依赖调用者。\n实现过程中的代表性问题与修复：\n\n可执行文件运行时报找不到 libtic_tac_toe_core.so：可执行目标缺 BUILD_RPATH，查找位置没有写进产物；补回后重新配置修复，完整定位过程见棋盘与状态的常见错误。\nctest 报 No tests were found：顶层规则漏了 enable_testing()，子目录注册的测试进不了 CTest；在 add_subdirectory(tests) 之前补上修复。\n修改 CMake 后行为没变：构建目录缓存了旧配置；按记录重新配置而不是重复编译，见配置并运行最小工程的常见错误。\n\n每类问题都按症状、定位、修复、验证的顺序记录在对应章节的常见错误里，本章不重复排查过程。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>完成定义与下一步</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/10-completion-and-next-steps.html#盘点成果与推进",
+    "href": "content/tic-tac-toe/10-completion-and-next-steps.html#盘点成果与推进",
+    "title": "完成定义与下一步",
+    "section": "盘点成果与推进",
+    "text": "盘点成果与推进\n当前可观察成果：\n\n01-toolchain-probe：配置、编译、CTest、运行全部成功，最小程序稳定输出并返回 0；\n02-board-and-state：规则核心编译为动态库，GoogleTest 覆盖初始状态、落子写入、越界拒绝与终局桩，CLI 能链接动态库打印初始棋盘。\n\n后续按渐进式路线的编号目录推进，先补全落子合法性，再接入回合与终局判定。共享库提取、AI 剪枝与 WebSocket 评估的触发条件分别记在各自出处章；AI、Python、Web 和共享抽象都不能反过来成为终端规则的前置依赖。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>完成定义与下一步</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/10-completion-and-next-steps.html#本章回顾",
+    "href": "content/tic-tac-toe/10-completion-and-next-steps.html#本章回顾",
+    "title": "完成定义与下一步",
+    "section": "本章回顾",
+    "text": "本章回顾\n本章固定了井字棋的完成标准与运行入口，回顾了已实现架构与代表性修复。完成前，各章按设计页阅读并通过验收后逐层落地。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>完成定义与下一步</span>"
+    ]
+  },
+  {
+    "objectID": "content/tic-tac-toe/10-completion-and-next-steps.html#参考资料",
+    "href": "content/tic-tac-toe/10-completion-and-next-steps.html#参考资料",
+    "title": "完成定义与下一步",
+    "section": "参考资料",
+    "text": "参考资料\n本章与其他章节引用过的外部资料：\n\nC++ Core Guidelines\nCMake enable_testing 命令\nCMake add_test 命令\nCMake Tutorial\nPython subprocess 模块\nMDN Fetch API\nWHATWG WebSocket Standard\nBerkeley CS188 Multi-Agent Search",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>完成定义与下一步</span>"
+    ]
+  }
+]
