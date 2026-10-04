@@ -1,0 +1,89 @@
+---
+title: "检查落子并判定终局"
+engine: jupyter
+---
+
+[定义棋盘与格子状态](03-board.qmd)已经能保存每一个棋盘格子。这一章把棋盘状态提升为一局对弈：`Game::Place` 决定落子是否接受，井字棋动态库在接受后判定胜负或平局。规则在 `game.h` 和 `game.cpp`。终端输入输出留到[构建、测试并运行终端对局](05-terminal-play.qmd)。
+
+## 定义玩家与落子动作
+
+先手是 X。[game.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/include/game.h) 里的玩家、落子结果和终局都写出枚举初值：
+
+```{.cpp filename="game.h"}
+enum class Player : std::uint8_t {
+  kCross = 0,
+  kNought = 1,
+};
+```
+
+`Move` 带有棋盘格子坐标和落子的玩家。`CellStateFor` 由 `Player::kCross` 得到 `CellState::kCross`。
+
+## 拒绝无效落子
+
+`Game::Place` 在下面几种情况返回 `PlaceResult::kRejected`，棋盘和当前玩家都不变：
+
+- 对局已经结束。
+- 落子的玩家不是现在轮到的人。
+- 坐标无效，或目标棋盘格子已经有状态。
+
+接受时写入棋盘格子。若对局仍在进行，换成另一名玩家。
+
+## 判定胜负与平局
+
+写入之后检查刚落子的玩家是否占满一行、一列或一条对角线。
+
+- 占满则对应 `GameResult::kCrossWin` 或 `GameResult::kNoughtWin`。
+- 没有三连且棋盘已满则是 `GameResult::kDraw`。
+- `GameTest` 覆盖错人落子、行、列、两条对角线、平局，以及获胜后再落子被拒绝。
+
+下面的图是终局棋盘：X 占满第一行。
+
+```{python}
+#| echo: false
+#| warning: false
+#| fig-cap: "第一行三连，对局记为 X 获胜"
+#| fig-align: center
+
+import sys
+from pathlib import Path
+
+from IPython.display import HTML
+
+root = Path.cwd()
+while not (root / "config.toml").exists():
+    root = root.parent
+sys.path.append(str(root / ".agents/skills/writing-quarto/scripts/diagrams"))
+from coords_grid import render_grid
+
+HTML(render_grid(marks={(0, 0): "X", (0, 1): "X", (0, 2): "X", (1, 0): "O", (1, 1): "O"}))
+```
+
+这一局面在 `GameTest` 里记为 X 获胜。
+
+## 常见错误
+
+### 同一格子写入第二次
+
+第二次写入同一个棋盘格子时，`Board::PlacePiece` 必须返回假。
+
+- 原有状态保留。先写入再判断会让后手盖掉先手。
+
+### 下满时先报平局
+
+最后一子同时形成三连时，应先判定获胜。
+
+- 先看棋盘是否下满会把获胜记成平局。
+
+## 自测问题
+
+先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。
+
+1. 为什么后手不能在开局直接落在中心？
+
+   ::: {.answer}
+   开局轮到 X。`Place` 发现玩家不是当前玩家时拒绝，棋盘仍是空的。
+   :::
+
+## 本章回顾
+
+你已经能拒绝越界落子、拒绝向已有棋子的格子落子，并判定胜负与平局。下一章构建、测试并运行终端对局，把结果印到终端，并首次配置、编译和验证这个工程。

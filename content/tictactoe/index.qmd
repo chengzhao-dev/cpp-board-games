@@ -1,55 +1,38 @@
 ---
 title: "井字棋"
-description: "从最小工程逐步建立可验证的井字棋实现。"
 number-sections: false
 body-classes: index-page
 ---
 
-按顺序阅读即可。每页只完成一个目标，并为下一页留下可以继续使用的结果。
+在终端下完一局双人井字棋。按顺序阅读即可：前五章完成这局对局，后两章分别让电脑产生落子、用一行 JSON 记下局面。
 
 ::: {.feature-grid}
 ::: {.landing-card}
-### [先看清工程](01-scope-and-principles.qmd)
-明确工具、项目内容与分层实现。
+### [看懂一局井字棋](01-rules.qmd)
+两名玩家在终端轮流落子，三连获胜，棋盘下满为平局。
 :::
 ::: {.landing-card}
-### [配置并运行最小工程](02-toolchain-probe.qmd)
-在最小工程目录上走完一次完整构建流程。
+### [认识井字棋工程布局](02-project-layout.qmd)
+查看井字棋动态库、终端程序和测试目录如何分工。
 :::
 ::: {.landing-card}
-### [棋盘与状态](03-board-and-state.qmd)
-建立棋盘、位置与状态值类型。
+### [定义棋盘与格子状态](03-board.qmd)
+用行、列和棋盘格子状态保存 3×3 棋盘。
 :::
 ::: {.landing-card}
-### [落子合法性](04-move-validation.qmd)
-区分合法与非法落子。
+### [检查落子并判定终局](04-game.qmd)
+拒绝非法落子，并判定胜负与平局。
 :::
 ::: {.landing-card}
-### [回合与终局](05-turns-and-terminal-rules.qmd)
-处理回合切换、胜负与平局。
+### [构建、测试并运行终端对局](05-terminal-play.qmd)
+首次配置、编译、测试和运行井字棋工程。
 :::
 ::: {.landing-card}
-### [CLI 与分层验收](06-cli-and-acceptance.qmd)
-串联终端对局与分层验收。
+### [让电脑产生一次落子](06-opponent.qmd)
+另一名玩家由电脑担任，按同样的规则产生落子。
 :::
 ::: {.landing-card}
-### [渐进式路线](07-incremental-roadmap.qmd)
-回看编号目录与进入门槛。
+### [用一行 JSON 记下局面](07-line-protocol.qmd)
+每次打印棋盘时，用一行 JSON 记下九个棋盘格子、轮到谁和对局结果。
 :::
-::: {.landing-card}
-### [AI 与双人扩展](08-ai-and-two-player-extension.qmd)
-在双人规则稳定后引入 AI。
-:::
-::: {.landing-card}
-### [Python 与 Web 过渡](09-python-and-web-transition.qmd)
-从脚本驱动过渡到浏览器。
-:::
-::: {.landing-card}
-### [完成定义与下一步](10-completion-and-next-steps.qmd)
-确认完成标准与后续顺序。
-:::
-:::
-
-::: {.callout-note title="统一开发环境"}
-命令默认在 WSL Ubuntu 中执行。代码按编号存放在[井字棋代码目录](https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tic-tac-toe)下。
 :::

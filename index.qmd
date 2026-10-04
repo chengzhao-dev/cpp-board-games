@@ -1,48 +1,24 @@
 ---
 title: "C++ 棋盘游戏实践"
-description: "从一个可验证的终端井字棋开始，逐步学习 C++ 工程、测试和后续工具衔接。"
+description: "用可运行、可测试的棋盘游戏学习 C++ 工程实践，从井字棋开始逐步建立清晰的程序边界。"
 body-classes: homepage
 ---
 
 ::: {.hero-eyebrow}
-用一个可验证的棋盘游戏学习 C++ 工程
+用可验证的棋盘游戏学习 C++ 工程
 :::
 
-学习沿渐进路线推进：从最小可运行程序开始，每次只增加一个可观察、可验证的行为，直到完成一局可验证的终端井字棋。
+这个项目用可运行、可测试的棋盘游戏承载 C++ 工程实践。内容从需求和规则开始，逐步说明程序边界、构建、测试与可观察的运行结果。当前从井字棋这个完整样例开始。
 
-## 井字棋
+## 当前游戏
 
 ::: {.feature-grid}
 ::: {.landing-card}
-### [先看清工程](content/tic-tac-toe/01-scope-and-principles.qmd)
+### [井字棋](content/tictactoe/index.qmd)
 
-确认工具、项目内容与三层实现，理解每个编号目录都是一个完整项目。
+按顺序查看井字棋从规则、目录和棋盘到对手与逐行协议的完整演进。
 
-[查看准备 →](content/tic-tac-toe/01-scope-and-principles.qmd){.cta}
-:::
-
-::: {.landing-card}
-### [配置并运行最小工程](content/tic-tac-toe/02-toolchain-probe.qmd)
-
-在最小工程目录上走完一次完整构建流程，理解 CMake 构建规则与一键脚本。
-
-[开始实践 →](content/tic-tac-toe/02-toolchain-probe.qmd){.cta}
-:::
-
-::: {.landing-card}
-### [CLI 与分层验收](content/tic-tac-toe/06-cli-and-acceptance.qmd)
-
-用终端双人闭环串联规则核心，按改动所在分层划定验证范围。
-
-[查看验收 →](content/tic-tac-toe/06-cli-and-acceptance.qmd){.cta}
-:::
-
-::: {.landing-card}
-### [AI 与 Python/Web 扩展](content/tic-tac-toe/08-ai-and-two-player-extension.qmd)
-
-双人规则稳定后引入 Minimax AI，再经 Python 脚本与 HTTP 过渡到浏览器。
-
-[查看扩展 →](content/tic-tac-toe/08-ai-and-two-player-extension.qmd){.cta}
+[进入井字棋 →](content/tictactoe/index.qmd){.cta}
 :::
 :::
 
@@ -52,18 +28,18 @@ body-classes: homepage
 ::: {.landing-card .coming-soon}
 ### 四子棋
 
-完成井字棋后按同一渐进方式推进。
+井字棋完成后再写。
 :::
 
 ::: {.landing-card .coming-soon}
 ### 五子棋
 
-复用同一套工具链与分层验收约定。
+工具链与井字棋相同，规则另写。
 :::
 
 ::: {.landing-card .coming-soon}
 ### 黑白棋
 
-在共享抽象条件成熟后评估规则复用。
+至少两个游戏真实复用同一规则之前，不抽共享库。
 :::
 :::

@@ -1,0 +1,58 @@
+---
+title: "用一行 JSON 记下局面"
+engine: jupyter
+---
+
+[让电脑产生一次落子](06-opponent.qmd)已经固定了启动输入，并保留了双人和人机两种模式。这一章定义输出协议：在给人看的棋盘后追加一行版本化 JSON，把九格和终局写明，别的程序不用从中文棋盘里抠格子。代码在 [03-line-protocol](https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tictactoe/03-line-protocol)。
+
+## 追加局面输出协议
+
+[cli.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/03-line-protocol/apps/src/cli.cpp) 仍先打印行列号棋盘。`WriteSnapshot` 紧接着写一行 JSON，包含版本、序号、九格、轮到谁、状态和胜者。
+
+```{python}
+#| echo: false
+#| warning: false
+#| fig-cap: "图 1：逐行 JSON 里的第一行三连"
+#| fig-align: center
+
+import sys
+from pathlib import Path
+
+from IPython.display import HTML
+
+root = Path.cwd()
+while not (root / "config.toml").exists():
+    root = root.parent
+sys.path.append(str(root / "games/tictactoe/python"))
+sys.path.append(str(root / ".agents/skills/writing-quarto/scripts/diagrams"))
+from coords_grid import render_grid
+from replay import marks_from_cells, parse_snapshot
+
+line = '{"version":1,"sequence":0,"cells":["X","X","X","O","O"," "," "," "," "],"player":"X","status":"x_wins","winner":"X"}'
+snapshot = parse_snapshot(line)
+HTML(render_grid(marks=marks_from_cells(snapshot["cells"])))
+```
+
+九格按行依次排列，每三个是一行。管道棋谱结束时，`status` 是 `x_wins`，`winner` 是 `X`；标准输出仍有 `X 获胜`。别的程序要九格和终局，读这一行 JSON 就够；中文棋盘继续给人看。
+
+## 常见错误
+
+### 只留下 JSON
+
+删掉中文棋盘后，人就看不到行列号。
+
+- 棋盘文本保留。JSON 只追加在每次打印之后。
+
+## 自测问题
+
+先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。
+
+1. 为什么不从中文棋盘里把 X 和 O 抠出来？
+
+   ::: {.answer}
+   中文排版一变，抠出来的格子就会错。一行 JSON 把九格和终局写明，解析只核对这行的字段。
+   :::
+
+## 本章回顾
+
+你已经能在每次打印后读到版本、序号、九格、轮到谁、状态和胜者。人机参数和双人管道都还能用。

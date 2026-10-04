@@ -1,9 +1,15 @@
 project:
   type: book
+  output-dir: _book
+
+# freeze: auto 将计算结果写入根 _freeze/：它随 main 分支提交，供全项目渲染复用。
+# .quarto/_freeze/ 只是本地隐藏缓存；_book/ 是忽略的静态发布输出，CI 仅发布后者。
+execute:
+  freeze: auto
 
 book:
   title: "C++ 棋盘游戏实践"
-  description: "从一个可验证的终端井字棋开始，逐步学习 C++ 工程、测试和后续工具衔接。"
+  description: "用一局可下完的终端井字棋学习 C++ 工程和测试。"
   site-url: "https://chengzhao-dev.github.io/cpp-board-games"
   repo-url: "https://github.com/chengzhao-dev/cpp-board-games"
   favicon: ".agents/skills/designing-theme/assets/theme/assets/favicon.svg"
@@ -15,18 +21,15 @@ book:
     search: true
   chapters:
     - index.qmd
-    - part: content/tic-tac-toe/index.qmd
+    - part: content/tictactoe/index.qmd
       chapters:
-        - content/tic-tac-toe/01-scope-and-principles.qmd
-        - content/tic-tac-toe/02-toolchain-probe.qmd
-        - content/tic-tac-toe/03-board-and-state.qmd
-        - content/tic-tac-toe/04-move-validation.qmd
-        - content/tic-tac-toe/05-turns-and-terminal-rules.qmd
-        - content/tic-tac-toe/06-cli-and-acceptance.qmd
-        - content/tic-tac-toe/07-incremental-roadmap.qmd
-        - content/tic-tac-toe/08-ai-and-two-player-extension.qmd
-        - content/tic-tac-toe/09-python-and-web-transition.qmd
-        - content/tic-tac-toe/10-completion-and-next-steps.qmd
+        - content/tictactoe/01-rules.qmd
+        - content/tictactoe/02-project-layout.qmd
+        - content/tictactoe/03-board.qmd
+        - content/tictactoe/04-game.qmd
+        - content/tictactoe/05-terminal-play.qmd
+        - content/tictactoe/06-opponent.qmd
+        - content/tictactoe/07-line-protocol.qmd
 
 filters:
   - .agents/skills/writing-quarto/scripts/answer-disclosure.lua
@@ -39,7 +42,7 @@ format:
     grid:
       sidebar-width: 272px
       # 略放宽正文列，减少路径和表格的无谓换行；移动端仍受 max-width 约束。
-      body-width: 920px
+      body-width: 720px
       margin-width: 256px
       gutter-width: 1rem
     respect-user-color-scheme: true

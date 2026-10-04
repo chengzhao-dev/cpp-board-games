@@ -1,0 +1,57 @@
+---
+title: "让电脑产生一次落子"
+---
+
+[构建、测试并运行终端对局](05-terminal-play.qmd)已经验证了双人终端工程。这一章把后手输入替换为对手产生的一次 `Move`，落子仍调用同一个 `Place`。代码在 [02-cpu-opponent](https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tictactoe/02-cpu-opponent)。
+
+## 选择一次落子
+
+[opponent.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/02-cpu-opponent/tictactoe/include/opponent.h) 不打印棋盘，也不读取键盘。`ChooseMove` 读当前对局，返回当前玩家的一次合法 `Move`。
+
+```{.cpp filename="opponent.h"}
+[[nodiscard]] Move ChooseMove(const Game& game, Strength strength);
+```
+
+`ChooseMove` 与 `Game` 在同一个动态库 `tictactoe` 里。终端程序在 `apps/`，轮到 O 时调用它，然后把返回值交给 `Game::Place`。先手仍从标准输入读两个整数。对手只读取当前局面，再把选出的 `Move` 交回调用方。
+
+## 选择对局输入协议
+
+启动后先读一行，`1` 是双人、`2` 是人机；选人机时再读难度。这是本次程序启动时的输入协议，双人管道棋谱把 `1` 放在坐标前面，输出里仍有 `X 获胜`。
+
+```{.bash filename="Ubuntu Bash"}
+printf '%s\n' '1' '0 0' '1 0' '0 1' '1 1' '0 2' | ./build/bin/app
+```
+
+- `1` 随机，只保证落在空棋盘格子上。
+- `2` 启发式，能立刻取胜就取胜，否则挡住对方马上能赢的一步。
+- `3` 极小极大，按终局结果选择对当前玩家更有利的一步。双方都用它从空棋盘下完，结果是平局。
+
+`OpponentTest` 核对能赢就赢、能挡就挡、随机落子合法，以及这场双极小极大平局。
+
+## 常见错误
+
+### 对手直接改棋盘
+
+`ChooseMove` 如果自己写入棋盘，终端里的 `Place` 会看到格子已占用。
+
+- 对手只返回 `Move`。写入只发生在 `Place`。
+
+### 把打印放进井字棋动态库
+
+井字棋动态库的头文件不包含输入输出，`ChooseMove` 只返回 `Move`。
+
+- 打印和读入留在 `apps/`。对手与规则共用动态库 `tictactoe`。
+
+## 自测问题
+
+先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。
+
+1. 为什么人机对局仍调用 `Place`？
+
+   ::: {.answer}
+   对手只产生 `Move`。是否接受这一步、何时终局，仍由 `Place` 决定，和双人读入走的是同一条路径。
+   :::
+
+## 本章回顾
+
+你已经能让后手产生一次 `Move`，并仍用 `Place` 落子，`./build-and-run.sh` 会跑动态库测试、对手测试和双人管道棋谱。下一章在每次打印后追加一行 JSON，把九格和终局写给别的程序。
