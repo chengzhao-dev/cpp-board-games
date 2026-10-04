@@ -1,0 +1,270 @@
+/* cpp-notes 共享主题 · 侧栏 / TOC / 翻页卡片（自 common.css 拆分） */
+
+/* ---------- 侧栏 / TOC ---------- */
+/* 分组标题（sidebar 含分组时生成，向前兼容）：冷灰 docs 风——13px 半粗、不大写、正文色 */
+#quarto-sidebar .sidebar-section .sidebar-item-section > .sidebar-item-text,
+#quarto-sidebar .sidebar-item-section .sidebar-item-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--body-color);
+  padding: 0.95rem 0.75rem 0.4rem;
+}
+/* 侧栏细滚动条（与代码块一致）；底色与页面融为一体，右侧不加竖线 */
+#quarto-sidebar.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  background-color: transparent;
+}
+/* ≤991.98px 时 Quarto 把左侧栏从常驻栏改成覆盖正文的浮层，必须换成不透明底色：
+   透明底会把下方正文透上来叠在侧栏文字上，窄屏和移动端浏览器都读不清。
+   浮层压住正文，右侧补一条发丝线把两层分开；桌面端不进入此分支，观感不变。 */
+@media (max-width: 991.98px) {
+  #quarto-sidebar.sidebar {
+    background-color: var(--page-bg);
+    border-right: 1px solid var(--card-border);
+  }
+}
+#quarto-margin-sidebar {
+  background-color: transparent;
+}
+#quarto-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+#quarto-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+#quarto-sidebar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+/* 全站细滚动条（与侧栏/代码块一致） */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 5px;
+}
+/* 章节链接：通栏条目（margin 0 + 1.5rem 内边距），默认灰字 14px/400/1.4；
+   当前项 = 左侧 2px 竖条 + 弱背景 + 半粗（冷灰 docs 风，无圆角）。
+   非激活项补 2px 透明左边框，激活切换时不抖动 */
+#quarto-sidebar .sidebar-item-text.sidebar-link {
+  display: block;
+  padding: 0.3rem 1.5rem;
+  margin: 0;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--ui-font);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: normal;
+  word-break: keep-all;
+  color: var(--sidebar-fg);
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+}
+#quarto-sidebar .sidebar-item-text.sidebar-link:hover {
+  color: var(--body-color);
+  background-color: var(--sidebar-hover-bg);
+}
+#quarto-sidebar .sidebar-item-text.sidebar-link.active {
+  color: var(--body-color);
+  font-weight: 600;
+  background-color: var(--sidebar-active-bg);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+/* 嵌套子项（章节分组 / 小节）：缩进由条目 padding-left 提供，色条与 part 标题左缘对齐 */
+#quarto-sidebar .sidebar-section .sidebar-item {
+  margin-left: 0;
+}
+#quarto-sidebar .sidebar-section .sidebar-item-text.sidebar-link {
+  padding: 0.3rem 1.5rem 0.3rem 2.25rem;
+  font-family: var(--ui-font);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--sidebar-fg);
+}
+/* 嵌套激活项：提高特异性，避免被上方嵌套规则把 font-weight 覆盖回 500（修左栏当前章节不加粗） */
+#quarto-sidebar .sidebar-section .sidebar-item-text.sidebar-link.active {
+  color: var(--body-color);
+  font-weight: 600;
+  background-color: var(--sidebar-active-bg);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+/* 右 TOC：分组标题 + 滚动高亮（冷灰 docs "On this page" 观感：14px 常规、不大写） */
+.sidebar.margin-sidebar nav[role="doc-toc"] h2#toc-title {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--body-color);
+  margin-bottom: 0.75rem;
+}
+/* 基础项（含嵌套）：13px 灰字、无底色圆角（docs TOC 风）。
+   每项保留 1px 左竖线（Quarto 原生），竖线↔文字 0.75rem（覆盖 Quarto 的 .6rem 并修复贴字），
+   边框色令牌化（替换硬编码 #e9ecef，暗色下可见度走 --card-border） */
+.sidebar.margin-sidebar nav[role="doc-toc"] a.nav-link {
+  color: var(--sidebar-fg);
+  border-left: 1px solid var(--card-border);
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  font-family: var(--ui-font);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.4;
+  border-radius: 0;
+  /* 单行条目高度：1.5rem 恰好容纳一行 0.8125rem/1.4 文字，条目折到两行时
+     高度会明显超过此值，改缩进或 grid 后需人工复看右侧目录是否折行。 */
+  min-height: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+/* hover：正文色（!important 压过 Quarto 产物中的 color:#0969da !important） */
+.sidebar.margin-sidebar nav[role="doc-toc"] a.nav-link:hover {
+  color: var(--body-color) !important;
+  background-color: transparent;
+}
+/* 右 TOC 激活项：黑色竖线 + 加粗正文色（!important 压过 Quarto 的蓝色激活规则），无背景 */
+.sidebar.margin-sidebar nav[role="doc-toc"] a.nav-link.active {
+  color: var(--toc-active) !important;
+  font-weight: 600;
+  background-color: transparent;
+  border-left: 2px solid var(--accent);
+}
+/* 收口非激活态：按下/聚焦/已访问 不再回退到全局 a 的蓝色（修「点击 TOC 变蓝」） */
+.sidebar.margin-sidebar nav[role="doc-toc"] a.nav-link:not(.active):active,
+.sidebar.margin-sidebar nav[role="doc-toc"] a.nav-link:not(.active):focus,
+.sidebar.margin-sidebar nav[role="doc-toc"] a.nav-link:not(.active):visited,
+#quarto-sidebar a.sidebar-link:not(.active):active,
+#quarto-sidebar a.sidebar-link:not(.active):focus,
+#quarto-sidebar a.sidebar-link:not(.active):visited {
+  color: var(--sidebar-fg);
+}
+/* 焦点环改中性灰，避免蓝色描边 */
+.sidebar.margin-sidebar nav[role="doc-toc"] a.nav-link:focus-visible,
+#quarto-sidebar a.sidebar-link:focus-visible {
+  outline-color: var(--sidebar-fg);
+}
+/* 二级嵌套：竖线占位 0.75rem + 半级缩进。缩进表达层级即可，
+   每级整整 0.75rem 会在窄侧栏里把三级条目的文字宽度压到折行。 */
+.sidebar.margin-sidebar nav[role="doc-toc"] ul ul > li > a.nav-link {
+  padding-left: calc(0.75rem + var(--toc-indent) * 0.5);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--sidebar-fg);
+}
+/* 三级嵌套（h4）：更深缩进 */
+.sidebar.margin-sidebar nav[role="doc-toc"] ul ul ul > li > a.nav-link {
+  padding-left: calc(0.75rem + var(--toc-indent));
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--sidebar-fg);
+}
+/* prev/next 章节导航（卡片式）：文字黑色，箭头改用 < 与 > 符号 */
+nav.page-navigation {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+.nav-page.nav-page-previous,
+.nav-page.nav-page-next {
+  flex: 1;
+}
+.nav-page .pagination-link {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  color: var(--body-color);
+  font-size: 0.85rem;
+  padding: 0.9rem 1.1rem;
+  min-height: 3.5rem;
+}
+.nav-page .pagination-link .bi {
+  display: none; /* 隐藏 Bootstrap 图标，改用 < > */
+}
+.nav-page-previous .pagination-link::before {
+  content: "<";
+  margin-right: 0.5rem;
+}
+.nav-page-next .pagination-link::after {
+  content: ">";
+  margin-left: 0.5rem;
+}
+.nav-page .pagination-link:hover {
+  color: var(--accent);
+  border-color: var(--card-hover-border);
+}
+.nav-page .nav-page-text {
+  color: var(--body-color);
+}
+.nav-page .pagination-link:hover .nav-page-text {
+  color: var(--accent);
+}
+
+.nav-page .pagination-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767.98px) {
+  nav.page-navigation {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .nav-page .pagination-link {
+    min-height: 3rem;
+    padding: 0.75rem 0.9rem;
+  }
+}
+
+
+/* 侧栏 part 分组标题（Quarto 渲染为顶级 .sidebar-item-section）：作为分组分隔标签 */
+/* 前缀 #quarto-sidebar 以提升优先级，压过通用链接规则（含 ID） */
+#quarto-sidebar ul.list-unstyled.mt-1 > li.sidebar-item-section {
+  margin-top: 1.25rem;
+}
+/* 首个 part（紧跟首页（cpp-notes））：留出呼吸位，又不过分离群 */
+#quarto-sidebar ul.list-unstyled.mt-1 > li.sidebar-item-section:first-child {
+  margin-top: 0.375rem;
+}
+/* 兜底：多 part 书籍下 Quarto 可能注入的分隔线，统一隐藏以保持 quarto.org 简洁观感 */
+#quarto-sidebar hr.sidebar-divider,
+#quarto-sidebar .sidebar hr {
+  display: none;
+}
+/* part 标题与折叠箭头垂直居中对齐（修「准备开发环境与工具链」箭头错位） */
+#quarto-sidebar ul.list-unstyled.mt-1 > li.sidebar-item-section > .sidebar-item-container {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+#quarto-sidebar ul.list-unstyled.mt-1 > li.sidebar-item-section > .sidebar-item-container > .sidebar-item-text.sidebar-link {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--ui-font);
+  color: var(--body-color);
+  padding: 0.375rem 1.5rem;
+}
+/* 嵌套分组 ul：清 Bootstrap 的 ul 默认下边距，组内节奏由条目 padding 承担 */
+#quarto-sidebar ul.sidebar-section {
+  margin: 0;
+}
+#quarto-sidebar ul.list-unstyled.mt-1 > li.sidebar-item-section > .sidebar-item-container > .sidebar-item-text.sidebar-link:hover {
+  color: var(--body-color);
+  background: var(--sidebar-hover-bg);
+}

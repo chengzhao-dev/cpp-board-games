@@ -1,0 +1,208 @@
+/* cpp-notes 共享主题 · 代码块 / 行号 / 行内代码 / 复制按钮 */
+
+pre {
+  font-family: var(--mono-font);
+  color: var(--code-fg);
+  background-color: var(--code-bg);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--code-font-size);
+  line-height: var(--code-line-height);
+  font-weight: 400;
+  overflow-x: auto;
+  font-variant-ligatures: none;
+  tab-size: 4;
+  -moz-tab-size: 4;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+pre::-webkit-scrollbar { height: 8px; width: 8px; }
+pre::-webkit-scrollbar-track { background: transparent; }
+pre::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+
+/*
+ * 代码块外观只有一个控制点：语言代码块被 div.sourceCode 包裹，外框、圆角归该容器；
+ * pre 只负责底色、内边距与滚动。没有 div 包裹的裸 pre（预期输出、目录树）自己承担
+ * 边框与圆角，两类块的观感一致，也不会出现框中框。
+ */
+pre.sourceCode,
+pre:not(.sourceCode) {
+  background-color: var(--code-bg) !important;
+  padding: var(--code-padding);
+  overflow: auto;
+}
+pre:not(.sourceCode) {
+  border: 1px solid var(--code-border);
+  border-radius: var(--code-radius);
+}
+
+pre.sourceCode code,
+pre:not(.sourceCode) code {
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--code-font-size);
+  font-weight: inherit;
+  line-height: var(--code-line-height);
+  /* 与 Quarto 注入的 pre > code.sourceCode 取同一套换行语义，否则
+     站点声明的 code-overflow: wrap 被同特异的本规则静默取消。 */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+pre.sourceCode code > span { line-height: var(--code-line-height); }
+
+/* GitHub 风格高亮只区分颜色，不用额外字重强调命令名或输出 token。 */
+pre.sourceCode code span { font-weight: 400; }
+
+/*
+ * 颜色只由 GitHub 风格的语义 token 提供。不要按字符、位置或命令名
+ * 覆盖 span，否则同一行的括号、版本号和普通文本会出现突兀的颜色切换。
+ */
+/* 语言代码块和普通文本代码块共享布局；只有语言代码块保留语义 token。 */
+pre.sourceCode,
+div.sourceCode {
+  text-align: left;
+  font-family: var(--mono-font);
+  font-size: var(--code-font-size);
+  line-height: var(--code-line-height);
+  tab-size: 4;
+  -moz-tab-size: 4;
+}
+
+div.sourceCode {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--code-bg);
+  color: var(--code-fg);
+  font-family: var(--mono-font);
+  font-size: var(--code-font-size);
+  line-height: var(--code-line-height);
+  text-align: left;
+}
+div.sourceCode code {
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--code-font-size);
+  line-height: inherit;
+}
+
+/*
+ * Quarto 的 filename 属性生成“标题条 + 代码体”。标题条负责来源环境或真实
+ * 文件名，代码体继续使用统一的外框和语法高亮；两层不能各自画完整边框，
+ * 否则顶部会出现双线或圆角断裂。
+ */
+.code-with-filename .code-with-filename-file {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--code-title-padding);
+  padding-right: 3rem;
+  background-color: var(--code-title-bg);
+  border: 1px solid var(--code-border);
+  border-bottom: 0;
+  border-radius: var(--code-radius) var(--code-radius) 0 0;
+}
+
+/* Quarto 的深色规则是 .quarto-dark .code-with-filename…，提高一层作用域才能
+   让标题条继续使用项目令牌，而不是回退到内置的 #555。 */
+body.quarto-dark .code-with-filename .code-with-filename-file {
+  background-color: var(--code-title-bg);
+}
+
+.code-with-filename .code-with-filename-file pre {
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  border: 0;
+  border-radius: 0;
+}
+
+.code-with-filename .code-with-filename-file strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--code-title-fg);
+  font-family: var(--mono-font);
+  font-size: var(--code-title-font-size);
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code-with-filename div.sourceCode,
+.code-with-filename > pre {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 0;
+}
+
+pre code { background-color: transparent !important; border: none; padding: 0; }
+pre, code { letter-spacing: normal; }
+
+/* 行号 */
+pre.sourceCode.numberSource {
+  margin-left: 0;
+  padding-left: 2.5em;
+  box-shadow: inset 2.5em 0 0 var(--line-num-bg);
+}
+pre.numberSource code { counter-reset: source-line 0; }
+pre.numberSource code > span { position: relative; left: 0; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before {
+  content: counter(source-line);
+  position: relative;
+  left: -2.5em;
+  display: inline-block;
+  width: 2.5em;
+  padding: 0 0.3em 0 0;
+  text-align: right;
+  color: var(--line-num-color);
+  text-decoration: none;
+  border-right: 1px solid var(--code-border);
+  vertical-align: baseline;
+  user-select: none;
+}
+pre.sourceCode code > span:hover { background-color: var(--line-hover-bg); }
+
+#quarto-document-content :not(pre) > code {
+  background-color: var(--inline-code-bg);
+  color: var(--inline-code-fg);
+  border-radius: var(--radius-sm);
+  padding: 0.15em 0.4em;
+  font-size: 0.875em;
+  font-family: var(--mono-font);
+}
+
+/* Quarto 1.10：复制按钮与代码块同为 scaffold 的直接子元素。 */
+.code-copy-button {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  background-color: var(--copy-btn-bg);
+  border: 1px solid var(--copy-btn-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity var(--transition), background-color var(--transition), color var(--transition);
+}
+.code-copy-outer-scaffold:hover .code-copy-button,
+.code-copy-outer-scaffold:focus-within .code-copy-button,
+.code-copy-button:focus { opacity: 1; }
+
+/* 触屏无 hover：始终可见，否则移动端无法复制。 */
+@media (hover: none) { .code-copy-button { opacity: 1; } }
+.code-copy-button:hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--link-color);
+  border-color: var(--code-border);
+}
+.code-copy-button-checked { opacity: 1; color: var(--link-color); }

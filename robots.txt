@@ -1,0 +1,1 @@
+Sitemap: https://chengzhao-dev.github.io/cpp-board-games/sitemap.xml

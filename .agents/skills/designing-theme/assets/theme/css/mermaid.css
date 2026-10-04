@@ -1,0 +1,106 @@
+/* cpp-notes 共享主题 · mermaid 图表（冷灰 docs 风） */
+
+/* 依赖条件：_quarto.yml 不配置 format.html.mermaid.theme——此时 quarto-diagram 的
+   mermaid-init.js 会注入内置 themeCSS（mkdocs-material 适配版），全部取色走
+   --mermaid-* 变量；下方变量只引用主题令牌，明暗随 body class 即时切换。
+   若该路径失效（页面存在 <meta name="mermaid-theme"> 时主题色被烧进 SVG），
+   由文件末尾的 !important 覆盖兜底，两套取值一致，视觉等价。 */
+body {
+  --mermaid-bg-color: transparent;
+  --mermaid-fg-color: var(--text-secondary);
+  --mermaid-fg-color--lighter: var(--card-border);
+  --mermaid-fg-color--lightest: var(--code-bg);
+  --mermaid-node-bg-color: var(--surface-raised);
+  --mermaid-node-fg-color: var(--card-border);
+  --mermaid-edge-color: var(--text-secondary);
+  --mermaid-label-fg-color: var(--body-color);
+  --mermaid-label-bg-color: var(--page-bg);
+  --mermaid-font-family: var(--ui-font);
+  --mermaid-font-weight: 400;
+}
+
+/* ---------- 排版守卫：页面排版规则不进 SVG ----------
+   base.css 的 #quarto-document-content p{overflow-wrap:break-word;text-wrap:pretty;line-break:strict}
+   会命中 mermaid 标签内部的 <p>，两处都致命：
+   ① overflow-wrap:break-word 在实测宽度超出 mermaid 测量值时强行断行，框高按测量值分配，
+      第二行文字压到框底；② text-wrap 简写自带 mode=wrap，直接声明在 <p> 上会压掉从
+      标签 div（内联 white-space:nowrap / break-spaces）继承来的折行模式，让单行标签也折行。
+   守卫只修 <p>（div/span 不得碰——div 的折行模式就来自它自己的内联 white-space，
+   任何 text-wrap 声明都会把它覆盖成继承值）：text-wrap:inherit 让 <p> 恢复继承
+   div 的折行意图（单行 nowrap、多行 break-spaces），断行权限交还 mermaid 自身；
+   配合每个 mermaid 块首的 %%{init}%% 字体指令（测量=渲染）使用，写法见仓库
+   .agents/knowledge/quarto-writing/rendering/mermaid-conventions.md。
+   注意：不能写 text-wrap:initial —— initial 的 mode 是 wrap，等于强制可折行（已实测）。 */
+#quarto-document-content svg.mermaid-js p {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  line-break: auto !important;
+  text-wrap: inherit !important;
+}
+
+/* 图表容器：SVG 水平居中 + 不超栏宽（自 content.css「正文组件」迁入并补 max-width） */
+#quarto-document-content .cell-output-display figure.figure svg {
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- 兜底：主题色被烧进 SVG 时强制对齐同一套令牌（特异性 + !important 压过 SVG 内部 <style>） ----------
+   注：mermaid v10 把烘焙主题规则用 SVG id 作用域化（#mermaid-N .node rect，特异性高于
+   quarto 注入的变量版 themeCSS），故实际生效的是本段；上方变量仍保留——两条路径取值一致。 */
+#quarto-document-content svg.mermaid-js {
+  font-family: var(--ui-font) !important; /* 压过烘焙的 #mermaid-N{font-family:"trebuchet ms"...} */
+}
+#quarto-document-content svg.mermaid-js .node > rect,
+#quarto-document-content svg.mermaid-js .node > polygon,
+#quarto-document-content svg.mermaid-js .node > circle,
+#quarto-document-content svg.mermaid-js .node > ellipse {
+  fill: var(--surface-raised) !important;
+  stroke: var(--card-border) !important;
+}
+#quarto-document-content svg.mermaid-js .nodeLabel,
+#quarto-document-content svg.mermaid-js .nodeLabel p,
+#quarto-document-content svg.mermaid-js .nodeLabel span {
+  color: var(--body-color) !important;
+  font-family: var(--ui-font) !important;
+  font-weight: 400 !important;
+}
+#quarto-document-content svg.mermaid-js .edgePath .path,
+#quarto-document-content svg.mermaid-js .flowchart-link {
+  stroke: var(--text-secondary) !important;
+}
+#quarto-document-content svg.mermaid-js .edgePath .arrowheadPath {
+  fill: var(--text-secondary) !important;
+  stroke: none !important;
+}
+/* 边标签：外层 g / div.labelBkg / span / p 四层都可能画底色，全部压成页面底色
+   （不透明，遮住穿过的连线；观感即「无底色文字」） */
+#quarto-document-content svg.mermaid-js .edgeLabel,
+#quarto-document-content svg.mermaid-js .edgeLabel rect,
+#quarto-document-content svg.mermaid-js .edgeLabel span,
+#quarto-document-content svg.mermaid-js .edgeLabel p,
+#quarto-document-content svg.mermaid-js .edgeLabel .label div,
+#quarto-document-content svg.mermaid-js .labelBkg {
+  background-color: var(--page-bg) !important;
+  fill: var(--page-bg) !important;
+  color: var(--text-secondary) !important;
+}
+#quarto-document-content svg.mermaid-js .edgeLabel span,
+#quarto-document-content svg.mermaid-js .edgeLabel p {
+  color: var(--text-secondary) !important;
+  font-family: var(--ui-font) !important;
+}
+/* SVG text 版标签（htmlLabels 关闭时）与 cluster（子图）一并令牌化 */
+#quarto-document-content svg.mermaid-js .label text {
+  fill: var(--body-color) !important;
+}
+#quarto-document-content svg.mermaid-js .cluster rect {
+  fill: var(--code-bg) !important;
+  stroke: var(--card-border) !important;
+}
+#quarto-document-content svg.mermaid-js .cluster text,
+#quarto-document-content svg.mermaid-js .cluster span {
+  fill: var(--body-color) !important;
+  color: var(--body-color) !important;
+}

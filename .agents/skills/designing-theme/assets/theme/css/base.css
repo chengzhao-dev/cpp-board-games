@@ -1,0 +1,368 @@
+/* cpp-notes 共享主题 · 基础排版（标题块 / 标题 / 垂直节奏 / 链接；自 common.css 拆分） */
+
+/* ---------- 标题块（章节标题 + 首页引导段） ---------- */
+/* 标题块内面包屑（起步：环境与工具链 > 章节）：与标题之间留白；
+   桌面端（≥992px）按设计隐藏，此间距仅窄屏可见时生效 */
+.quarto-title-breadcrumbs {
+  margin-bottom: 0.5rem;
+}
+/* 标题块（章节/首页通用）：覆盖 Quarto 默认居中 + 其更高优先级的 margin-bottom:0，
+    用同等特异性选择器（组件 css 后加载）确保生效
+    —— 间距控制点：
+       · 章节页 标题→首段引言：由本规则的 line-height / margin-bottom 控制（见下方 #quarto-document-content > p:first-of-type）
+       · 首页 标题→描述：由下方 #title-block-header .description 的 margin-top 控制 */
+#title-block-header.quarto-title-block.default .quarto-title .title {
+  font-size: 2rem;   /* 32px，GitHub Markdown h1 */
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-wrap: balance;
+  text-align: left;        /* 覆盖默认 theme 居中，与左对齐正文/引言成组 */
+  margin-bottom: 0;        /* 章节页标题→首段进一步收紧；首页间距交由 .description 控制 */
+}
+/* hero eyebrow（首页眉标，gitcn「GITHUB SKILLS」同款：英文大写标签 + 绿点在文字后）。
+   .hero-eyebrow 与标题块同为 #quarto-document-content 直接子级，
+   用 flex + order 将其提到标题（h1+description）之前。 */
+#quarto-document-content:has(.hero-eyebrow) {
+  display: flex;
+  flex-direction: column;
+}
+#quarto-document-content:has(.hero-eyebrow) .hero-eyebrow {
+  order: -1;
+  margin-top: 0;          /* 抵消下方 *+* 的 1.25rem */
+  margin-bottom: 0.9rem;  /* 眉标→标题间距 */
+}
+#quarto-document-content:has(.hero-eyebrow) #title-block-header {
+  order: 0;
+}
+/* 首页标题 36px（gitcn getting-started hero text-4xl），覆盖内容页默认 30px */
+#quarto-document-content:has(.hero-eyebrow) #title-block-header .quarto-title .title {
+  font-size: 2.25rem;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text-secondary);
+}
+.hero-eyebrow p {
+  margin: 0;
+}
+.hero-eyebrow::after {
+  content: "";
+  width: 0.5rem;
+  height: 0.625rem;
+  background-color: var(--dot-accent);
+}
+#title-block-header .description {
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.7;
+  max-width: 65ch;
+  margin: 0 0 1.8rem;
+}
+#title-block-header .description p {
+  margin-bottom: 0;
+}
+#title-block-header .quarto-title-meta {
+  margin: 1.5rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+/* 无元数据（作者/日期）时隐藏空 meta，避免章节页留白空隙 */
+#title-block-header .quarto-title-meta:not(:has(.quarto-title-meta-contents > *)) {
+  display: none;
+}
+
+/* ---------- 标题：用字重与尺寸区分阅读层级 ---------- */
+h1,
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-wrap: balance;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--card-border);
+}
+h1 { font-size: 2rem; }
+h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+h5 {
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+/* h2 下边框由 Quarto/Bootstrap 主题默认提供；索引页关闭分隔线。 */
+body.index-page #quarto-document-content h2 {
+  border-bottom: 0;
+}
+body.homepage #quarto-document-content h2 {
+  border-bottom: 0;
+}
+body.homepage #quarto-document-content h1 {
+  border-bottom: 0;
+}
+
+/* ---------- 垂直节奏（上边距节奏，参考 mdBook / React / Vue 的 prose 模式） ----------
+   Quarto 把每个 h2 章节内容包在 <section class="level2"> 里，因此对主容器与各 section
+   的直属块级子元素统一重置 margin，用上边距节奏控制间距
+   —— 统一控制点：下方 #quarto-document-content > * + * 的 1.125rem 是【正文段落间距唯一来源】，
+      对 content/*.qmd 与首页 index.qmd 一视同仁（二者正文都在 #quarto-document-content 内），
+      故章节与首页段落/列表间距天然一致；章节标题间距见下方 h2/h3 规则。 */
+#quarto-document-content > *,
+#quarto-document-content section > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+/* 正文块间距略放宽，避免段落、列表和代码块挤成连续盒子。 */
+#quarto-document-content > * + *,
+#quarto-document-content section > * + * {
+  margin-top: 1.55rem;
+}
+#quarto-document-content p,
+#quarto-document-content li {
+  line-height: 1.75;
+}
+/* 代码块↔代码块：额外 +0.4rem，命令序列更疏朗 */
+#quarto-document-content > :is(.code-copy-outer-scaffold, pre) + :is(.code-copy-outer-scaffold, pre),
+#quarto-document-content section > :is(.code-copy-outer-scaffold, pre) + :is(.code-copy-outer-scaffold, pre) {
+  margin-top: 1.5rem;
+}
+/* 代码块上方/下方的说明（caption）：次要灰 + 略小，贴近其描述的代码块；
+   代码块本身保持高对比正文色（切勿把灰色涂到 pre 上） */
+.code-caption {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  margin-bottom: 0;
+}
+/* 代码块 ↔ 正文：上下对称统一 1.375rem（跟随正文块间距） */
+#quarto-document-content > :is(.code-copy-outer-scaffold, pre) + :is(p, .code-caption),
+#quarto-document-content section > :is(.code-copy-outer-scaffold, pre) + :is(p, .code-caption) {
+  margin-top: 1.375rem;
+}
+#quarto-document-content > :is(p, .code-caption) + :is(.code-copy-outer-scaffold, pre),
+#quarto-document-content section > :is(p, .code-caption) + :is(.code-copy-outer-scaffold, pre) {
+  margin-top: 1.375rem;
+}
+/* 列表项由 li 自身承担块间距，上面的 section 直属子元素规则覆盖不到代码块后的验证句。 */
+#quarto-document-content li > :is(.code-copy-outer-scaffold, .code-with-filename, pre, div.sourceCode) + p {
+  margin-top: var(--code-followup-gap);
+}
+/* 说明段紧贴其描述代码块（覆盖上方间距） */
+#quarto-document-content > .code-caption + :is(.code-copy-outer-scaffold, pre),
+#quarto-document-content section > .code-caption + :is(.code-copy-outer-scaffold, pre) {
+  margin-top: 0.5rem;
+}
+#quarto-document-content :is(h2, h3, h4) + .callout {
+  margin-top: 0.75rem;
+}
+#quarto-document-content :is(.code-copy-outer-scaffold, pre) + .callout,
+#quarto-document-content .callout + :is(.code-copy-outer-scaffold, pre) {
+  margin-top: 1rem;
+}
+/* h2 间距：保持章节之间的清晰节奏 */
+#quarto-document-content > h2,
+#quarto-document-content section > h2 {
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+/* 章节页首段引言：进一步拉近与标题的间距（标题块 margin-bottom 已为 0，这里再上拉一点）
+   —— 间距控制点：标题块 line-height/margin-bottom（上方 #title-block-header… .title）＋ 此处首段 margin-top */
+#quarto-document-content > p:first-of-type {
+  margin-top: 0.5rem;      /* 标题→首段：干净正间距（取代负 margin hack） */
+}
+#quarto-document-content > h3,
+#quarto-document-content section > h3 {
+  margin-top: 2rem;
+}
+#quarto-document-content > h4,
+#quarto-document-content > h5,
+#quarto-document-content section > h4,
+#quarto-document-content section > h5 {
+  margin-top: 2rem;
+}
+/* 标题紧接的首段/列表收紧，让「标题—首段」成组（段→标题仍保留上方疏朗留白） */
+#quarto-document-content :is(h2, h3, h4) + :is(p, ul, ol) {
+  margin-top: 0.625rem;
+}
+/* 中文段落健壮性：长英文/代码/URL 不撑破列宽；避免末行孤字；CJK 换行规范 */
+#quarto-document-content p,
+#quarto-document-content li,
+#quarto-document-content blockquote,
+#quarto-document-content dd {
+  overflow-wrap: break-word;
+  text-wrap: pretty;       /* 修复 text-wrap 非继承导致段落未生效的问题 */
+  line-break: strict;      /* CJK 标点处不当断行 */
+}
+/* 标题悬浮锚点 #（anchorJS 注入）：次要灰（docs 标题锚点不着色，可见性由 anchorJS 控制） */
+.anchorjs-link {
+  color: var(--text-secondary);
+  transition: color var(--transition);
+}
+.anchorjs-link:hover {
+  color: var(--body-color);
+}
+
+/* 章节号弱化置灰 */
+.quarto-section-identifier {
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+/* ---------- 链接 ---------- */
+a {
+  color: var(--link-color);
+}
+a:hover {
+  text-decoration: underline;
+}
+/* r4ds：代码里的链接用细下划线 */
+code a:any-link {
+  text-decoration: underline;
+  text-decoration-color: var(--link-underline);
+  text-decoration-thickness: 1px;
+}
+
+/* ---------- 杂项（原 misc.css：过渡 / 小屏 / 页脚 / 返回顶部 / 打印） ---------- */
+#quarto-sidebar .sidebar-item-text.sidebar-link,
+.sidebar.margin-sidebar nav[role="doc-toc"] a,
+.landing-card,
+.nav-page .pagination-link {
+  transition: var(--transition);
+}
+
+@media (max-width: 767.98px) {
+  body {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+  pre {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar nav a,
+  .toc nav a {
+    padding: 0.35rem 0;
+  }
+}
+
+.footer {
+  grid-column: 1 / -1;
+  color: var(--text-secondary);
+  background-color: var(--code-bg);
+  font-family: var(--ui-font);
+  font-weight: 400;
+  font-size: 0.75rem;
+  border-radius: 0;
+  padding: 1.25rem 1rem 1rem;
+  margin-top: 3rem;
+  text-align: center;
+}
+
+body.quarto-light .navbar,
+body.quarto-dark .navbar {
+  --bs-navbar-color: var(--navbar-fg);
+  --bs-navbar-hover-color: var(--navbar-fg);
+  --bs-navbar-active-color: var(--navbar-fg);
+  --bs-navbar-brand-color: var(--navbar-fg);
+  box-shadow: none;
+}
+
+.footer a {
+  color: var(--text-link);
+}
+.footer a:hover {
+  text-decoration: underline;
+}
+
+#back-to-top {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background-color: var(--card-bg);
+  color: var(--accent);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.5rem);
+  transition: opacity var(--transition), transform var(--transition),
+    background-color var(--transition);
+  box-shadow: var(--card-shadow);
+  z-index: 1000;
+}
+#back-to-top.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+#back-to-top:hover {
+  background-color: var(--sidebar-hover-bg);
+}
+@media (prefers-reduced-motion: reduce) {
+  #back-to-top {
+    transition: none;
+  }
+}
+
+pre,
+div.sourceCode,
+.callout,
+.table,
+blockquote {
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+@media print {
+  /* 只隐藏复制按钮：Quarto 1.10 起 .code-copy-outer-scaffold 包裹着代码本身，
+     把它一起 display:none 会导致打印/导出 PDF 时所有代码块消失。 */
+  #quarto-sidebar,
+  #quarto-margin-sidebar,
+  .nav-page,
+  .code-copy-button,
+  #back-to-top {
+    display: none;
+  }
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+  }
+  pre {
+    break-inside: avoid;
+  }
+  #quarto-document-content a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    word-break: break-all;
+  }
+}

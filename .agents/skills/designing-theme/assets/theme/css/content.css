@@ -1,0 +1,271 @@
+/* cpp-notes 共享主题 · 正文内容（表格 / 引用 / 正文组件与排版；自 common.css 拆分） */
+
+/* ---------- 表格（冷灰 docs：无外框、表头底线 + 行 hairline） ---------- */
+.table {
+  --bs-table-hover-bg: transparent;
+  /* 表体与正文同档：表格字号一旦小于正文，正文里嵌表格就会出现两次字级跳变，
+     扫读时表格被读成「另一类内容」。表头小一号但不加大写（中文表头 uppercase 无意义且显僵硬）。 */
+  font-size: 1rem;
+  border-collapse: collapse;
+  display: block; /* 宽表横向滚动，避免移动端溢出 */
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: none;
+  border-radius: 0;
+  font-variant-numeric: tabular-nums;
+}
+.table > :not(caption) > * > * {
+  padding: 0.5rem 1rem;
+  vertical-align: baseline;
+  border-bottom: 1px solid var(--table-hairline);
+}
+/* 首尾列贴边（docs 表格无左右内边距） */
+.table > :not(caption) > * > :first-child {
+  padding-inline-start: 0;
+}
+.table > :not(caption) > * > :last-child {
+  padding-inline-end: 0;
+}
+.table thead th {
+  background-color: transparent;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-align: left;
+  padding-top: 0;
+  border-bottom: 1px solid var(--table-border);
+}
+
+/* 短对照表保持全宽左对齐（与正文同宽，不居中收窄）；左对齐便于中文术语扫读。
+   宽表仍由通用 .table 规则负责滚动，不要给多列/长单元格表套本类。 */
+.compact-table {
+  overflow-x: auto;
+}
+.compact-table .table {
+  display: table;
+  width: 100%;
+  max-width: 100%;
+}
+.compact-table .table th,
+.compact-table .table td {
+  text-align: left;
+  padding-inline: 1.25rem;
+}
+.compact-table .table > :not(caption) > * > :first-child {
+  padding-inline-start: 0;
+}
+.compact-table .table > :not(caption) > * > :last-child {
+  padding-inline-end: 0;
+}
+
+/* ---------- 引用块（> 标记，用于「注意」等提示；GitHub markdown-body 灰风：灰边 + 灰字，无彩色底） ---------- */
+blockquote,
+blockquote.blockquote {
+  font-size: 0.9375rem; /* 略小于正文（次要提示定位），并压掉 Quarto .blockquote 命中的 Bootstrap 1.25rem */
+  margin: 1.375rem 0;
+  border-left: 3px solid var(--quote-border);
+  background-color: var(--quote-bg);
+  color: var(--text-secondary);
+  padding: 0 1rem;
+  font-style: normal;
+}
+/* 分隔线（---）样式与节奏统一在下方「正文排版」段定义（docs 风：每个小节标题前一条细线，上方 3.375rem） */
+
+/* ---------- 正文组件润色 ---------- */
+/* 正文链接：强调色 + 细下划线 */
+#quarto-document-content a {
+  color: var(--text-link);
+  text-decoration: underline;
+  text-decoration-color: var(--text-underline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+#quarto-document-content a:hover {
+  color: var(--link-color);
+  text-decoration-color: var(--link-underline);
+}
+/* 图片 / 图：圆角 + 细边 + 居中图注 */
+#quarto-document-content img:not(.no-border) {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--code-border);
+  max-width: 100%;
+}
+#quarto-document-content figure figcaption {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+/* jupyter 单元的图必须用 IPython.display.HTML 输出保持 SVG 内联：image/svg+xml 输出会被
+   Quarto 外置成 <img>，无法继承站点 data-bs-theme 明暗与文档字体。text/html 输出不被
+   Quarto 识别为图像，fig-cap 退化为图后一个裸 <p>，这里按 figcaption 同款图注样式居中。 */
+#quarto-document-content .cell-output-display > svg.coords-grid + p {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+/* mermaid / dot 图表样式见 mermaid.css（SVG 居中规则已迁入） */
+/* 坐标图：GitHub 文档图的做法是抬起一块浅底、不加实线外框。
+   内联 SVG 用 currentColor，跟着正文颜色走；独立 svg 文件再用
+   prefers-color-scheme 兜住系统明暗。 */
+#quarto-document-content :is(figure, .cell-output-display) svg.coords-grid {
+  display: block;
+  margin-inline: auto;
+  max-width: min(100%, 20rem);
+  height: auto;
+  color: var(--body-color);
+  background: var(--surface-raised);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+/* 代码块后正文强制 UI 字体，避免继承 mono 栈造成中文观感不一致 */
+#quarto-document-content :is(.code-copy-outer-scaffold, .code-with-filename, pre) + :is(p, ul, ol),
+#quarto-document-content section :is(.code-copy-outer-scaffold, .code-with-filename, pre) + :is(p, ul, ol) {
+  font-family: var(--ui-font);
+}
+/* 键盘键 */
+#quarto-document-content kbd {
+  font-family: var(--mono-font);
+  font-size: 0.85em;
+  background: var(--inline-code-bg);
+  border: 1px solid var(--code-border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.4em;
+}
+
+/* 防御性：可能写到但尚未使用的组件，统一走主题 token，避免裸 Bootstrap 默认风 */
+mark {
+  background-color: var(--mark-bg); /* 明暗两值见 tokens.css（暗色深金底，保证对比度） */
+  color: inherit;
+  padding: 0 0.15em;
+  border-radius: 3px;
+}
+dl {
+  margin: 1.2rem 0;
+}
+dt {
+  font-weight: 600;
+  margin-top: 0.6rem;
+}
+dd {
+  margin-left: 1.2rem;
+  color: var(--text-secondary);
+}
+#quarto-document-content details.answer-disclosure {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+  margin: 1.2rem 0;
+}
+#quarto-document-content details.answer-disclosure > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+#quarto-document-content details.answer-disclosure[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+/* ---------- 正文排版 ---------- */
+/* 平滑滚动 + 锚点不被固定头遮挡（参考 Vue/React 文档体验） */
+html {
+  color-scheme: light dark;
+  scroll-behavior: smooth;
+  scroll-padding-top: 7rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+/* 选区配色 */
+::selection {
+  background-color: var(--selection-bg);
+}
+/* 键盘导航焦点可见 */
+:focus-visible {
+  outline: 2px solid var(--link-color);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* 列表项间距：li+li 0.625rem、嵌套列表上距 0.625rem（docs 节奏；仅正文内容，不碰侧栏） */
+#quarto-document-content li + li {
+  margin-top: 0.625rem;
+}
+#quarto-document-content li > ul,
+#quarto-document-content li > ol {
+  margin-top: 0.625rem;
+}
+/* 列表内「标题段 + 正文段」：粗体首段仅当其为唯一子元素（拆分写法 - **标题** 独占行）
+   时渲染为块级小标题；同行写法 - **标题**：正文 的 strong 后接文字，非 only-child，不受影响。
+   这样既统一「长项拆分」观感，又不误伤普通加粗列表项。 */
+#quarto-document-content li > p:first-child > strong:only-child {
+  display: block;
+  font-weight: 600;
+  color: var(--body-color);
+  margin-bottom: 0.15rem;
+}
+/* 同一 li 内标题段↔正文段间距（全局 > * + * 规则够不到 li > p，这里补回 docs 节奏） */
+#quarto-document-content li > p + p {
+  margin-top: 0.35rem;
+}
+/* 正文基色统一到 token，避免与 h1–h3 微妙色差 */
+#quarto-document-content {
+  color: var(--body-color);
+  letter-spacing: normal;
+  text-spacing-trim: trim-start;
+  text-autospace: normal;
+}
+/* 正文 strong：颜色 + 加粗双重强调。文楷 Screen 只有 400 一个字面且 body 禁合成
+   （font-synthesis: none，见 tokens.css），这里单独对 strong 放开合成加粗；
+   拉丁字符命中 Fixel Text 真实 700。标题与 UI 不在作用域，维持禁合成。 */
+#quarto-document-content strong {
+  font-weight: 700;
+  font-synthesis: weight;
+  color: var(--emphasis-color);
+}
+pre,
+code {
+  text-autospace: no-autospace;
+}
+
+/* GitHub Markdown 正文约束：普通段落使用正文列的实际宽度，组件不撑破三栏布局。
+   页面列宽由 Quarto grid 与 --content-width 决定；不要再用 75ch 对段落做第二次限宽。 */
+#quarto-document-content {
+  max-width: min(100%, var(--content-width));
+  min-width: 0;
+}
+#quarto-document-content > p,
+#quarto-document-content section > p {
+  max-width: 100%;
+}
+#quarto-document-content :is(pre, table, figure, .callout, .cell) {
+  max-width: 100%;
+}
+#quarto-document-content hr {
+  border: 0;
+  border-top: 1px solid var(--card-border);
+  margin: 2rem 0;
+  opacity: 1;
+}
+/* 锚点 / 深链跳转后的目标标题轻微高亮，便于定位（复用行 hover 的浅强调底） */
+#quarto-document-content :is(h2, h3, h4, h5, h6):target {
+  scroll-margin-top: 7rem;
+  background-color: var(--line-hover-bg);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.35em;
+  margin-left: -0.35em;
+}

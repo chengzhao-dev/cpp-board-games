@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="用一局可下完的终端井字棋学习 C++ 工程和测试。">
+
+<title>定义棋盘与格子状态 – C++ 棋盘游戏实践</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../content/tictactoe/04-game.html" rel="next">
+<link href="../../content/tictactoe/02-project-layout.html" rel="prev">
+<link href="../../.agents/skills/designing-theme/assets/theme/assets/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-50e11a0eea4fc09e44b034133925b24b.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-ae2600701c9dcd13a473aac5bc90ffc6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-50e11a0eea4fc09e44b034133925b24b.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-9172779cb1b6cc187cd70aee668e1aac.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-fdc29467b34abf11f0438a482998bd27.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-9172779cb1b6cc187cd70aee668e1aac.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<!-- 仅注入移动端浏览器地址栏主题色；自托管 @font-face 在 css/fonts.css。 -->
+<meta name="theme-color" id="meta-theme-color" content="#ffffff">
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/fonts.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/tokens.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/palettes/github/tokens.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/base.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/code.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/content.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/mermaid.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/nav.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/sidebar.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/callouts.css">
+<link rel="stylesheet" href="../../.agents/skills/designing-theme/assets/theme/css/landing.css">
+<meta property="og:title" content="定义棋盘与格子状态 – C++ 棋盘游戏实践">
+<meta property="og:description" content="用一局可下完的终端井字棋学习 C++ 工程和测试。">
+<meta property="og:site_name" content="C++ 棋盘游戏实践">
+<meta name="twitter:title" content="定义棋盘与格子状态 – C++ 棋盘游戏实践">
+<meta name="twitter:description" content="用一局可下完的终端井字棋学习 C++ 工程和测试。">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">C++ 棋盘游戏实践</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+    <a href="https://github.com/chengzhao-dev/cpp-board-games" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+          <div id="quarto-search" class="" title="搜索"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../content/tictactoe/index.html">井字棋</a></li><li class="breadcrumb-item"><a href="../../content/tictactoe/03-board.html"><span class="chapter-title">定义棋盘与格子状态</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">C++ 棋盘游戏实践</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../content/tictactoe/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">井字棋</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/01-rules.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">看懂一局井字棋</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/02-project-layout.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">认识井字棋工程布局</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/03-board.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">定义棋盘与格子状态</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/04-game.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">检查落子并判定终局</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/05-terminal-play.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">构建、测试并运行终端对局</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/06-opponent.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">让电脑产生一次落子</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/07-line-protocol.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">用一行 JSON 记下局面</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#认识棋盘格子" id="toc-认识棋盘格子" class="nav-link active" data-scroll-target="#认识棋盘格子">认识棋盘格子</a>
+  <ul class="collapse">
+  <li><a href="#定义坐标范围" id="toc-定义坐标范围" class="nav-link" data-scroll-target="#定义坐标范围">定义坐标范围</a></li>
+  <li><a href="#区分空格与棋子" id="toc-区分空格与棋子" class="nav-link" data-scroll-target="#区分空格与棋子">区分空格与棋子</a></li>
+  </ul></li>
+  <li><a href="#读写棋盘格子" id="toc-读写棋盘格子" class="nav-link" data-scroll-target="#读写棋盘格子">读写棋盘格子</a>
+  <ul class="collapse">
+  <li><a href="#用数组存放九个格子" id="toc-用数组存放九个格子" class="nav-link" data-scroll-target="#用数组存放九个格子">用数组存放九个格子</a></li>
+  <li><a href="#换算一维下标" id="toc-换算一维下标" class="nav-link" data-scroll-target="#换算一维下标">换算一维下标</a></li>
+  <li><a href="#检查坐标后访问" id="toc-检查坐标后访问" class="nav-link" data-scroll-target="#检查坐标后访问">检查坐标后访问</a></li>
+  </ul></li>
+  <li><a href="#常见错误" id="toc-常见错误" class="nav-link" data-scroll-target="#常见错误">常见错误</a>
+  <ul class="collapse">
+  <li><a href="#绕过棋盘直接计算数组位置" id="toc-绕过棋盘直接计算数组位置" class="nav-link" data-scroll-target="#绕过棋盘直接计算数组位置">绕过棋盘直接计算数组位置</a></li>
+  <li><a href="#把空状态当成一次落子" id="toc-把空状态当成一次落子" class="nav-link" data-scroll-target="#把空状态当成一次落子">把空状态当成一次落子</a></li>
+  </ul></li>
+  <li><a href="#自测问题" id="toc-自测问题" class="nav-link" data-scroll-target="#自测问题">自测问题</a></li>
+  <li><a href="#本章回顾" id="toc-本章回顾" class="nav-link" data-scroll-target="#本章回顾">本章回顾</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../content/tictactoe/index.html">井字棋</a></li><li class="breadcrumb-item"><a href="../../content/tictactoe/03-board.html"><span class="chapter-title">定义棋盘与格子状态</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">定义棋盘与格子状态</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><a href="../../content/tictactoe/02-project-layout.html">认识井字棋工程布局</a>已经指出井字棋动态库的头文件位置。这一章只处理棋盘：它如何定位格子、保存状态、把坐标换算成数组下标，以及拒绝无效访问。本章的代码写在头文件 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/include/board.h">board.h</a> 和源文件 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/src/board.cpp">board.cpp</a> 里。</p>
+<section id="认识棋盘格子" class="level2">
+<h2 class="anchored" data-anchor-id="认识棋盘格子">认识棋盘格子</h2>
+<p>每个棋盘格子由一个坐标定位，并保存一种状态。</p>
+<section id="定义坐标范围" class="level3">
+<h3 class="anchored" data-anchor-id="定义坐标范围">定义坐标范围</h3>
+<p><code>CellPosition</code> 用行和列定位棋盘格子，声明在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/include/board.h">board.h</a> 里。</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘的行数。</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">int</span> kRows <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘的列数。</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">int</span> kCols <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘包含的格子总数。</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">int</span> kCellCount <span class="op">=</span> kRows <span class="op">*</span> kCols<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">/// 表示棋盘格子的行列坐标。</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">/// 行和列从 0 开始，默认构造的坐标是 (0, 0)。</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> CellPosition <span class="op">{</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> row <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>  <span class="co">///&lt; 行坐标。</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> col <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>  <span class="co">///&lt; 列坐标。</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>CellPosition</code> 把坐标交给 <code>Board</code>，负数和行列为 <code>3</code> 的位置都会被拒绝。下面的图标出可用的 <code>(row, col)</code>。左上角是 <code>(0, 0)</code>，行向下增加，列向右增加。</p>
+<div id="00010591" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-display" data-execution_count="1">
+<svg class="coords-grid" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 258 258" width="258" height="258" font-family="Fixel Text, LXGW WenKai Screen, system-ui, sans-serif" font-size="14">
+<style>.coords-grid{color:#1F2328}@media (prefers-color-scheme: dark){.coords-grid{color:#CDD9E5}}</style>
+<g stroke="currentColor" fill="none" stroke-width="1.25">
+<line x1="18" y1="18" x2="250" y2="18"></line>
+<polygon points="250,14 258,18 250,22" fill="currentColor" stroke="none"></polygon>
+<text x="144.0" y="12" text-anchor="middle" fill="currentColor" stroke="none">col</text>
+<line x1="18" y1="18" x2="18" y2="250"></line>
+<polygon points="14,250 18,258 22,250" fill="currentColor" stroke="none"></polygon>
+<text x="10" y="144.0" transform="rotate(-90 10 144.0)" text-anchor="middle" fill="currentColor" stroke="none">row</text>
+<text x="80.0" y="38" text-anchor="middle" fill="currentColor" stroke="none">0</text>
+<text x="144.0" y="38" text-anchor="middle" fill="currentColor" stroke="none">1</text>
+<text x="208.0" y="38" text-anchor="middle" fill="currentColor" stroke="none">2</text>
+<text x="38" y="80.0" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">0</text>
+<text x="38" y="144.0" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">1</text>
+<text x="38" y="208.0" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">2</text>
+<rect x="48" y="48" width="64" height="64"></rect>
+<text x="80.0" y="80.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,0)</text>
+<rect x="112" y="48" width="64" height="64"></rect>
+<text x="144.0" y="80.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,1)</text>
+<rect x="176" y="48" width="64" height="64"></rect>
+<text x="208.0" y="80.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,2)</text>
+<rect x="48" y="112" width="64" height="64"></rect>
+<text x="80.0" y="144.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,0)</text>
+<rect x="112" y="112" width="64" height="64"></rect>
+<text x="144.0" y="144.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,1)</text>
+<rect x="176" y="112" width="64" height="64"></rect>
+<text x="208.0" y="144.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,2)</text>
+<rect x="48" y="176" width="64" height="64"></rect>
+<text x="80.0" y="208.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,0)</text>
+<rect x="112" y="176" width="64" height="64"></rect>
+<text x="144.0" y="208.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,1)</text>
+<rect x="176" y="176" width="64" height="64"></rect>
+<text x="208.0" y="208.0" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,2)</text>
+</g>
+<circle cx="48" cy="48" r="3" fill="currentColor"></circle>
+</svg>
+<p>行向下、列向右，左上角是 (0, 0)</p>
+</div>
+</div>
+</section>
+<section id="区分空格与棋子" class="level3">
+<h3 class="anchored" data-anchor-id="区分空格与棋子">区分空格与棋子</h3>
+<p>每个棋盘格子保存 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/include/board.h">board.h</a> 中 <code>CellState</code> 的三种取值之一。</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘格子的状态。</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> CellState <span class="op">:</span> <span class="bu">std::</span>uint8_t <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  kEmpty <span class="op">=</span> <span class="dv">0</span><span class="op">,</span>   <span class="co">///&lt; 空格。</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  kCross <span class="op">=</span> <span class="dv">1</span><span class="op">,</span>   <span class="co">///&lt; X 棋子。</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  kNought <span class="op">=</span> <span class="dv">2</span><span class="op">,</span>  <span class="co">///&lt; O 棋子。</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>空格可以落 X 或 O，终端把后两种状态显示为对应字母。</p>
+</section>
+</section>
+<section id="读写棋盘格子" class="level2">
+<h2 class="anchored" data-anchor-id="读写棋盘格子">读写棋盘格子</h2>
+<p><code>Board</code> 对内用一个数组和一次下标换算存放九个格子，对外只暴露检查后的读写入口。</p>
+<section id="用数组存放九个格子" class="level3">
+<h3 class="anchored" data-anchor-id="用数组存放九个格子">用数组存放九个格子</h3>
+<p>九个棋盘格子存放在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/include/board.h">board.h</a> 私有段的一个数组里。</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a> <span class="kw">private</span><span class="op">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 将二维坐标转换为一维索引。</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="bu">std::</span>size_t ToFlatIndex<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="kw">noexcept</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 棋盘格子的存储数组，按行依次存放。</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">std::</span>array<span class="op">&lt;</span>CellState<span class="op">,</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="bu">std::</span>size_t<span class="op">&gt;(</span>kCellCount<span class="op">)&gt;</span> <span class="va">cells_</span><span class="op">{};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>数组的类型把长度 <code>kCellCount</code> 直接写进类型本身：棋盘在编译期就固定为 9 格，代码里写不出其他长度的 <code>cells_</code>。井字棋的格子数从规则上就不会增减，<code>std::array</code> 的固定长度正好把这条规则固化下来，不需要能自动变长的容器。</p>
+</section>
+<section id="换算一维下标" class="level3">
+<h3 class="anchored" data-anchor-id="换算一维下标">换算一维下标</h3>
+<p>数组只用一个下标编号格子，<code>Board</code> 用一行公式把行列坐标换算成它，定义见 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/src/board.cpp">board.cpp</a>。</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 先跳过前面的整行，再加上列偏移，得到一维索引。</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t Board<span class="op">::</span>ToFlatIndex<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="kw">noexcept</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="bu">std::</span>size_t<span class="op">&gt;(</span>position<span class="op">.</span>row<span class="op">)</span> <span class="op">*</span> kCols<span class="op">)</span> <span class="op">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>         <span class="kw">static_cast</span><span class="op">&lt;</span><span class="bu">std::</span>size_t<span class="op">&gt;(</span>position<span class="op">.</span>col<span class="op">);</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>公式是 <code>row * kCols + col</code>：乘法跳过这一行前面的整行，每行有 <code>kCols</code> 个格子，代入 <code>(1, 2)</code> 得到 <code>1 * 3 + 2 = 5</code>。</p>
+<p>换算只发生在 <code>Board</code> 内部，<code>ToFlatIndex</code> 也声明在私有段，调用方始终只传行列坐标。下面的图把 <code>cells_</code> 的九个下标排成一行：第 0 行占下标 0–2，第 1 行占 3–5，第 2 行占 6–8，加粗的 5 号位置就是 <code>(1, 2)</code> 的换算结果。</p>
+<div id="81c90bcc" class="cell" data-execution_count="2">
+<div class="cell-output cell-output-display" data-execution_count="2">
+<svg class="coords-grid" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 624 116" width="624" height="116" font-family="Fixel Text, LXGW WenKai Screen, system-ui, sans-serif" font-size="14">
+<style>.coords-grid{color:#1F2328}@media (prefers-color-scheme: dark){.coords-grid{color:#CDD9E5}}</style>
+<g stroke="currentColor" fill="none" stroke-width="1.25">
+<text x="98.0" y="19" text-anchor="middle" fill="currentColor" stroke="none">row = 0</text>
+<line x1="6" y1="25" x2="190" y2="25"></line>
+<text x="312.0" y="19" text-anchor="middle" fill="currentColor" stroke="none">row = 1</text>
+<line x1="220" y1="25" x2="404" y2="25"></line>
+<text x="526.0" y="19" text-anchor="middle" fill="currentColor" stroke="none">row = 2</text>
+<line x1="434" y1="25" x2="618" y2="25"></line>
+<rect x="6" y="30" width="56" height="56"></rect>
+<text x="34.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">0</text>
+<text x="34.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(0,0)</text>
+<rect x="70" y="30" width="56" height="56"></rect>
+<text x="98.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">1</text>
+<text x="98.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(0,1)</text>
+<rect x="134" y="30" width="56" height="56"></rect>
+<text x="162.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">2</text>
+<text x="162.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(0,2)</text>
+<rect x="220" y="30" width="56" height="56"></rect>
+<text x="248.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">3</text>
+<text x="248.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(1,0)</text>
+<rect x="284" y="30" width="56" height="56"></rect>
+<text x="312.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">4</text>
+<text x="312.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(1,1)</text>
+<rect x="348" y="30" width="56" height="56"></rect>
+<text x="376.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">5</text>
+<text x="376.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(1,2)</text>
+<rect x="434" y="30" width="56" height="56"></rect>
+<text x="462.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">6</text>
+<text x="462.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(2,0)</text>
+<rect x="498" y="30" width="56" height="56"></rect>
+<text x="526.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">7</text>
+<text x="526.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(2,1)</text>
+<rect x="562" y="30" width="56" height="56"></rect>
+<text x="590.0" y="58.0" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="currentColor" stroke="none">8</text>
+<text x="590.0" y="102" text-anchor="middle" font-size="12" fill="currentColor" stroke="none">(2,2)</text>
+</g>
+<rect x="348" y="30" width="56" height="56" fill="none" stroke="currentColor" stroke-width="3"></rect>
+</svg>
+<p>数组下标 0–8 与行列坐标的对应</p>
+</div>
+</div>
+</section>
+<section id="检查坐标后访问" class="level3">
+<h3 class="anchored" data-anchor-id="检查坐标后访问">检查坐标后访问</h3>
+<p>每个读写入口都先经过 <code>IsValidPosition</code> 检查，声明在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/include/board.h">board.h</a>。</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 表示井字棋的棋盘。</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// 提供读取格子状态、放置棋子和检查棋盘是否已满的功能。</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Board <span class="op">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a> <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 检查坐标是否在棋盘范围内。</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="dt">bool</span> IsValidPosition<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="kw">noexcept</span><span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 构造函数：创建一个所有格子均为空的棋盘。</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  Board<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 获取指定坐标处的格子状态。</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> CellState GetCellState<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 在指定坐标放置棋子。</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> PlacePiece<span class="op">(</span>CellPosition position<span class="op">,</span> CellState state<span class="op">);</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 检查棋盘是否已满。</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> IsFull<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span><span class="op">;</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>摘录里的标注服务于调用方：<code>[[nodiscard]]</code> 表示忽略返回值就是逻辑错误。<code>IsValidPosition</code> 和 <code>IsFull</code> 标注 <code>noexcept</code>，承诺不会抛出异常。摘录只保留每个函数的概述行，参数、返回值与异常的 <code>@param</code>、<code>@return</code>、<code>@throw</code> 标签见源文件。</p>
+<p>这些声明的函数体都写在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/src/board.cpp">board.cpp</a> 里，<code>IsValidPosition</code> 的定义就是同一条坐标边界：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> Board<span class="op">::</span>IsValidPosition<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="kw">noexcept</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">(</span>position<span class="op">.</span>row <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> position<span class="op">.</span>row <span class="op">&lt;</span> kRows<span class="op">)</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>         <span class="op">(</span>position<span class="op">.</span>col <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> position<span class="op">.</span>col <span class="op">&lt;</span> kCols<span class="op">);</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>调用方只给出坐标和要写入的状态，数组和下标换算都留在 <code>Board</code> 私有段。<code>Board</code> 完成格子读写，<code>Game</code> 在下一章决定轮到谁落子、何时获胜和何时平局。</p>
+</section>
+</section>
+<section id="常见错误" class="level2">
+<h2 class="anchored" data-anchor-id="常见错误">常见错误</h2>
+<section id="绕过棋盘直接计算数组位置" class="level3">
+<h3 class="anchored" data-anchor-id="绕过棋盘直接计算数组位置">绕过棋盘直接计算数组位置</h3>
+<p>调用方自己计算下标时，很容易漏掉负坐标或上界检查。</p>
+<ul>
+<li>把坐标交给 <code>Board</code>。它会拒绝无效位置。</li>
+<li>换算与存储都留在 <code>Board</code> 私有段，调用方不复制公式。</li>
+</ul>
+</section>
+<section id="把空状态当成一次落子" class="level3">
+<h3 class="anchored" data-anchor-id="把空状态当成一次落子">把空状态当成一次落子</h3>
+<p><code>CellState::kEmpty</code> 只表示还未落子，不能写入为新的落子状态。</p>
+<ul>
+<li>用 <code>kCross</code> 或 <code>kNought</code> 调用 <code>PlacePiece</code>。</li>
+</ul>
+</section>
+</section>
+<section id="自测问题" class="level2">
+<h2 class="anchored" data-anchor-id="自测问题">自测问题</h2>
+<p>先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。</p>
+<ol type="1">
+<li><p>为什么行号 <code>-1</code> 和 <code>3</code> 都会被拒绝？</p>
+<details class="answer-disclosure">
+<summary>查看答案</summary>
+<p><code>Board::IsValidPosition</code> 要求行号从 <code>0</code> 到 <code>kRows - 1</code>。<code>kRows</code> 是 3，所以 <code>-1</code> 和 <code>3</code> 都不属于棋盘。</p>
+</details></li>
+<li><p>向已有 X 的格子再落一次 O，棋盘会变吗？</p>
+<details class="answer-disclosure">
+<summary>查看答案</summary>
+<p>不会。<code>PlacePiece</code> 在格子已经占用时返回假，棋盘保持不变。</p>
+</details></li>
+<li><p><code>(1, 2)</code> 对应数组的哪个位置？</p>
+<details class="answer-disclosure">
+<summary>查看答案</summary>
+<p><code>ToFlatIndex</code> 按 <code>row * kCols + col</code> 换算：<code>1 * 3 + 2 = 5</code>，即下标 5。</p>
+</details></li>
+<li><p>为什么用 <code>std::array</code> 存放九个格子？</p>
+<details class="answer-disclosure">
+<summary>查看答案</summary>
+<p>格子数固定为 9，长度 <code>kCellCount</code> 直接写进类型，编译期就确定，代码里写不出其他长度的数组。不需要能自动变长的容器。</p>
+</details></li>
+</ol>
+</section>
+<section id="本章回顾" class="level2">
+<h2 class="anchored" data-anchor-id="本章回顾">本章回顾</h2>
+<p>你已经能用 <code>CellPosition</code> 和 <code>CellState</code> 描述棋盘格子，知道九个格子如何存进数组、坐标如何换算成下标，并让 <code>Board</code> 检查坐标、拒绝不合法写入。下一章把这些格子组织成会轮流落子的对局。</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<div class="footer">
+  © 2026 C++ 棋盘游戏实践 · 用 <a href="https://quarto.org">Quarto</a> 构建
+</div>
+<button id="back-to-top" type="button" title="返回顶部" aria-label="返回顶部">↑</button>
+<script>
+(function () {
+  var btn = document.getElementById('back-to-top');
+  if (!btn) return;
+  var onScroll = function () {
+    if (window.scrollY > 400) btn.classList.add('show');
+    else btn.classList.remove('show');
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  btn.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+</script>
+<script>
+(function () {
+  var meta = document.getElementById('meta-theme-color');
+  if (!meta) return;
+  // 地址栏主题色直接读 tokens.css 的 --page-bg 计算值（body.quarto-dark 切换后自动取暗色），
+  // 避免与令牌双写漂移；取不到时按当前明暗兜底
+  var sync = function () {
+    var v = window.getComputedStyle(document.body).getPropertyValue('--page-bg').trim();
+    if (!v) v = document.body.classList.contains('quarto-dark') ? '#22272E' : '#FFFFFF';
+    meta.setAttribute('content', v);
+  };
+  sync();
+  if (window.MutationObserver) {
+    new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+})();
+</script>
+<script>
+(function () {
+  // Quarto 只本地化搜索结果面板文案，导航栏搜索按钮与仓库图标仍带组件库的英文默认值。
+  // 这里按 zh 语言包的同义中文补齐，只在命中英文原文时替换，Quarto 自行本地化后本脚本自动失效。
+  var LABELS = { 'Search': '搜索', 'Source Code': '查看代码' };
+  var ATTRS = ['title', 'aria-label', 'placeholder'];
+  var sync = function () {
+    document
+      .querySelectorAll('a.quarto-navigation-tool, #quarto-search, #quarto-search *')
+      .forEach(function (el) {
+        ATTRS.forEach(function (attr) {
+          var text = el.getAttribute(attr);
+          if (text && LABELS[text]) {
+            el.setAttribute(attr, LABELS[text]);
+          }
+        });
+      });
+  };
+  sync();
+  window.addEventListener('load', sync);
+  var box = document.getElementById('quarto-search');
+  if (box && window.MutationObserver) {
+    new MutationObserver(sync).observe(box, { childList: true, subtree: true });
+  }
+})();
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/chengzhao-dev\.github\.io\/cpp-board-games");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../content/tictactoe/02-project-layout.html" class="pagination-link" aria-label="认识井字棋工程布局">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">认识井字棋工程布局</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../content/tictactoe/04-game.html" class="pagination-link" aria-label="检查落子并判定终局">
+        <span class="nav-page-text"><span class="chapter-title">检查落子并判定终局</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
