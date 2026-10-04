@@ -44,14 +44,16 @@
 
 自托管 OFL（`assets/fonts/` + `css/fonts.css`）：Sans 为 Fixel → WenKai Screen；Mono 为 Bright Code → WenKai Screen。高亮主题与活跃 palette `meta.md` 同步（github 包为 github-light/dark）。改字体须同步 SCSS、tokens、fonts、OFL、资产与 `check_layout.py`；单页最多 5 个字体文件、预算 1.6 MB。
 
+正文 `strong` 用「颜色 + 加粗」双重强调（`content.css`）：`font-weight: 700` 加 `font-synthesis: weight`——文楷 Screen 只有 400 一个字面，加粗靠浏览器对 strong 单独合成，body 全局仍是 `font-synthesis: none`（文楷 700 显僵，标题与 UI 不放开合成）；拉丁字符命中 Fixel 真实 700。
+
 ### 正文字号
 
 | 元素 | 值 |
 |---|---|
-| 正文 | 16px / lh 1.75 |
+| 正文 | 16px / lh 1.75 / 列宽 720px |
 | H1（title） | 32px / w600 |
 | H2 | 24px / w600 / mt 2.75rem mb 0.9rem |
-| H3 | 20px / w600 / mt 2rem |
+| H3 | 22px / w600 / mt 2rem |
 | 代码块 | 15px / lh 1.75 |
 | 行内代码 | 0.875em |
 | Callout 正文 / 标题 | 16px / 15px w600 |

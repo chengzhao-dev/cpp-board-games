@@ -22,7 +22,7 @@ estimated_tokens: 1100
 | --- | --- | --- |
 | `skills/*/SKILL.md` | 任务路由、P0、判据 | 命中任务时整篇读取 |
 | `skills/*/references/` | 可执行 how（步骤、清单、本仓约定） | 按 SKILL 路由读取 |
-| `.agents/knowledge/` | 稳定 why / 取舍，`kb_id` 唯一标识 | 按 `KNOWLEDGE.md` 定点取用，或 `kb-search` |
+| `.agents/knowledge/` | 稳定 why / 取舍，`kb_id` 唯一标识；正反对照在领域下 `cases/`，其 `appendix/` 仅人审 | 按 `KNOWLEDGE.md` 定点取用，或 `kb-search` |
 | `.agents/memory/` | 跨会话教训 | 任务开始时读 `MEMORY.md` 索引 |
 | `.agents/incidents/` | 失败复盘 | 仅排查失败时读 `INDEX.md`，不进检索索引 |
 | `.agents/mcp/` | 结构化工具入口 | 宿主显式配置，不假设自动发现 |

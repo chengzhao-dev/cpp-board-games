@@ -60,7 +60,7 @@ def active_palette_name(quarto_text=""):
 # 共享结构令牌与组件规则（与色板无关）
 SHARED_CHECKS = [
     ("body line-height 1.75", "line-height: 1.75"),
-    ("content width", "--content-width: 800px"),
+    ("content width", "--content-width: 720px"),
     ("code font 15px", "--code-font-size: 0.9375rem"),
     ("code line-height 1.75", "--code-line-height: 1.75"),
     ("code title padding token", "--code-title-padding"),
@@ -99,7 +99,8 @@ PALETTE_VALUE_CHECKS = {
         ("light code background", "--code-bg: #F6F8FA"),
         ("dark code background", "--code-bg: #2D333B"),
         ("dark page #22272E", "#22272E"),
-        ("dark body #ADBAC7", "#ADBAC7"),
+        ("dark body #CDD9E5", "#CDD9E5"),
+        ("dark secondary #B1BAC4", "#B1BAC4"),
         ("dark link #539BF5", "#539BF5"),
         ("callout note border light", "--callout-note-border: #2563EB"),
     ],

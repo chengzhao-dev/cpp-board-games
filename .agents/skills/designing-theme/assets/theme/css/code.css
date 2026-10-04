@@ -10,6 +10,7 @@ pre {
   line-height: var(--code-line-height);
   font-weight: 400;
   overflow-x: auto;
+  font-variant-ligatures: none;
   tab-size: 4;
   -moz-tab-size: 4;
   margin: 0;

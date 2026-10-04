@@ -44,7 +44,7 @@ Git 对比服务于当前任务，不要在每个步骤重复运行 `git status`
 文本一律 LF、编码一律 UTF-8 无 BOM（`.gitattributes` 已强制 `* text=auto eol=lf`）。二进制扩展名显式声明为 binary，`*.bat`/`*.cmd` 保持 CRLF。中文文件禁止经过系统代码页或 GBK 往返转换。改动 `.qmd` 或规范文档后先跑编码检查。
 
 ```bash
-git check-ignore -v _book .quarto games/tic-tac-toe/01-toolchain-probe/build temp
+git check-ignore -v _book .quarto games/tictactoe/01-cli-game/build temp
 # 每个路径都应命中一条忽略规则；.agents/skills 不应出现在输出里
 ```
 

@@ -35,7 +35,7 @@ metadata:
 ## 输出格式
 
 ```text
-[P1] 悬挂引用风险 — games/tic-tac-toe/02-board-and-state/tic_tac_toe/src/game_state.cpp:28
+[P1] 悬挂引用风险 — games/tictactoe/01-cli-game/tictactoe/src/board.cpp:16
 一段说明：问题场景、成因与可操作的修复建议。
 ```
 

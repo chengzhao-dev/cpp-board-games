@@ -37,17 +37,8 @@
 
 ## 运行入口
 
-统一入口是 `skills/governing-agents/scripts/run.ps1`（Python 侧 `run.py`），解释器唯一来源是根目录 `config.toml` 的 `python`（最低 3.12）。常用命令：
-
-```powershell
-& .agents/skills/governing-agents/scripts/run.ps1 scope <game>/<stage>
-& .agents/skills/governing-agents/scripts/run.ps1 check --profile fast|book|knowledge|python|full
-& .agents/skills/governing-agents/scripts/run.ps1 render
-& .agents/skills/governing-agents/scripts/run.ps1 build <game>/<stage>
-& .agents/skills/governing-agents/scripts/run.ps1 kb-index [--rebuild]
-& .agents/skills/governing-agents/scripts/run.ps1 kb-search <查询>
-```
+统一入口是 `skills/governing-agents/scripts/run.ps1`（Python 侧 `run.py`）。子命令以 `run.py` 文件头为准，这里不复制命令表。解释器只读根目录 `config.toml` 的 `python`。
 
 脚本不得从当前工作目录推断仓库根；移动或新增脚本后，必须检查 `Path(__file__)` 的根目录解析，并更新所有统一入口、测试和文档引用。
 
-游戏代码按编号阶段目录组织在 `games/<game>/` 下：每个阶段（如 `01-toolchain-probe/`）是拥有自身 `.clang-format`、`.vscode/`、构建和测试的完整项目，配置归属阶段目录本身；格式模板在 `skills/cpp-development/assets/config/.clang-format`；判断依据见 `knowledge/agent-workspace/navigation/staged-game-layout.md`。
+游戏代码按编号阶段目录组织在 `games/<game>/` 下：每个阶段（如 `01-cli-game/`）是拥有自身 `.clang-format`、`.vscode/`、构建和测试的完整项目，配置归属阶段目录本身；格式模板在 `skills/cpp-development/assets/config/.clang-format`；判断依据见 `knowledge/agent-workspace/navigation/staged-game-layout.md`。

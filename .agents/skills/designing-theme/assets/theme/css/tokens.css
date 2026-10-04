@@ -20,15 +20,14 @@ body {
   --radius-md: 12px;
   --radius-lg: 12px;
   --code-radius: 8px;
-  --ui-font: "Fixel Text", "LXGW WenKai Screen", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --ui-font: "Fixel Text", "LXGW WenKai Screen", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "Roboto", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --mono-font: "LXGW Bright Code", "LXGW WenKai Screen", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
-  --content-width: 800px;
+  --content-width: 720px;
   color: var(--body-color);
   background-color: var(--page-bg);
   line-height: 1.75;
   font-size: 1rem;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  font-synthesis: none;
   text-wrap: pretty;
   /* 显式声明浅色，使内嵌 SVG（顶栏品牌徽标）与原生控件跟随页面明暗，
      而不是跟随系统偏好；深色由 palette 的 body.quarto-dark 覆盖。 */

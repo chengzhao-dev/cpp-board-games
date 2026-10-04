@@ -7,7 +7,7 @@ tags: [workflow, star, storyline, chapter-responsibility]
 level_range: [0, 5]
 dependencies: ["bg-project-decisions-v1"]
 created: "2026-09-28"
-updated: "2026-09-28"
+updated: "2026-10-02"
 chunk_strategy: "semantic_heading"
 estimated_tokens: 1100
 ---
@@ -38,17 +38,18 @@ estimated_tokens: 1100
 - **A（行动）**：架构划分、代表性踩坑与修复；坑的完整排查写在中间章常见错误，此处只作摘要并链接出处。
 - **R（成果）**：当前可观察成果（可构建、测试数、可运行行为）、已知可优化点与延后项。
 
-延后项不设集中页：各延后决定写在出处章自己的边界句里，触发条件汇总在渐进式路线章的门槛表（井字棋为 `07-incremental-roadmap.qmd`）。
+延后项不设集中页。井字棋只在第五章末留一句：新的对手产生 `Move`，调用同一个 `Place`。`06-opponent.qmd`、`07-search.qmd` 与 `08-replay.qmd` 的职责写在标识 `bg-roadmap-v1` 的「已设计、未实现」，对应目录可构建之前不注册进读者书。
 
 ## 与仓库目录的映射
 
 | 故事线元素 | 落点 |
 | --- | --- |
-| ① 短需求形态、② 目录层次、③ 模块职责、STAR 的 S/T、开发环境与真实选型 | 游戏 `01-scope-and-principles.qmd`（读者语言摘要；不写长篇调试日志与具体编译报错排查） |
-| ④⑤⑥ 的章内任务 | 各中间实现章（02–06 等已实现/升格章）；不把整套八步或完整 STAR 再抄一遍 |
-| ⑦ 报错记录 | 中间实现章「常见错误」（症状 → 定位 → 修复 → 验证）；不面向读者且排查价值高的进 `.agents/incidents/` |
-| ⑧ README 要点、STAR 的 A 摘要与 R | 游戏末章（如 `10-completion-and-next-steps.qmd`；指向阶段 `build-and-run.sh` 与 CTest，不另造根 README 替代 Quarto） |
-| 每阶段的可运行证据 | `games/<game>/<NN>/` 的 `build-and-run.sh` 与 CTest；阶段目录内不放完整 STAR，只保留极短注释 |
+| ① 短需求 | 第一章 `content/tictactoe/01-rules.qmd`：对局输入、输出与结束条件 |
+| ② 目录 | 第二章 `content/tictactoe/02-project-layout.qmd`：`01-cli-game` 的目录、文件职责与依赖方向 |
+| ④⑤⑥ 实现与测试 | 第三章 `03-board.qmd`、第四章 `04-game.qmd`，验收动作在终端章展开 |
+| ⑦ 报错记录 | 第二章到第五章的「常见错误」；不面向读者且排查价值高的进 `.agents/incidents/` |
+| ⑧ 运行与成果 | 第五章 `05-terminal-play.qmd`：终端输入输出、配置、编译、测试与运行 |
+| 可运行证据 | `games/tictactoe/01-cli-game/build-and-run.sh` 与 CTest |
 
 后续新游戏（四子棋等）复用同一模板：各自首章写本游戏 S/T，末章写 A/R，中间章常见错误记本游戏坑。
 

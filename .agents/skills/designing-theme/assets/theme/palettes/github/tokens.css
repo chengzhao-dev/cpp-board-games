@@ -6,6 +6,7 @@
 body {
   /* GitHub Light 页面令牌 */
   --body-color: #1F2328;
+  --emphasis-color: #0D1117;
   /* GitHub Light 代码块色板；语义 token 由 Pandoc/Quarto 提供。 */
   --code-bg: #F6F8FA;
   --code-border: #D0D7DE;
@@ -71,17 +72,18 @@ body {
 
 body.quarto-dark {
   /* GitHub Dark Dimmed 页面令牌（软暗色：近灰底，缓解 Dark Default 的偏黑） */
-  --body-color: #ADBAC7;
+  --body-color: #CDD9E5;
+  --emphasis-color: #F0F6FC;
   /* GitHub Dark Dimmed 代码块色板，与页面明暗模式同步。 */
   --code-bg: #2D333B;
   --code-border: #444C56;
-  --code-fg: #ADBAC7;
+  --code-fg: #CDD9E5;
   --code-title-bg: #373E47;
-  --code-title-fg: #768390;
-  --line-num-color: #768390;
+  --code-title-fg: #B1BAC4;
+  --line-num-color: #B1BAC4;
   --inline-code-bg: rgba(99, 110, 123, 0.4);
-  --inline-code-fg: #ADBAC7;
-  --text-secondary: #768390;
+  --inline-code-fg: #CDD9E5;
+  --text-secondary: #B1BAC4;
   --link-color: #539BF5;
   --link-underline: rgba(83, 155, 245, 0.45);
   --text-link: var(--link-color);
@@ -108,11 +110,11 @@ body.quarto-dark {
   --mark-bg: rgba(198, 144, 38, 0.35);
   --sidebar-hover-bg: rgba(205, 217, 229, 0.06);
   --sidebar-active-bg: rgba(83, 155, 245, 0.18);
-  --sidebar-fg: #768390;
+  --sidebar-fg: #B1BAC4;
   --accent: var(--link-color);
   --navbar-bg: #22272E;
-  --navbar-fg: #ADBAC7;
-  --navbar-muted: #768390;
+  --navbar-fg: #CDD9E5;
+  --navbar-muted: #B1BAC4;
   --navbar-border: #444C56;
   --navbar-shadow: rgba(28, 33, 40, 0.35);
   --navbar-input-bg: #2D333B;
@@ -133,4 +135,24 @@ body.quarto-dark {
   --line-num-bg: rgba(205, 217, 229, 0.05);
   --line-hover-bg: rgba(83, 155, 245, 0.10);
   color-scheme: dark;
+}
+
+@media (prefers-contrast: more) {
+  body {
+    --body-color: #0D1117;
+    --emphasis-color: #0D1117;
+    --code-border: #8C959F;
+    --card-border: #8C959F;
+    --navbar-border: #8C959F;
+  }
+
+  body.quarto-dark {
+    --body-color: #F0F6FC;
+    --code-fg: #F0F6FC;
+    --inline-code-fg: #F0F6FC;
+    --emphasis-color: #F0F6FC;
+    --code-border: #768390;
+    --card-border: #768390;
+    --navbar-border: #768390;
+  }
 }

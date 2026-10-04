@@ -13,7 +13,7 @@ import kb_common as kb  # noqa: E402
 from retriever import retrieve  # noqa: E402
 
 
-def adapt(query: str, *, repository: str = "cpp-notes", kind: str = "knowledge",
+def adapt(query: str, *, repository: str = "cpp-board-games", kind: str = "knowledge",
           domain: str = "", scope: str = "", status: str = "active",
           top_k: int = 5, token_budget: int | None = None,
           explain: bool = False) -> dict:

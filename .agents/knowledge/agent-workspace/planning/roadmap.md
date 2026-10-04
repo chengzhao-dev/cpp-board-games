@@ -7,45 +7,41 @@ tags: [roadmap, stages, milestones]
 level_range: [0, 5]
 dependencies: []
 created: "2026-09-26"
-updated: "2026-09-28"
+updated: "2026-10-02"
 chunk_strategy: "semantic_heading"
 estimated_tokens: 900
 ---
 
 # 项目路线依据
 
-本文件供 Agent 判断阶段边界使用；面向读者的完整路线记录在 `content/tic-tac-toe/`。
+本文件供 Agent 判断阶段边界使用。井字棋读者页是 `content/tictactoe/` 的各章，不另设路线章。
 
 ## 当前文档范围
 
-本轮重置后，`content/` 只维护井字棋设计与执行路线。其他棋类暂不创建对应 content 页面，但未来四子棋、五子棋、黑白棋等必须沿用“最小可实现、每步可验证、先具体后抽象”的渐进式流程。
+`content/` 当前只维护井字棋。其他棋类暂不创建对应 content 页面。新游戏仍要每步可验证，先有可编译示例再注册章节。井字棋当前的章节链覆盖 01 规则与终端、02 对手和 03 逐行协议；Python 回放与本地 Web 适配作为协议层之后的辅助程序维护。
 
 ## 井字棋阶段顺序
 
-终端双人井字棋按编号目录从最小到完整迭代，每个目录都是 `games/tic-tac-toe/<NN-名称>/` 下的完整项目（详见 标识 `bg-staged-game-layout-v1` 的知识文件）：
+井字棋有三份可运行目录。`01-cli-game` 是双人终端。`02-cpu-opponent` 是人机，先选双人或人机，选人机后再选随机、启发式或 minimax 难度。`03-line-protocol` 在每次打印后追加版本化 JSON，包含九格、序号、轮到谁、状态和胜者；`games/tictactoe/python/replay.py` 只解析这行，不重判胜负。`games/tictactoe/python/web.py` 是只监听回环地址的本地 HTTP/Fetch 适配，复用 03 的终端协议，不属于 C++ 规则核心。
 
-1. `01-toolchain-probe`：WSL Ubuntu 下的 C++20、CMake、Ninja、Clang、CTest 最小工程；目录已建立 `.clang-format` 和 `.vscode/` 配置归属。
-2. `02-board-and-state`：固定棋盘、位置、玩家、棋子和状态值类型。
-3. `03-move-validation`：合法落子，以及非法输入不改变状态。
-4. `04-turns-and-terminal-rules`：回合切换、行列对角线胜负、平局和终局保护。
-5. `05-cli-and-acceptance`：终端双人闭环、CLI smoke test 和分层验收。
+## 已实现阶段与辅助适配
 
-后续阶段只在真实开始实现时创建目录：
+02 与 03 已完成独立构建、CTest 和脚本验收。Python 回放已覆盖版本、字段和序号校验；本地 Web 适配已实现模式/难度选择、坐标校验、请求体上限、回环监听和子进程错误边界。HTTP 只作为本地辅助适配，不新增 `04-http-play` 阶段、不引入远程部署或 WebSocket。
 
-6. `06-ai`：双人规则稳定后加入 Minimax AI。
-7. `07-python-subprocess`：用 Python `subprocess` 驱动稳定 CLI。
-8. `08-json-protocol`：在纯文本不足时定义逐行 JSON 协议。
-9. `09-http-fetch`：用 Python HTTP 服务和浏览器 Fetch 构建 Web 原型。
-10. `10-websocket`：只有实时推送确有需要时再评估。
+人机对战的短需求：复制 `01-cli-game` 为 `games/tictactoe/02-cpu-opponent`。输入仍是一行两个整数。电脑的一步由 `tictactoe` 库里的 `ChooseMove` 产生 `Move`，再调用同一个 `Game::Place`。规则库不读终端、不选着。随机合法空格、能赢则赢否则阻挡、minimax（终局效用胜 `+1`、和 `0`、负 `-1`）三种强度放在同一目录。alpha-beta 只有在与不剪枝选出同一着时才留在这一阶段。验收是 CTest 覆盖必胜、必挡和双 minimax 开局成和，以及 `build-and-run.sh` 能完成一局人机。
+
+逐行协议与回放的短需求：复制 `02-cpu-opponent` 为 `games/tictactoe/03-line-protocol`。标准输出在原有局面文本之外多一行版本化 JSON（版本、序号、九格、轮到谁、状态和胜者）。人的输入仍是两个整数。`games/tictactoe/python/replay.py` 解析这些行，用 `unittest` 检查协议，不重测胜负。读者章 `07-line-protocol.qmd` 用解析结果调用 `render_grid`。不引入 Flask、WebSocket 或 matplotlib。
+
+`04-http-play` 不创建：本地 Web 适配已经存在于 `games/tictactoe/python/web.py`，但它不改变阶段路由，也不等同于可部署的 HTTP 产品。若未来需要正式服务，再另行定义认证、并发和部署边界。
 
 ## 阶段门槛
 
-每个小步都应保持可配置、可构建、可运行或可测试，并记录目标、预期行为、验证方式、失败定位范围和完成状态。Hello World 或最小工程只验证开发环境，不成为最终游戏架构。
+这一阶段必须能配置、编译、测试和运行。门槛写在本文件，不单设读者章。
 
 ## 测试框架时机
 
-- `01-toolchain-probe` 和 `05-cli-and-acceptance` 的冒烟验证使用纯 CTest（`add_test` + `PASS_REGULAR_EXPRESSION`）；第三方测试框架在出现真实规则逻辑的阶段按需评估引入。
-- `02-board-and-state` 出现第一批真实规则逻辑时，通过 CMake FetchContent 引入 GoogleTest，测试统一注册进 CTest 运行；后续阶段沿用（2026-09 决策）。
+- `01-cli-game` 用 FetchContent 引入 GoogleTest `v1.17.0`，测试注册进 CTest。
+- 管道棋谱是另一条 CTest：喂入固定着法，要求输出含有 `X 获胜`。脚本自己再用管道喂同一局。
 
 ## 架构边界
 

@@ -13,11 +13,15 @@
 │   └── retrieval/   # 检索协议与四区职责边界
 ├── cpp-teaching/    # C++ 工程与风格依据（技能：cpp-development）
 │   ├── style/       # 注释、终端输出与 Google C++ 风格决策
-│   └── toolchain/   # 工具链、CMake 与环境
+│   ├── toolchain/   # 工具链、CMake 与环境
+│   └── cases/       # 正反对照（正确/不佳/改写）；appendix/ 不进索引
 └── quarto-writing/  # Quarto 写作与渲染依据（技能：writing-quarto）
     ├── rendering/   # include、链接与 Mermaid 等渲染层约定
-    └── writing/     # 章节骨架、标题、元素与中文风格的取舍与差异
+    ├── writing/     # 章节骨架、标题、元素与中文风格的取舍与差异
+    └── cases/       # 正反对照（正确/不佳/改写）；appendix/ 不进索引
 ```
+
+`cases/` 放正反对照，一条对照的检索单元是「正确 + 不佳 + 改写」；规范条文留在 `writing/`、`style/` 等条文叶子。`cases/appendix/` 是低频人审附录：索引、检索、评测与校验全部跳过，仅人审或用户点名时读。
 
 `visual-theme/`（技能：designing-theme）与 `repo-github/`（技能：shipping-github）在出现第一个文件时再创建，不建空目录。文件名与目录名一律纯 ASCII kebab-case。
 
@@ -31,23 +35,39 @@
 | --- | --- |
 | 写或评审各阶段 CMakeLists.txt | `bg-cmake-conventions-v1` |
 | 写代码注释、终端输出与日志 | `bg-comment-style-v1`、`bg-terminal-output-style-v1` |
+| 写或改 `.clang-format` / `.clang-tidy` / `.clangd` 注释 | `bg-comment-style-v1`（「工具配置 YAML」）、对照 `bg-comment-cases-v1` |
+| 判定 clang-tidy 门禁范围、`at()` 与下标检查 | `bg-static-analysis-boundaries-v1` |
+| 写或评审异常边界与 `what()` 文案 | `bg-exception-message-format-v1`、`bg-google-cpp-style-v1` |
 | 写或评审 C++ 标识符命名与风格 | `bg-google-cpp-style-v1` |
 | 判断阶段目录命名与配置归属 | `bg-staged-game-layout-v1` |
 | 判断阶段顺序、门槛与测试框架时机 | `bg-roadmap-v1` |
 | 判断架构、共享库与外部依据 | `bg-project-decisions-v1` |
+| 写或评审代码旁白的工程叙事范围（语言课禁令） | `bg-project-decisions-v1`、`bg-chinese-style-cases-v1` |
 | 写游戏开篇/收官章与 STAR 摘要 | `bg-engineering-storyline-v1` |
 | 确认 WSL、VS Code 与工具链环境 | `bg-development-environment-v1` |
 | 检索协议与四区职责边界 | `bg-retrieval-governance-v1` |
+| 判断技能分层、AGENTS.md 体量与参考目录为什么不拍平 | `bg-skills-engineering-v1` |
 | 写或改章节骨架、标题与自测 | `bg-chapter-page-pattern-v1`、`bg-file-title-naming-v1` |
+| 查句段与措辞的正反对照 | `bg-chinese-style-cases-v1`（核心）、低频章级对照在 `cases/appendix/` |
+| 查 Quarto 元素写法正反对照 | `bg-qmd-elements-cases-v1`（元素细则见 `bg-qmd-element-cases-v1`） |
+| 查注释写法正反对照 | `bg-comment-cases-v1`（条文见 `bg-comment-style-v1`） |
+| 查标识符命名正反对照 | `bg-naming-cases-v1`（规则见 `bg-google-cpp-style-v1`） |
+| 查类内与命名空间作用域声明顺序 | `bg-declaration-order-v1` |
 | 写代码块、列表、表格与 Callout | `bg-qmd-element-cases-v1` |
 | 核对篇幅预算 | `bg-content-budget-v1` |
 | 改写句段、措辞与列表 | `bg-chinese-style-cases-v1`、`bg-paragraph-list-style-v1` |
-| 统一语气与语域（口语腔、公文腔、规划元叙述） | `bg-chinese-voice-register-v1` |
+| 统一语气与语域（口语腔、公文腔、规划元叙述、压缩隐喻） | `bg-chinese-voice-register-v1` |
+| 判断代码与图的放置节奏（一图一事、同主题相邻、拆节） | `bg-qmd-element-cases-v1`，依据见 `bg-section-focus-density-v1` |
 | 衔接段落与小节过渡 | `bg-paragraph-cohesion-v1` |
 | 查术语与禁用词 | `bg-terminology-v1` |
 | 处理 include 与链接 | `bg-quarto-conventions-v1` |
 | 写或改 Mermaid 图表 | `bg-mermaid-conventions-v1` |
+| 画坐标轴类网格图（棋盘行列、二维下标） | `bg-coords-diagram-v1` |
 | 权衡小节密度与盒子比例 | `bg-section-focus-density-v1` |
+| 写代码块与图（mermaid/python 坐标图）之间的桥接正文 | `bg-qmd-element-cases-v1`、`bg-coords-diagram-v1`，对照见 `bg-qmd-elements-cases-v1` |
+| 改写目录式堆砌（引言交付物清单、树后复述） | `bg-chinese-style-cases-v1`「目录式堆砌」 |
+| 判断块后正文与代码注释的分工、单段是否混对象 | `bg-qmd-element-cases-v1`，对照见 `bg-chinese-style-cases-v1`「块后复述注释」「单段混并列对象」 |
+| 判断同节递进代码块是否合并、多围栏导语形态 | `bg-qmd-element-cases-v1`，对照见 `bg-chinese-style-cases-v1`「递进片段合并」「多代码块一句导语」 |
 
 ## 文件规范（强制）
 

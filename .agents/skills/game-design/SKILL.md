@@ -19,15 +19,17 @@ metadata:
 
 | 任务 | 读取 |
 | --- | --- |
-| 工具、项目内容与分层实现（「先看清工程」） | `content/tic-tac-toe/01-scope-and-principles.qmd` |
-| 棋盘与状态设计（值类型、不变量与接口方向） | `content/tic-tac-toe/03-board-and-state.qmd` |
+| 对局规则 | `content/tictactoe/01-rules.qmd` |
+| 棋盘与格子状态 | `content/tictactoe/03-board.qmd` |
+| 落子与终局 | `content/tictactoe/04-game.qmd` |
 | 项目值类型约定与语言机制讲解 | `.agents/knowledge/agent-workspace/planning/project-decisions.md`；语言机制见 [cpp-notes 语言基础](https://github.com/chengzhao-dev/cpp-notes/tree/main/content/language-basics) |
 | 抽象与共享库决策依据 | `.agents/knowledge/agent-workspace/planning/project-decisions.md` |
 | 游戏开篇/收官章的流程与 STAR 职责 | `.agents/knowledge/agent-workspace/planning/engineering-storyline.md` |
+| 对手与后续阶段是否已实现 | `.agents/knowledge/agent-workspace/planning/roadmap.md`「已设计、未实现」 |
 
 ## P0 硬约束
 
-1. 先用值类型表达坐标、玩家、棋子状态、动作和游戏结果。
+1. 坐标、玩家、格子状态、动作和终局用值类型表达。`CellState` 等 `enum class` 的每个枚举子写连续初值。当前井字棋是双人终端，不含 AI。
 2. 规则对象只负责规则，不直接读写终端或网页。
 3. 井字棋优先组合，不预先建立复杂的棋子继承体系。
 4. 只有至少两个游戏真实共享且语义稳定时，才提取公共库。

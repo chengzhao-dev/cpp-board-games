@@ -6,6 +6,8 @@
    两层共用底色，仅在最底部画一条分隔线，整体视为一个 header。 */
 #quarto-header {
   background-color: var(--navbar-bg);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
   /* 注入 Bootstrap 变量，使 navbar 内组件在明暗两态都改用我们的 token
      （#quarto-header 为 ID 选择器，优先级高于 Quarto 的 [data-bs-theme="dark"]） */
   --bs-body-bg: var(--navbar-bg);
@@ -174,16 +176,16 @@ body.quarto-dark .quarto-navbar-search input {
     display: none;
   }
 }
-/* 主题切换按钮（navbar 内，与侧栏切换复用观感）；固定尺寸与搜索框（32px）一致 */
+/* 主题切换：可点区域 44px，图标仍是 18px */
 #quarto-header .quarto-color-scheme-toggle {
-  color: var(--navbar-fg);          /* 白色高辨识度（原 muted 灰太弱） */
-  border-radius: 50%;                /* 圆形按钮，强化可点感 */
+  color: var(--navbar-fg);
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  font-size: 1.125rem;              /* 图标放大到 18px */
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.125rem;
 }
 #quarto-header .quarto-color-scheme-toggle:hover {
   color: var(--navbar-fg);

@@ -97,7 +97,35 @@ blockquote.blockquote {
   text-align: center;
   margin-top: 0.5rem;
 }
+/* jupyter 单元的图必须用 IPython.display.HTML 输出保持 SVG 内联：image/svg+xml 输出会被
+   Quarto 外置成 <img>，无法继承站点 data-bs-theme 明暗与文档字体。text/html 输出不被
+   Quarto 识别为图像，fig-cap 退化为图后一个裸 <p>，这里按 figcaption 同款图注样式居中。 */
+#quarto-document-content .cell-output-display > svg.coords-grid + p {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
 /* mermaid / dot 图表样式见 mermaid.css（SVG 居中规则已迁入） */
+/* 坐标图：GitHub 文档图的做法是抬起一块浅底、不加实线外框。
+   内联 SVG 用 currentColor，跟着正文颜色走；独立 svg 文件再用
+   prefers-color-scheme 兜住系统明暗。 */
+#quarto-document-content :is(figure, .cell-output-display) svg.coords-grid {
+  display: block;
+  margin-inline: auto;
+  max-width: min(100%, 20rem);
+  height: auto;
+  color: var(--body-color);
+  background: var(--surface-raised);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+/* 代码块后正文强制 UI 字体，避免继承 mono 栈造成中文观感不一致 */
+#quarto-document-content :is(.code-copy-outer-scaffold, .code-with-filename, pre) + :is(p, ul, ol),
+#quarto-document-content section :is(.code-copy-outer-scaffold, .code-with-filename, pre) + :is(p, ul, ol) {
+  font-family: var(--ui-font);
+}
 /* 键盘键 */
 #quarto-document-content kbd {
   font-family: var(--mono-font);
@@ -149,6 +177,7 @@ html {
   scroll-padding-top: 7rem;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
+  text-size-adjust: 100%;
 }
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -197,9 +226,20 @@ html {
 #quarto-document-content {
   color: var(--body-color);
   letter-spacing: normal;
-  /* 不启用 palt：中文字体的 palt 会把全角标点（，。：；）压成比例宽度，
-     观感如同英文标点（系统字体时代是空操作，换 Web 字体后显形，已移除） */
-  text-spacing-trim: trim-start;      /* 中文标点起首去半角空白（较新浏览器） */
+  text-spacing-trim: trim-start;
+  text-autospace: normal;
+}
+/* 正文 strong：颜色 + 加粗双重强调。文楷 Screen 只有 400 一个字面且 body 禁合成
+   （font-synthesis: none，见 tokens.css），这里单独对 strong 放开合成加粗；
+   拉丁字符命中 Fixel Text 真实 700。标题与 UI 不在作用域，维持禁合成。 */
+#quarto-document-content strong {
+  font-weight: 700;
+  font-synthesis: weight;
+  color: var(--emphasis-color);
+}
+pre,
+code {
+  text-autospace: no-autospace;
 }
 
 /* GitHub Markdown 正文约束：普通段落使用正文列的实际宽度，组件不撑破三栏布局。

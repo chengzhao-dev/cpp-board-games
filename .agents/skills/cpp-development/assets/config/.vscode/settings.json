@@ -4,11 +4,11 @@
     "C_Cpp.intelliSenseEngine": "disabled",
     "C_Cpp.formatting": "disabled",
 
+    // clang-tidy 诊断由 .clangd 与阶段 .clang-tidy 控制，不在这里关闭。
     "clangd.arguments": [
         "--query-driver=/usr/bin/clang++",
         "--header-insertion=never",
-        "--background-index",
-        "--clang-tidy=false"
+        "--background-index"
     ],
 
     // 排版规则取自同一工程根目录中的 .clang-format。

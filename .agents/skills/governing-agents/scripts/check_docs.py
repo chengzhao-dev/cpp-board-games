@@ -37,7 +37,7 @@ CALLOUT_CLOSE = re.compile(r"^\s*:::\s*$")
 CALLOUTS = {"note", "tip", "warning", "important", "caution"}
 CODE_EXTENSIONS = {".cpp", ".cc", ".cxx", ".h", ".hpp", ".cmake", ".sh", ".bash"}
 CODE_NAMES = {"CMakeLists.txt"}
-CODE_LANGUAGES = {"cpp", "c", "bash", "sh", "shell", "powershell", "ps1", "cmake", "text", "markdown", "yaml", "json", "toml", "mermaid"}
+CODE_LANGUAGES = {"cpp", "c", "bash", "sh", "shell", "powershell", "ps1", "cmake", "python", "text", "markdown", "yaml", "json", "toml", "mermaid"}
 SHELL_LANGUAGES = {"bash", "sh", "shell"}
 POWERSHELL_LANGUAGES = {"powershell", "ps1"}
 TARGET_CREATION = re.compile(r"^\s*(add_executable|add_library)\s*\(")
@@ -431,7 +431,10 @@ def check(path):
             errors.append(f"{rel}:{start}: DOC-E14 {parse_error}")
         body = "\n".join(lines[start:end - 1])
         if kind == "qmd":
-            if language and language != "mermaid" and not attributes.get("filename"):
+            # {python} 可执行单元（坐标图等）的选项走块内 #| 注释，
+            # 不需要 filename（口径见标识 bg-coords-diagram-v1 的知识文件）。
+            is_exec_cell = info.startswith("{python")
+            if language and language != "mermaid" and not is_exec_cell and not attributes.get("filename"):
                 errors.append(
                     f"{rel}:{start}: DOC-E14 站点 QMD 代码块必须用 filename 属性标明来源或运行环境"
                 )

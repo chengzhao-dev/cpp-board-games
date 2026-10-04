@@ -14,19 +14,19 @@
 标准用法（使用仓库配置的 Python 3.12）：
   python .agents/skills/maintaining-python/scripts/scaffold/init_project.py `
     --name cmake-project `
-    --dir games/tic-tac-toe `
+    --dir games/tictactoe `
     --layout single
-上例会自动创建 games/tic-tac-toe/cmake-project。
+上例会自动创建 games/tictactoe/cmake-project。
 随后在 WSL2 Ubuntu 中进入项目目录并运行：
   bash build-and-run.sh
 
 仓库根目录已配置好 Python 时，也可以使用：
   python .agents/skills/maintaining-python/scripts/scaffold/init_project.py `
-    --name multi-file-project --dir games/tic-tac-toe --layout multi
+    --name multi-file-project --dir games/tictactoe --layout multi
 
 库工程示例：
   python .agents/skills/maintaining-python/scripts/scaffold/init_project.py `
-    --name static-library --dir games/tic-tac-toe --layout static-library
+    --name static-library --dir games/tictactoe --layout static-library
 
 用法：python .agents/skills/maintaining-python/scripts/scaffold/init_project.py `
   --name <name> [--dir games/<game>] [--layout single|multi|static-library|shared-library]

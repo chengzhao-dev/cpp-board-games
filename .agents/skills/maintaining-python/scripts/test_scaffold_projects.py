@@ -89,7 +89,9 @@ def main():
     )
     single_script = (single / "build-and-run.sh").read_text(encoding="utf-8").splitlines()
     assert single_script[0] == "#!/usr/bin/env bash"
-    assert single_script[1] == "# 配置、构建并运行当前 CMake 项目。"
+    assert single_script[2] == "# build-and-run.sh - 工程一键验证脚本"
+    assert "header() {" in single_script
+    assert "trap 'err" in " ".join(single_script)
 
     multi = case_root / "multi-project"
     assert create_project(module, case_root, multi.name, "multi") == 0
@@ -172,7 +174,10 @@ def main():
         assert f"add_library(greeting {library_type} src/greeting.cpp)" in module_cmake
         assert "target_include_directories(greeting PUBLIC include)" in module_cmake
         assert "target_link_libraries(app PRIVATE greeting)" in library_cmake
-        assert f"CMAKE_{output_kind}_OUTPUT_DIRECTORY ${{CMAKE_BINARY_DIR}}/lib" in library_cmake
+        assert (
+            f'set(CMAKE_{output_kind}_OUTPUT_DIRECTORY "${{CMAKE_BINARY_DIR}}/lib")'
+            in library_cmake
+        )
         assert "CompilationDatabase: build" in (library / ".clangd").read_text(
             encoding="utf-8"
         )

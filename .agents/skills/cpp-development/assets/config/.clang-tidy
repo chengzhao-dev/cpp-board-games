@@ -1,22 +1,29 @@
+#===------------------------------------------------------------------------===#
+# .clang-tidy - C++ 静态检查与命名规则
+#===------------------------------------------------------------------------===#
 ---
-# C++ 静态检查：modernize + cppcoreguidelines + bugprone 等，命名规则
-# 与 google-* 启用项以 Google C++ Style Guide 为主标准（偏离白名单见
-# 知识库 bg-google-cpp-style-v1）。
-Checks: >
-  bugprone-*,
-  cppcoreguidelines-*,
-  misc-*,
-  modernize-*,
-  performance-*,
-  portability-*,
-  readability-*,
-  google-build-using-namespace,
-  google-global-names-in-headers,
-  google-explicit-constructor,
-  -bugprone-easily-swappable-parameters,
-  -modernize-use-trailing-return-type,
-  -readability-identifier-length,
-  -readability-magic-numbers
+Checks:
+  - bugprone-*
+  - cppcoreguidelines-*
+  - misc-*
+  - modernize-*
+  - performance-*
+  - portability-*
+  - readability-*
+  - google-build-using-namespace
+  - google-global-names-in-headers
+  - google-explicit-constructor
+  # 关闭 bugprone-easily-swappable-parameters：
+  # 行与列类型相同，这项误报多于真问题。
+  - "-bugprone-easily-swappable-parameters"
+  # 关闭 modernize-use-trailing-return-type：函数保持前置返回类型。
+  - "-modernize-use-trailing-return-type"
+  # 关闭 readability-identifier-length：row、col 是坐标和循环的正常短名。
+  - "-readability-identifier-length"
+  # 关闭 readability-magic-numbers：尺寸常量集中定义，不逐个字面量报警。
+  - "-readability-magic-numbers"
+  # 关闭 portability-avoid-pragma-once：头文件使用 #pragma once。
+  - "-portability-avoid-pragma-once"
 CheckOptions:
   - key: readability-identifier-naming.NamespaceCase
     value: lower_case
@@ -29,6 +36,9 @@ CheckOptions:
   - key: readability-identifier-naming.VariableCase
     value: lower_case
   - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  # 局部常量不是全程固定的 k 常量，避免误套 ConstantCase。
+  - key: readability-identifier-naming.LocalConstantCase
     value: lower_case
   - key: readability-identifier-naming.MemberCase
     value: lower_case

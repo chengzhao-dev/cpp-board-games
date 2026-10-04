@@ -25,7 +25,7 @@ metadata:
 ## P0 硬约束
 
 1. 仓库检查一律走 `.agents/skills/governing-agents/scripts/run.py`，不绕过它直接串脚本。
-2. 运行时只读取根目录 `config.toml` 的 `python`（最低 3.12），不得使用环境变量、`runtime.json.python`、PATH 或 `sys.executable` 回退。字段缺失、路径不可执行或版本不足时立即中止，不伪造结果。
+2. 运行时只读取根目录 `config.toml` 的 `python`（最低 3.12），不得使用环境变量、`runtime.json.python`、PATH 或 `sys.executable` 回退。字段缺失、路径不可执行或版本不足时立即中止，不伪造结果。唯一例外：向 Quarto 子进程注入 `QUARTO_PYTHON` 时，值必须来自同一 `config.toml` 字段（`run.py` 的 `render` / `preview`）。
 3. 知识库正文只在根 `.agents/knowledge/`。所有项目临时产物（包括脚本测试、测量和基准的中间文件）统一写在 `temp/<用途>/`，索引产物写在 `temp/knowledge-index/`（均不入库）。统一检索协议见 `.agents/knowledge/agent-workspace/retrieval/retrieval-governance.md`。
 4. 作用域、检索和索引统一跳过构建产物、Quarto 缓存、依赖目录、Python 缓存与密钥文件。规则来源是根目录 `.gitignore`，不依赖 `.agents/` 下的忽略文件。
 5. 脚本改动后同步更新 `AGENTS.md` 命令表与 `run.py` 子命令说明。

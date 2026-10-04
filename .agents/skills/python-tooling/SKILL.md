@@ -19,15 +19,15 @@ Python 是本项目的正式辅助学习路线，不承担 C++ 核心规则。
 
 | 任务 | 读取 |
 | --- | --- |
-| Python 衔接路线与切片规划 | `content/tic-tac-toe/09-python-and-web-transition.qmd` |
+| 脚本、回放和本地 Web 的边界 | 本文件，以及知识 `bg-roadmap-v1`「已实现阶段与辅助适配」。`games/<game>/python/` 已存在时在原目录内维护，不重复创建功能平行目录 |
 
 ## P0 硬约束
 
-1. 推荐顺序：标准库和 `unittest` → `subprocess` 调用游戏 CLI → JSON 文件或标准输入输出传递游戏状态 → 生成测试局面、分析对局并输出报告 → 再评估本地 HTTP、Web 和 `pybind11`。
-2. 每个游戏的专属 Python 内容放在 `games/<game>/python/`。
-3. Python 测试验证脚本和接口，不替代 C++ 规则测试。
+1. 推荐顺序：标准库和 `unittest` → `subprocess` 调用游戏 CLI → 版本化逐行 JSON → 回放/分析 → 本地 HTTP/Fetch 适配 → 实时需求明确后再评估 WebSocket 或 `pybind11`。
+2. 每个游戏的专属 Python 内容放在 `games/<game>/python/`；回放、协议校验和本地 Web 适配共享该目录，不按功能再建平行顶层目录。
+3. Python 测试验证脚本、协议和 HTTP 输入边界，不替代 C++ 规则测试；本地 Web 默认只绑定回环地址，不写远程部署或认证假设。
 
 ## 完成判据
 
-- [ ] Python 测试通过且不重复覆盖 C++ 规则测试。
-- [ ] 脚本职责、输入输出在游戏目录内有记录。
+- [x] Python 测试通过且不重复覆盖 C++ 规则测试。
+- [x] 脚本职责、输入输出在游戏目录内有记录。

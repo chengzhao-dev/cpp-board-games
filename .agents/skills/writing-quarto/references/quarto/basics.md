@@ -26,7 +26,7 @@ format: html
 | 字段 | 作用 |
 |---|---|
 | `title` | 标题；侧边栏、TOC 与章节号均取自它 |
-| `description` | 页面描述。本仓规划页用它承载一句定位；着陆页（`index.qmd`）的 description 会渲染为可见引导段 |
+| `description` | 站点元数据：仅根 `index.qmd` 保留，只进 `<meta>`，不渲染为可见文字；其余章节与游戏落地页一律不写，定位信息并入开篇说明 |
 | `format` | 输出格式（本仓统一 `html`），可写对象形式配置子选项 |
 | `lang` | 语言，本仓在 `_quarto.yml` 统一设 `zh` |
 | `toc` | 目录（本仓统一在 `format: html` 下设置，见 `rendering-and-output.md`） |
@@ -38,6 +38,16 @@ quarto render 文档.qmd            # 渲染单个文档
 quarto preview 文档.qmd           # 本地预览（实时刷新）
 quarto render                     # 渲染当前项目全部内容
 ```
+
+本仓验收与日常预览优先：
+
+```powershell
+& .agents/skills/governing-agents/scripts/run.ps1 render
+& .agents/skills/governing-agents/scripts/run.ps1 preview
+& .agents/skills/governing-agents/scripts/run.ps1 preview content/tictactoe/03-board.qmd
+```
+
+`run.ps1` 会把 `config.toml` 的 `python` 注入为 `QUARTO_PYTHON`。裸 `quarto preview` 不读该字段；Windows 上 PATH 的 `python3` 可能是 Store 占位符。Cursor Preview 请用 `Python: Select Interpreter` 选同一解释器。细则见知识库 `bg-coords-diagram-v1`「解释器与 CI 依赖」。
 
 `quarto render` 必须在仓库根目录执行，在其他目录执行会静默不渲染。
 
@@ -55,13 +65,13 @@ book:
     collapse-level: 1
   chapters:
     - index.qmd
-    - part: content/tic-tac-toe/index.qmd
+    - part: content/tictactoe/index.qmd
       chapters:
-        - content/tic-tac-toe/01-scope-and-principles.qmd
+        - content/tictactoe/01-rules.qmd
 ```
 
 - **`index.qmd` 必须存在**，作为 Book 首页/入口。
-- **`part:` 指向游戏落地页**（如 `content/tic-tac-toe/index.qmd`），产生分组标题；新增游戏时先建游戏落地页，再加 part。
+- **`part:` 指向游戏落地页**（如 `content/tictactoe/index.qmd`），产生分组标题；新增游戏时先建游戏落地页，再加 part。
 - 章节可放子目录，在 `chapters` 写相对路径；`_quarto.yml` 的章节顺序与游戏落地页的阅读顺序保持一致。
 - 渲染：`quarto render`，Book 默认输出到 `_book/`。
 
@@ -82,7 +92,7 @@ book:
 title: "章节标题"
 ---
 
-开篇说明写正文普通段落（1-3 句），普通章节的 `description` 只进 `<meta>`。
+开篇说明写正文普通段落（1-3 句）；章节与游戏落地页不写 `description`，定位信息只保留在开篇说明。
 
 ## 第一个小节
 正文。

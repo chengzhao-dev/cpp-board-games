@@ -21,7 +21,7 @@ metadata:
 | --- | --- |
 | 改动后圈定验证范围 | `references/verification-matrix.md` |
 | 游戏 STAR 中测试步骤职责与报错记录落点 | `.agents/knowledge/agent-workspace/planning/engineering-storyline.md` |
-| 验收边界与完成定义（读者视角，需要完整语义时） | `content/tic-tac-toe/06-cli-and-acceptance.qmd` |
+| 验收边界与完成定义（读者视角，需要完整语义时） | `content/tictactoe/05-terminal-play.qmd` |
 
 ## P0 硬约束
 

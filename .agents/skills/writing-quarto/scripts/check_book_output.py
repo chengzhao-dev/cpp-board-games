@@ -75,6 +75,30 @@ def main() -> int:
                 problems.append(f"sitemap.xml 存在非绝对 URL：{url}")
                 break
 
+    root = Path(__file__).resolve().parents[4]
+    for qmd in sorted((root / "content").rglob("*.qmd")):
+        source = qmd.read_text(encoding="utf-8")
+        if not source.startswith("---"):
+            continue
+        front = source.split("---", 2)[1]
+        if "engine: jupyter" not in front:
+            continue
+        html = book / qmd.relative_to(root).with_suffix(".html")
+        rel = html.relative_to(book).as_posix()
+        if not html.is_file():
+            problems.append(f"{rel}: 声明了 engine: jupyter，但没有对应 HTML")
+            continue
+        page = html.read_text(encoding="utf-8", errors="replace")
+        figures = html.with_name(html.stem + "_files")
+        figure_text = ""
+        if figures.is_dir():
+            figure_text = "\n".join(
+                path.read_text(encoding="utf-8", errors="replace")
+                for path in figures.rglob("*.svg")
+            )
+        if "coords-grid" not in page and "coords-grid" not in figure_text:
+            problems.append(f"{rel}: 坐标图页面缺少 coords-grid")
+
     if problems:
         print(f"发布产物检查失败（{len(problems)} 项）：")
         for item in problems[:30]:

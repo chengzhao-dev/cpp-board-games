@@ -7,7 +7,7 @@ tags: [mermaid, diagrams, rendering, quarto]
 level_range: [0, 5]
 dependencies: ["bg-quarto-conventions-v1"]
 created: "2026-09-28"
-updated: "2026-09-28"
+updated: "2026-09-30"
 chunk_strategy: "semantic_heading"
 estimated_tokens: 600
 ---
@@ -15,6 +15,8 @@ estimated_tokens: 600
 # Mermaid 图表渲染约定
 
 本文件记录 `content/**/*.qmd` 中 Mermaid 图表的渲染层约定；是否使用图表的门槛见 `writing-quarto` 技能的 P0 硬约束，主题侧取色与排版守卫见 `designing-theme` 技能的 `assets/theme/css/mermaid.css`。
+
+Mermaid 只承担流程图、分层图与调用链；坐标轴类网格图（棋盘行列、二维下标）走 `coords_grid.py` 加 `{python}` 可执行单元，分工与写法见标识 `bg-coords-diagram-v1` 的知识文件，禁止用 Mermaid 硬画网格。
 
 ## 只使用 {mermaid} 围栏
 
@@ -38,5 +40,6 @@ mermaid 用 init 指令中的字体测量标签宽度，页面 CSS 按 `--ui-fon
 - 节点标签只画抽象层名，不把职责明细塞进节点括号；逐项职责用图后列表交代；
 - 标签中不使用全角冒号与直角引号「」承载分隔语义；并列用顿号，补充说明用全角括号；
 - 边标签写在 `-- 文字 -->` 中，保持简短中文；
-- 图表方向按阅读顺序选择：分层结构用 `TB`，推进或调用链用 `LR`；
+- 图表方向以窄屏可读为底线：分层结构用 `TB`；单向推进链节点数 ≥ 5 时默认 `TB` 单列，一屏过高时拆成两张图（如「01–05」「06–10」各一张），禁止长 `LR` 挤爆视口；节点数 ≤ 4 的短链可用 `LR`；
+- 单图节点建议 ≤ 6，一图一事不变，超出优先拆图而不是压缩标签；
 - 图后不设 `>` 引用块图注：图注内容并入图后列表的引言句或正文句，图表之后直接跟职责列表，不让图独立承载全部信息。

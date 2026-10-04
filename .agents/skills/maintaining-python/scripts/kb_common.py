@@ -210,12 +210,18 @@ def content_hash(text: str) -> str:
 
 
 def list_knowledge_files() -> list[Path]:
-    """递归列出 .agents/knowledge/ 下的有效知识文件。"""
+    """递归列出 .agents/knowledge/ 下的有效知识文件。
+
+    cases/appendix/ 是低频人审附录：不进分块、索引、检索与评测，
+    因此在这里一步排除，下游（chunker / kb-search / kb-eval）无需各自处理。
+    """
     if not KB_ROOT.is_dir():
         return []
     return [
         path for path in sorted(KB_ROOT.rglob("*.md"))
-        if not path.name.startswith("_") and path.name.lower() not in {"readme.md", "knowledge.md"}
+        if not path.name.startswith("_")
+        and path.name.lower() not in {"readme.md", "knowledge.md"}
+        and "appendix" not in path.relative_to(KB_ROOT).parts
     ]
 
 

@@ -63,7 +63,7 @@ function sampleHtml(files, root) {
     add(chapters[0]);
     add(chapters.at(-1));
   }
-  const representative = /(?:library|cmake|first-program|minimal-program-structure|types-and-variables|constants)/;
+  const representative = /(?:library|cmake|first-program|minimal-program-structure|types-and-variables|const|constexpr)/;
   for (const file of contentFiles) {
     if (representative.test(file)) {
       add(file);

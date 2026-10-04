@@ -22,7 +22,7 @@
 | `toc` / `toc-depth` / `toc-location` | `true` / `3` / `right` | 右侧目录最多到 H3，窄屏会折叠，不作唯一定位手段 |
 | `number-sections` | `false` | 因此标题不手填序号，见 `basics.md` |
 | `code-copy` / `code-overflow` | `true` / `wrap` | 长行换行，不让读者横向拖动 |
-| `grid` | sidebar 272 / body 920 / margin 256 / gutter 1rem | 正文列略放宽，减少路径和表格的无谓换行 |
+| `grid` | sidebar 272 / body 720 / margin 256 / gutter 1rem | 正文列约 45 个汉字，对齐 1280 视口 |
 | `lang` | `zh` | 影响部分 HTML 行为与提示框默认词 |
 
 本仓**不开启**代码行号（`code-line-numbers`）与代码折叠（`code-fold`）。站点 QMD 代码块使用 `{.语言 filename="标题"}`；Quarto 会把标题渲染为 `.code-with-filename`，外观与复制按钮位置由主题统一控制。filename 缺失由 `check_docs.py` 拦截，内容语义与篇幅由 `verify_content.py` 负责。

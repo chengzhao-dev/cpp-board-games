@@ -50,7 +50,7 @@ P1 强制细则、P2 建议和反模式一律下沉 L2 或 `.agents/knowledge/`�
 `.agents/skills/cpp-development/references/stages/<game>.md` 一行一个单元（代码阶段或说明页章节），是章节映射、读取边界与状态的唯一权威记录，格式由 `.agents/skills/governing-agents/scripts/scope.py` 解析：
 
 1. 行以 `| \`目标\`` 开头且 5 格：目标 | 章节正文 | 代码目录 | 专项必读 | 状态。
-2. `—` 表示空；无代码阶段写 `—（横向说明页，无代码阶段）` 或 `—（规划页，实现前不建代码目录）`，不留裸空白。
+2. `—` 表示空。没有源文件的章不占路由表，不留裸空白。
 3. 目标键用阶段目录名或说明页章节名；章号与阶段号错位时以本表为准，不靠数字推断。
 4. 文件级读取边界只写一次（`- **必读**` 公共行），行间只写差异。
 5. 状态只允许 `todo` / `done`；新阶段开工时先补行再建目录。验收语义与 `.agents/skills/testing/references/verification-matrix.md` 一致，本表不设第二套。

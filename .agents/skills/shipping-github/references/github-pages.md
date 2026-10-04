@@ -9,9 +9,9 @@
 Actions 渲染 + 推 `gh-pages` 产物分支，配置在 `.github/workflows/pages.yml`：
 
 1. Pages 设置选 **Deploy from a branch** → 分支 `gh-pages`、目录 `/ (root)`。
-2. `sed` 改写 config.toml 的 python 字段指向 runner 解释器 → `quarto render`。
+2. `sed` 把 `config.toml` 的 `python` 指到 `/usr/bin/python3`，之后的 `run.py` 都用这个解释器。`run.py render` 注入同一个 `QUARTO_PYTHON`，并在渲染后给 Mermaid 脚本加 `defer`。
 3. `peaceiris/actions-gh-pages@v4` 上传 `./_book` 到 `gh-pages`，`force_orphan: true`。
-4. 幂等纠正 Pages 源：先 POST 再 PUT，返回 409 属正常，非 2xx/409 时提示去 Settings → Pages 手工选择。
+4. 读回 Pages 源。不是 `gh-pages` `/` 就让任务失败。`GITHUB_TOKEN` 对 POST/PUT 常返回 403，不能靠它自愈。
 5. `permissions` 只需 `contents: write` 与 `pages: write`。不用 `configure-pages`/`upload-pages-artifact`/`deploy-pages`，也不需要 `id-token: write`。
 
 ## 备选模式（新项目或无 Actions 时）

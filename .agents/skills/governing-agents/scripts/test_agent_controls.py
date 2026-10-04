@@ -3,6 +3,7 @@
 
 from pathlib import Path
 import importlib.util
+import subprocess
 import sys
 
 
@@ -28,7 +29,7 @@ def main() -> int:
     assert encoding.control_issues("auto\x07") == [(1, 5, "U+0007")]
     assert encoding.control_issues("中文\n\ttext") == []
     assert encoding.severity(Path(".agents/skills/governing-agents/scripts/x.py")) == "hard"
-    assert encoding.severity(Path("content/tic-tac-toe/02-toolchain-probe.qmd")) == "soft"
+    assert encoding.severity(Path("content/tictactoe/02-project-layout.qmd")) == "soft"
 
     # 体量脚本：L1 front matter 字段可解析
     fields = size.front_fields(ROOT / ".agents/skills/writing-quarto/SKILL.md")
@@ -61,7 +62,7 @@ def main() -> int:
     review = next(tool for tool in mcp.TOOLS if tool["name"] == "project_review")
     assert review["inputSchema"]["properties"] == {}
     assert runner.status_group(".agents/skills/governing-agents/references/catalog.md") == "maintenance"
-    assert runner.status_group("content/tic-tac-toe/03-board-and-state.qmd") == "content"
+    assert runner.status_group("content/tictactoe/03-board.qmd") == "content"
     assert runner.display_command("kb-index") == "知识库索引"
     assert runner.display_check("kb-eval") == "知识库评测"
     fast = [name for name, *_rest in runner.checks_for_profile("fast")]
@@ -71,15 +72,15 @@ def main() -> int:
     assert "content" in fast and "dom" not in fast
 
     # 作用域：阶段解析、路径反查与仓库域
-    unit = scope.find_stage("tic-tac-toe/02-board-and-state", ROOT)
+    unit = scope.find_stage("tictactoe/03-board", ROOT)
     assert unit and unit["row"]["status"] == "done"
-    assert unit["row"]["qmd"] == "content/tic-tac-toe/03-board-and-state.qmd"
-    by_qmd = scope.find_stage_by_qmd(ROOT / "content/tic-tac-toe/02-toolchain-probe.qmd", ROOT)
-    assert by_qmd and by_qmd["stage"] == "01-toolchain-probe"
+    assert unit["row"]["qmd"] == "content/tictactoe/03-board.qmd"
+    by_qmd = scope.find_stage_by_qmd(ROOT / "content/tictactoe/02-project-layout.qmd", ROOT)
+    assert by_qmd and by_qmd["stage"] == "02-project-layout"
     by_code = scope.find_stage_by_code_path(
-        ROOT / "games/tic-tac-toe/02-board-and-state", ROOT
+        ROOT / "games/tictactoe/01-cli-game", ROOT
     )
-    assert by_code and by_code["stage"] == "02-board-and-state"
+    assert by_code and by_code["stage"] == "01-rules"
     assert scope.resolve_repo_domain(
         ".agents/skills/shipping-github/SKILL.md", ROOT
     )["label"] == "skill shipping-github"
@@ -95,9 +96,9 @@ def main() -> int:
         ".agents/knowledge/KNOWLEDGE.md", ROOT
     )["label"] == "knowledge"
     table_rows = scope.parse_table(
-        ROOT / ".agents/skills/cpp-development/references/stages/tic-tac-toe.md"
+        ROOT / ".agents/skills/cpp-development/references/stages/tictactoe.md"
     )
-    assert "01-toolchain-probe" in table_rows and "10-completion-and-next-steps" in table_rows
+    assert "01-rules" in table_rows and "05-terminal-play" in table_rows
 
     # 项目级硬约束留在 AGENTS.md
     agents_text = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
@@ -105,8 +106,26 @@ def main() -> int:
     assert "提交与推送默认不做" in agents_text
     assert "chengzhao-dev" in agents_text
     assert (ROOT / ".agents/skills/shipping-github/references/git-workflow.md").is_file()
-    assert (ROOT / ".agents/skills/cpp-development/references/stages/tic-tac-toe.md").is_file()
+    assert (ROOT / ".agents/skills/cpp-development/references/stages/tictactoe.md").is_file()
     assert (ROOT / ".agents/knowledge/agent-workspace/navigation/staged-game-layout.md").is_file()
+
+    allowed_root = {
+        ".agents", ".github", "content", "games", "shared", "_freeze",
+        ".gitattributes", ".gitignore", "AGENTS.md", "config.toml",
+        "index.qmd", "LICENSE", "README.md", "_quarto.yml",
+    }
+    unexpected_root = []
+    for path in ROOT.iterdir():
+        if path.name in allowed_root or path.name == ".git":
+            continue
+        ignored = subprocess.run(
+            ["git", "check-ignore", "-q", "--", path.name],
+            cwd=ROOT,
+            check=False,
+        ).returncode == 0
+        if not ignored:
+            unexpected_root.append(path.name)
+    assert unexpected_root == [], unexpected_root
 
     tools = {tool["name"]: tool for tool in mcp.TOOLS}
     execution_only = {

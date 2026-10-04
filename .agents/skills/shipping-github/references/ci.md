@@ -9,15 +9,16 @@
 ### pages.yml
 
 - 触发：`push` 到 `main`，或 `workflow_dispatch`
-- 步骤：checkout → setup Quarto → setup Python 3.12 → 改写 config.toml → `quarto render` → `peaceiris/actions-gh-pages` 推 `_book/` 到 `gh-pages`（`force_orphan`）→ 幂等校正 Pages source
+- 步骤：checkout（完整历史）→ setup Quarto → setup Python 3.12 → 把 `config.toml` 的 `python` 改成 `/usr/bin/python3` → 用该解释器 `run.py install-quarto-deps` → `run.py check --profile fast` → `run.py render`（注入同一 `QUARTO_PYTHON`，并在渲染后执行 `defer_mermaid.py`）→ `run.py check --profile full` → `peaceiris/actions-gh-pages` 推 `_book/` 到 `gh-pages`（`force_orphan`）→ 读回 Pages source，不是 `gh-pages` `/` 则失败
 - 权限：`contents: write`（推分支）、`pages: write`（调 Pages API）
 - 并发：`concurrency: pages`，不取消进行中的发布，避免 gh-pages 半更新
 - Pages 设置：Deploy from a branch → `gh-pages` / `(root)`（见 `github-pages.md`）
+- `GITHUB_TOKEN` 往往不能自行改 Pages 源（POST/PUT 返回 403）。读回失败就让任务变红，不降级成警告。修复漂移需要一次性 PAT 或在 Settings → Pages 手工改回。
 
 ### render-check.yml
 
 - 触发：PR 到 `main` 与 `workflow_dispatch`
-- 步骤：`run.py check --profile fast`（编码、体量、文件名、链接、文档内容）→ `quarto render` → `run.py check --profile full`（全量，含渲染产物契约与知识库评测）
+- 步骤：`run.py check --profile fast` → `run.py render` → `run.py check --profile full`
 - 范围边界：C++ 游戏代码的配置、编译、CTest 与运行全部留在本地阶段脚本，不作为 CI 门禁。
 
 ## CI 持续集成与检查规范

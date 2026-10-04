@@ -368,6 +368,8 @@ def detect_conflicts(con: sqlite3.Connection, registry: dict) -> int:
     1. 重合度取文档级概念名集合的 Jaccard。旧实现按 chunk_id 取交集，而 chunk_id
        以 doc_id 为前缀，跨文档交集恒空 → overlap 恒 0 → 检索侧降权从未生效。
     2. 跳过已被 supersedes 关联的一对：版本演进已有明确结论，再报冲突是重复告警。
+    3. 跳过存在 dependencies 关联的一对：cases 正反对照刻意复用条文的术语与标识符，
+       这是声明的依赖关系，不是内容漂移；报冲突会把条文文件整体降权，挤出检索结果。
 
     刻意不猜「描述是否矛盾」：纯词面分不清互补还是冲突，猜错会把正确知识静默降权。
     所以只报告共享概念名与较旧的一方，人工确认后再改 supersedes。
@@ -377,6 +379,7 @@ def detect_conflicts(con: sqlite3.Connection, registry: dict) -> int:
     docs = registry["documents"]
     dates = {d: str(docs[d].get("updated", "")) for d in docs}
     supersedes = {d: str(docs[d].get("supersedes") or "") for d in docs}
+    deps = {d: set(kb.as_list(docs[d].get("dependencies"))) for d in docs}
     rows = 0
     ids = sorted(docs)
     for index, first in enumerate(ids):
@@ -393,6 +396,8 @@ def detect_conflicts(con: sqlite3.Connection, registry: dict) -> int:
             if not concepts.get(older) or not concepts.get(newer):
                 continue
             if supersedes[newer] == older or supersedes[older] == newer:
+                continue
+            if older in deps[newer] or newer in deps[older]:
                 continue
             shared = concepts[older] & concepts[newer]
             if len(shared) < CONFLICT_MIN_SHARED:

@@ -7,7 +7,7 @@ tags: [terminal, stdout, stderr, logging, color]
 level_range: [0, 5]
 dependencies: []
 created: "2026-09-26"
-updated: "2026-09-27"
+updated: "2026-09-29"
 chunk_strategy: "semantic_heading"
 estimated_tokens: 1400
 ---
@@ -32,6 +32,7 @@ estimated_tokens: 1400
 3. 成功路径输出保持简短——底层工具（cmake/ninja/ctest）的原生输出已经足够详细，脚本不重复转述。
 4. `set -e` 负责失败即停；配合 `trap 'err "构建流程失败"' ERR` 在 stderr 打印一条提示并保留非零退出码。
 5. 不默认打印只有开发者才懂的调试信息；确需详细模式时用环境变量或参数显式开启。
+6. `header()`、`err()` 与 `trap ERR` 归入脚本的「输出辅助」段横幅，不与「严格模式与工作目录」段的 `set`、常量混段（段落划分见标识 `bg-comment-style-v1` 的知识文件）。
 
 ### 纯文本输出
 
