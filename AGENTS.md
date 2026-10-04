@@ -19,7 +19,7 @@
 | 路径 | 职责 |
 | --- | --- |
 | `content/`、`index.qmd`、`_quarto.yml` | Quarto Book 读者文档；游戏内文档在 `content/<game>/` |
-| `games/<game>/<NN-stage>/` | 单个游戏按编号阶段的完整垂直切片，每阶段可独立配置、编译、测试和运行 |
+| `games/<game>/<NN-stage>/` | 单个游戏按编号阶段的完整程序，每阶段可独立配置、编译、测试和运行。井字棋当前有 `01-cli-game`、`02-cpu-opponent`、`03-line-protocol`；只有出现新的真实行为时才继续新建阶段 |
 | `shared/` | 跨游戏共享库；出现首个真实复用时创建 |
 | `.agents/skills/` | Codex 项目 skills、references、路由表与工具脚本 |
 | `.agents/mcp/` | 项目级 MCP stdio server 与说明，由宿主显式配置 |
@@ -40,6 +40,8 @@
 | `… run.ps1 check --profile fast\|book\|knowledge\|python\|full` | 按改动域运行校验，默认 `full` |
 | `… run.ps1 verify --changed` | 增量校验 qmd 文档内容 |
 | `… run.ps1 render` | 渲染 Book（须在仓库根目录）并跑 `book` profile |
+| `… run.ps1 preview [路径.qmd]` | 本地 preview（注入 `config.toml` 的 `QUARTO_PYTHON`） |
+| `… run.ps1 install-quarto-deps` | 按 `config.toml` 安装 Quarto 可执行单元依赖 |
 | `… run.ps1 build <game>/<stage>` | 在 WSL 运行阶段 `build-and-run.sh`（配置、编译、CTest、运行） |
 | `… run.ps1 status` | 精简 git 状态 |
 | `… run.ps1 kb-index [--rebuild]` / `kb-check` / `kb-eval` / `kb-search` | 知识库索引、体检、评测与检索 |
@@ -47,7 +49,7 @@
 ## 读取、编辑与验收边界
 
 1. 每次任务先运行 `scope`，只读「单元」「读取」和必要 reference。不整包读取 references。
-2. 永不读取或索引 `_book/**`、`games/**/build/**`、`.quarto/**`、`.cache/**`、`.tmp/**`、`temp/**`。产物检查交给脚本。
+2. 永不读取或索引 `_book/**`、`games/**/build/**`、`.quarto/**`、`.cache/**`、`.tmp/**`、`temp/**`。`_book/` 是忽略的 Pages 发布物；根 `_freeze/` 是计算型页面的可提交快照，`.quarto/_freeze/` 仍属本地缓存。产物检查交给脚本。
 3. 预计读取超过 8 个文件或需要全仓检索时才派侦察代理；编辑回主线程完成。
 4. 中文文件使用 UTF-8 无 BOM、LF。修改 `.qmd`、skill 或主题 CSS 后先跑编码检查（`check --profile fast` 的 encoding 项）。
 5. 修改 `.agents/skills/designing-theme/assets/theme/**` 或 `_quarto.yml` 会触发整本渲染，确认代价后运行 `render`。
@@ -57,7 +59,7 @@
 
 ## Python 运行时
 
-所有仓库脚本直接读取根目录 `config.toml` 中的 `python`（最低 3.12）。Skills、MCP 与维护命令不得另行读取环境变量、`runtime.json.python`、PATH 或 `sys.executable` 作为项目 Python 来源。MCP 配置指向 `.agents/mcp/server.py`，由该 server 读取同一字段。
+解释器只读根目录 `config.toml` 的 `python`（最低 3.12）。字段缺失或不可执行时立即停止。细节在 `maintaining-python` 技能。
 
 ## 初始化兼容
 

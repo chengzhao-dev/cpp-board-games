@@ -44,4 +44,5 @@ coverage.xml
 .zcodeignore
 
 # 临时分析、重构报告与生成产物（不入库）
+/site_libs/
 /temp/

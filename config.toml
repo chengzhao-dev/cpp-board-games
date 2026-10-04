@@ -4,3 +4,11 @@
 # Python 解释器（最低 3.12），本仓库脚本与 MCP 统一用解释器的完整路径运行；
 # 留空或缺失时脚本立即失败，不回退 PATH。换机器或升级环境时只改这里。
 python = "D:/ProgramData/miniforge3/python.exe"
+
+# Quarto {python} / Jupyter 可执行单元的运行时依赖。CI 与本地均由 run.py 读取；
+# 坐标图只用标准库生成 SVG，无需 matplotlib。
+quarto_python_packages = [
+  "jupyter>=1.0",
+  "nbclient>=0.10",
+  "ipykernel>=6.29",
+]
