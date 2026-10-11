@@ -11,8 +11,10 @@ runs:
       name: Derive CI inputs from config.toml
       shell: bash
       run: |
-        sed -n '/^quarto_python_packages/,/^]/p' config.toml | grep -o '"[^"]*"' > quarto-requirements.txt
-        cat quarto-requirements.txt
+        # 依赖清单只作为缓存键，写到已忽略的 temp/：仓库根受 Agent 控制检查白名单约束
+        mkdir -p temp
+        sed -n '/^quarto_python_packages/,/^]/p' config.toml | grep -o '"[^"]*"' > temp/quarto-requirements.txt
+        cat temp/quarto-requirements.txt
         echo "quarto=$(sed -n 's/^quarto_version *= *"\([^"]*\)".*/\1/p' config.toml)" >> "$GITHUB_OUTPUT"
     - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b  # v2.2.0
       with:
@@ -21,7 +23,7 @@ runs:
       with:
         python-version: "3.12"
         cache: pip
-        cache-dependency-path: quarto-requirements.txt
+        cache-dependency-path: temp/quarto-requirements.txt
     # config.toml 的 python 字段是仓库唯一解释器来源；CI 把它指到 runner 的 python3。
     - name: Point config.toml python at the runner interpreter
       shell: bash
