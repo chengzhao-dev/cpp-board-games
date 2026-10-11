@@ -44,10 +44,9 @@ pre:not(.sourceCode) code {
   font-size: var(--code-font-size);
   font-weight: inherit;
   line-height: var(--code-line-height);
-  /* 与 Quarto 注入的 pre > code.sourceCode 取同一套换行语义，否则
-     站点声明的 code-overflow: wrap 被同特异的本规则静默取消。 */
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  /* 与 _quarto.yml 的 code-overflow: scroll 同一换行语义：长行不折断，
+     在代码块内部横向滚动；打印时无法滚动，由下方打印规则恢复折行。 */
+  white-space: pre;
 }
 pre.sourceCode code > span { line-height: var(--code-line-height); }
 
@@ -120,7 +119,9 @@ body.quarto-dark .code-with-filename .code-with-filename-file {
   border-radius: 0;
 }
 
-.code-with-filename .code-with-filename-file strong {
+/* 文件名不是正文强调：加 ID 前缀压过 content.css 的 #quarto-document-content strong
+   强调色，标题条颜色明暗各用自己的 token。 */
+#quarto-document-content .code-with-filename .code-with-filename-file strong {
   display: block;
   min-width: 0;
   overflow: hidden;
@@ -131,8 +132,6 @@ body.quarto-dark .code-with-filename .code-with-filename-file {
   font-size: var(--code-title-font-size);
   font-weight: 600;
   line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .code-with-filename div.sourceCode,
@@ -206,3 +205,13 @@ pre.sourceCode code > span:hover { background-color: var(--line-hover-bg); }
   border-color: var(--code-border);
 }
 .code-copy-button-checked { opacity: 1; color: var(--link-color); }
+
+/* 打印时横向滚动不存在，屏幕上的 white-space: pre 会把 100 列截掉；
+   打印恢复折行，屏幕规则不动。 */
+@media print {
+  pre.sourceCode code,
+  pre:not(.sourceCode) code {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}

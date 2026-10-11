@@ -113,7 +113,8 @@ blockquote.blockquote {
 #quarto-document-content :is(figure, .cell-output-display) svg.coords-grid {
   display: block;
   margin-inline: auto;
-  max-width: min(100%, 20rem);
+  /* 40rem 容器恰好容下下标条图 624px 的自然宽度，1:1 显示；更小的 render_grid 图不受影响。 */
+  max-width: min(100%, 40rem);
   height: auto;
   color: var(--body-color);
   background: var(--surface-raised);
@@ -161,9 +162,15 @@ dd {
   padding: 0.6rem 1rem;
   margin: 1.2rem 0;
 }
+/* 摘要文字用正文色；折叠三角显式着色——部分浏览器的 marker 不跟随文字色，
+   暗色底上会以黑色渲染导致消失。 */
 #quarto-document-content details.answer-disclosure > summary {
   cursor: pointer;
-  font-weight: 600;
+  color: var(--body-color);
+}
+#quarto-document-content details.answer-disclosure > summary::marker,
+#quarto-document-content details.answer-disclosure > summary::before {
+  color: var(--body-color);
 }
 #quarto-document-content details.answer-disclosure[open] > summary {
   margin-bottom: 0.5rem;
@@ -172,7 +179,6 @@ dd {
 /* ---------- 正文排版 ---------- */
 /* 平滑滚动 + 锚点不被固定头遮挡（参考 Vue/React 文档体验） */
 html {
-  color-scheme: light dark;
   scroll-behavior: smooth;
   scroll-padding-top: 7rem;
   scrollbar-width: thin;
@@ -209,6 +215,11 @@ html {
 #quarto-document-content li > ol {
   margin-top: 0.625rem;
 }
+/* 列表 marker（圆点/序号）：显式用次要文字色，暗色底上浏览器默认 marker 可能
+   以黑色渲染导致消失。 */
+#quarto-document-content li::marker {
+  color: var(--text-secondary);
+}
 /* 列表内「标题段 + 正文段」：粗体首段仅当其为唯一子元素（拆分写法 - **标题** 独占行）
    时渲染为块级小标题；同行写法 - **标题**：正文 的 strong 后接文字，非 only-child，不受影响。
    这样既统一「长项拆分」观感，又不误伤普通加粗列表项。 */
@@ -222,20 +233,29 @@ html {
 #quarto-document-content li > p + p {
   margin-top: 0.35rem;
 }
-/* 正文基色统一到 token，避免与 h1–h3 微妙色差 */
+/* 正文基色统一到 token，避免与 h1–h3 出现微妙色差 */
 #quarto-document-content {
   color: var(--body-color);
   letter-spacing: normal;
   text-spacing-trim: trim-start;
   text-autospace: normal;
 }
-/* 正文 strong：颜色 + 加粗双重强调。文楷 Screen 只有 400 一个字面且 body 禁合成
-   （font-synthesis: none，见 tokens.css），这里单独对 strong 放开合成加粗；
-   拉丁字符命中 Fixel Text 真实 700。标题与 UI 不在作用域，维持禁合成。 */
+/* 正文 strong：颜色 + 加粗双重强调。全站只有 LXGW Bright Medium 一个字面且
+   body 禁合成（font-synthesis: none，见 tokens.css），这里单独对 strong 放开
+   合成加粗；标题与 UI 不在作用域，维持禁合成（导航上的 font-weight 失效问题
+   靠色条/浅底/字号区分，不扩大合成范围）。 */
 #quarto-document-content strong {
   font-weight: 700;
   font-synthesis: weight;
   color: var(--emphasis-color);
+}
+/* 链接里的加粗：颜色跟链接走，不被 strong 的强调色盖住；下划线由链接规则提供 */
+#quarto-document-content a strong {
+  color: inherit;
+}
+/* 加粗里的行内代码与键盘键：不继承强调色，保持弱底 + 正文色 */
+#quarto-document-content kbd {
+  color: var(--body-color);
 }
 pre,
 code {

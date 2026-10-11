@@ -49,7 +49,8 @@ nav.navbar.navbar-expand-lg {
 .navbar-title {
   color: var(--navbar-fg);
   font-family: var(--ui-font);
-  font-weight: 600;
+  /* 单字面字体 + font-synthesis: none 下 600 不会变粗，靠字号与图标区分 */
+  font-weight: 400;
   font-size: 1.125rem;
   letter-spacing: 0;
 }
@@ -120,7 +121,7 @@ nav.navbar.navbar-expand-lg {
 }
 body.quarto-dark #quarto-search input,
 body.quarto-dark .quarto-navbar-search input {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23768390" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 1 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23B1BAC4" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 1 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>');
 }
 #quarto-search input:focus,
 .quarto-navbar-search input:focus {

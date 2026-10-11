@@ -64,7 +64,7 @@
   font-size: 1.125rem;
   font-weight: 400;
   line-height: 1.7;
-  max-width: 65ch;
+  max-width: 100%;
   margin: 0 0 1.8rem;
 }
 #title-block-header .description p {
@@ -80,7 +80,9 @@
   display: none;
 }
 
-/* ---------- 标题：用字重与尺寸区分阅读层级 ---------- */
+/* ---------- 标题：用尺寸区分阅读层级（单字面字体下层级只靠字号） ----------
+   h2 通栏底线显式关闭：Bootstrap 主题（cosmo）自带 h2 border-bottom，
+   不写会被回落默认值重新画上。章节之间靠 margin-top: 3rem 的节奏分隔。 */
 h1,
 h2 {
   font-size: 1.5rem;
@@ -88,12 +90,12 @@ h2 {
   line-height: 1.25;
   letter-spacing: 0;
   text-wrap: balance;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: none;
+  padding-bottom: 0;
 }
 h1 { font-size: 2rem; }
 h3 {
-  font-size: 1.375rem;
+  font-size: 1.25rem;   /* 20px：标题台阶 32/24/20/18，h3 与 h2 拉开一档 */
   font-weight: 600;
   line-height: 1.5;
   letter-spacing: 0;
@@ -112,16 +114,8 @@ h5 {
   letter-spacing: 0;
 }
 
-/* h2 下边框由 Quarto/Bootstrap 主题默认提供；索引页关闭分隔线。 */
-body.index-page #quarto-document-content h2 {
-  border-bottom: 0;
-}
-body.homepage #quarto-document-content h2 {
-  border-bottom: 0;
-}
-body.homepage #quarto-document-content h1 {
-  border-bottom: 0;
-}
+/* h2 通栏底线已移除（2026-10）：章节之间靠 margin-top: 3rem 的节奏分隔，
+   不再用横线；原首页/索引页关闭底线的覆盖规则随之删除。 */
 
 /* ---------- 垂直节奏（上边距节奏，参考 mdBook / React / Vue 的 prose 模式） ----------
    Quarto 把每个 h2 章节内容包在 <section class="level2"> 里，因此对主容器与各 section

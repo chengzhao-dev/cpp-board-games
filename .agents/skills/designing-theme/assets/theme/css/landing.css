@@ -55,7 +55,7 @@
   margin-top: 0;
   margin-bottom: 0.5rem;
   font-size: 1.0625rem;
-  font-weight: 600;        /* 卡片标题 600：文楷加粗辨识度有限，700 显僵 */
+  /* 单字面字体 + font-synthesis: none 下 600 不会变粗；卡片标题靠字号与边框区分 */
   color: var(--body-color);
 }
 #quarto-document-content .landing-card h3 a {
@@ -140,7 +140,7 @@ body.homepage #title-block-header.quarto-title-block.default .quarto-title .titl
 body.homepage #title-block-header.quarto-title-block.default .description,
 #quarto-document-content:has(> #title-block-header:first-child + .feature-grid) #title-block-header.quarto-title-block.default .description {
   text-align: left;
-  max-width: 65ch;
+  max-width: 100%;
   margin: 1.25rem 0 0;
   font-size: 1.125rem;
   color: var(--text-secondary);

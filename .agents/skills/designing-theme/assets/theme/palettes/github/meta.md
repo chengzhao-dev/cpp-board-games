@@ -1,6 +1,6 @@
 # Palette: github
 
-生产默认（唯一）色板。亮色对齐 GitHub Primer Light Default；暗色对齐 GitHub Primer **Dark Dimmed**（软暗色：近灰底 `#22272E`，缓解 Dark Default `#0D1117` 的偏黑与光晕）。代码高亮使用 Quarto 内置 `github-light` / `github-dark`。
+生产默认（唯一）色板。亮色对齐 GitHub Primer Light Default；暗色对齐 GitHub Primer **Dark Dimmed**（软暗色：近灰底 `#22272E`，缓解 Dark Default `#0D1117` 的偏黑与光晕）。代码语法色用色板目录里的两份 skylighting 主题 `highlight-light.theme` / `highlight-dark.theme`，取色自 Primer 当前 prettylights（[primer/github-vscode-theme](https://github.com/primer/github-vscode-theme) 的 light 与 dark-dimmed），不再用 Quarto 内置的 2020 年 `github-light` / `github-dark`。两处抬色：暗色注释从官方 `#768390` 抬到 `#9AA1AB`（本书代码底上需 4.5:1），暗色关键字改用 Dark Default 的关键字红 `#FF7B72`；取舍见标识 `bg-reading-surface-v1` 的知识文件。
 
 ## 接线
 
@@ -9,8 +9,8 @@
 | tokens | `palettes/github/tokens.css` |
 | SCSS light | `palettes/github/theme-light.scss` |
 | SCSS dark | `palettes/github/theme-dark.scss` |
-| highlight light | `github-light` |
-| highlight dark | `github-dark` |
+| highlight light | `.agents/skills/designing-theme/assets/theme/palettes/github/highlight-light.theme` |
+| highlight dark | `.agents/skills/designing-theme/assets/theme/palettes/github/highlight-dark.theme` |
 
 ## 暗色分层（Dark Dimmed）
 
@@ -32,4 +32,7 @@
 ## 来源
 
 - [Primer Color usage](https://primer.style/product/getting-started/foundations/color-usage/)
+- [primer/github-vscode-theme](https://github.com/primer/github-vscode-theme)（prettylights 取色来源，light 与 dark-dimmed）
 - GitHub Light / Dark Dimmed 文档表面色
+
+主题资产与 cpp-notes 同源：本仓改动的语法色主题（`highlight-light.theme`、`highlight-dark.theme`）与 `meta.md` 接线表需同步到 cpp-notes 的对应文件。

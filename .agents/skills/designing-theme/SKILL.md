@@ -1,6 +1,6 @@
 ---
 name: designing-theme
-description: 维护 Quarto Book 主题资产（css、scss、字体、palette）；调整页面样式、颜色或字体时使用
+description: 维护 Quarto Book 主题资产（css、scss、字体、palette）；调整页面样式、颜色或字体时使用，不用于改章节正文
 metadata:
   short-description: 维护共享 Quarto 主题
 ---
@@ -17,6 +17,8 @@ metadata:
 
 ## 任务路由
 
+任何主题任务先读 `references/theme-spine.md`（工序唯一入口），再按其中每一步登记的文件与 `##` 行进。
+
 | 任务 | 读取 |
 | --- | --- |
 | 色板接线与暗色分层 | `assets/theme/palettes/github/meta.md` |
@@ -28,9 +30,10 @@ metadata:
 2. `css/` 组件规则不写色值，语义颜色只来自 `palettes/github/tokens.css`；`css/tokens.css` 只放结构尺度令牌，明暗共用。
 3. 资产与 cpp-notes 共享，改动需评估两仓同步。
 4. 修改主题或 `_quarto.yml` 后在仓库根目录整本 `quarto render`，验证明暗两套主题；布局调整优先修改 grid 与共享节奏，不用页面局部样式堆叠间距。
+5. 不新增字体文件、不引入新颜色来源：字体与颜色定案的理由在知识 `bg-reading-surface-v1`，改定案先改知识再动资产。
 
 ## 完成判据
 
-- [ ] `quarto render` 通过，明暗主题下页面无错位或对比度问题。
-- [ ] 代码块 filename 标题在长路径输入下不撑破容器，窄屏仍可读。
+- [ ] `quarto render` 通过，明暗主题下页面无错位或对比度问题；`check_layout.py` 通过。
+- [ ] 代码块 filename 标题在长路径输入下不撑破容器，窄屏仍可读；超长代码在块内横向滚动，不出整页横向滚动条。
 - [ ] 两仓主题资产保持一致，或差异已记录。

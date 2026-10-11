@@ -6,14 +6,16 @@
 body {
   /* GitHub Light 页面令牌 */
   --body-color: #1F2328;
-  --emphasis-color: #0D1117;
+  /* 正文强调（strong）：比正文更深一档的中性色；全站字体只有一个字面，
+     强调色不取链接蓝，加粗本身靠 content.css 的合成。 */
+  --emphasis-color: #000000;
   /* GitHub Light 代码块色板；语义 token 由 Pandoc/Quarto 提供。 */
   --code-bg: #F6F8FA;
   --code-border: #D0D7DE;
   --code-fg: #1F2328;
   --code-title-bg: #EAEEF2;
   --code-title-fg: #57606A;
-  --line-num-color: #737373;
+  --line-num-color: #57606A;
   --inline-code-bg: rgba(175, 184, 193, 0.2);
   --inline-code-fg: #1F2328;
   --text-secondary: #656D76;
@@ -25,17 +27,18 @@ body {
   --table-border: #D0D7DE;
   --table-hairline: #EAECEF;
   --quote-bg: #F6F8FA;
-  /* callout：左条色 + 浅底（Mintlify 语法） */
-  --callout-note-border: #2563EB;
-  --callout-note-bg: #EFF6FF;
-  --callout-tip-border: #16A34A;
-  --callout-tip-bg: #F0FDF4;
-  --callout-warning-border: #D97706;
-  --callout-warning-bg: #FFFBEB;
-  --callout-important-border: #7C3AED;
-  --callout-important-bg: #F5F3FF;
-  --callout-caution-border: #DC2626;
-  --callout-caution-bg: #FEF2F2;
+  /* callout：左条色 + 浅底。条色对齐页面已有功能色（链接蓝/成功绿/低饱和琥珀与红，
+     紫为 Primer done）；浅底用同色 8%–12% 透明，不再用 Tailwind 粉彩实底。 */
+  --callout-note-border: #0969DA;
+  --callout-note-bg: rgba(9, 105, 218, 0.10);
+  --callout-tip-border: #1F883D;
+  --callout-tip-bg: rgba(31, 136, 61, 0.10);
+  --callout-warning-border: #8A5C00;
+  --callout-warning-bg: rgba(138, 92, 0, 0.10);
+  --callout-important-border: #8250DF;
+  --callout-important-bg: rgba(130, 80, 223, 0.10);
+  --callout-caution-border: #CF222E;
+  --callout-caution-bg: rgba(207, 34, 46, 0.10);
   --quote-border: #D0D7DE;
   --copy-btn-bg: #FFFFFF;
   --copy-btn-border: #E5E5E5;
@@ -50,19 +53,16 @@ body {
   --navbar-fg: #1F2328;
   --navbar-muted: #656D76;
   --navbar-border: #D0D7DE;
-  --navbar-shadow: rgba(0, 0, 0, 0.06);
   --navbar-input-bg: #F6F8FA;
   --navbar-hover-bg: rgba(0, 0, 0, 0.04);
   --navbar-secondary-bg: rgba(255, 255, 255, 0.85);
-  --btn-primary-bg: #1F883D;
-  --btn-primary-hover-bg: #1A7F37;
-  --btn-primary-fg: #FFFFFF;
   --dot-accent: #1F883D;
   --card-bg: #FFFFFF;
   --card-border: #D0D7DE;
   --card-hover-border: var(--link-color);
   --card-shadow: 0 1px 3px rgba(31, 35, 40, 0.06), 0 4px 12px rgba(140, 149, 159, 0.08);
-  --toc-active: var(--link-color);
+  /* 右目录当前项与侧栏一致：正文色加色条，不涂链接蓝 */
+  --toc-active: var(--body-color);
   --page-bg: #FFFFFF;
   --surface-raised: #F6F8FA;
   --sidebar-bg: transparent;
@@ -73,7 +73,8 @@ body {
 body.quarto-dark {
   /* GitHub Dark Dimmed 页面令牌（软暗色：近灰底，缓解 Dark Default 的偏黑） */
   --body-color: #CDD9E5;
-  --emphasis-color: #F0F6FC;
+  /* 正文强调（strong）：比正文更亮一档的中性色；不取链接蓝 */
+  --emphasis-color: #FFFFFF;
   /* GitHub Dark Dimmed 代码块色板，与页面明暗模式同步。 */
   --code-bg: #2D333B;
   --code-border: #444C56;
@@ -103,8 +104,10 @@ body.quarto-dark {
   --callout-caution-border: #E5534B;
   --callout-caution-bg: rgba(229, 83, 75, 0.12);
   --quote-border: #444C56;
+  /* 复制按钮边框：半透明 --text-secondary——按钮底与代码块底同为 #2D333B，
+     边框太暗会让图标沉进去 */
   --copy-btn-bg: #2D333B;
-  --copy-btn-border: #444C56;
+  --copy-btn-border: rgba(177, 186, 196, 0.4);
   --scrollbar-thumb: #545D68;
   --selection-bg: rgba(83, 155, 245, 0.30);
   --mark-bg: rgba(198, 144, 38, 0.35);
@@ -116,19 +119,16 @@ body.quarto-dark {
   --navbar-fg: #CDD9E5;
   --navbar-muted: #B1BAC4;
   --navbar-border: #444C56;
-  --navbar-shadow: rgba(28, 33, 40, 0.35);
   --navbar-input-bg: #2D333B;
   --navbar-hover-bg: rgba(205, 217, 229, 0.07);
   --navbar-secondary-bg: rgba(34, 39, 46, 0.90);
-  --btn-primary-bg: #347D39;
-  --btn-primary-hover-bg: #46954A;
-  --btn-primary-fg: #FFFFFF;
   --dot-accent: #57AB5A;
   --card-bg: #2D333B;
   --card-border: #444C56;
   --card-hover-border: var(--link-color);
   --card-shadow: none;
-  --toc-active: var(--link-color);
+  /* 右目录当前项与侧栏一致：正文色加色条，不涂链接蓝 */
+  --toc-active: var(--body-color);
   --page-bg: #22272E;
   --surface-raised: #2D333B;
   --sidebar-bg: transparent;
@@ -140,7 +140,8 @@ body.quarto-dark {
 @media (prefers-contrast: more) {
   body {
     --body-color: #0D1117;
-    --emphasis-color: #0D1117;
+    /* 与常规模式的强调色保持同一套，不因高对比回退旧色 */
+    --emphasis-color: #000000;
     --code-border: #8C959F;
     --card-border: #8C959F;
     --navbar-border: #8C959F;
@@ -150,7 +151,8 @@ body.quarto-dark {
     --body-color: #F0F6FC;
     --code-fg: #F0F6FC;
     --inline-code-fg: #F0F6FC;
-    --emphasis-color: #F0F6FC;
+    /* 与常规模式的强调色保持同一套，不因高对比回退旧色 */
+    --emphasis-color: #FFFFFF;
     --code-border: #768390;
     --card-border: #768390;
     --navbar-border: #768390;

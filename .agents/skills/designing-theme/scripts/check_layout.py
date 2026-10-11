@@ -28,15 +28,17 @@ PALETTE_ROOT = THEME_DIR / "assets" / "theme" / "palettes"
 MEASURE_SCRIPT = Path(__file__).resolve().parent / "measure_pages.mjs"
 ROOT = THEME_DIR.parents[2]
 QUARTO_YML = ROOT / "_quarto.yml"
-FONT_FAMILIES = ("LXGW WenKai Screen", "LXGW Bright Code")
+FONT_FAMILIES = ("LXGW Bright Medium", "LXGW Bright Code")
 EXPECTED_FONT_FACES = {
-    "Fixel Text": 3,
-    "LXGW WenKai Screen": 1,
+    "LXGW Bright Medium": 1,
     "LXGW Bright Code": 1,
 }
-# 三个 Fixel 字重加两个常用汉字包，保留少量缓存与字重余量。
+# 正文与代码各一份常用汉字包，保留少量缓存与字重余量。
 FONT_PAGE_BYTES_LIMIT = 1_600_000
 FONT_PAGE_FACES_LIMIT = 5
+# 子进程超时（秒）：查改动集短超时，浏览器量测留足整本页面矩阵的时间。
+GIT_TIMEOUT = 60
+MEASURE_TIMEOUT = 600
 
 
 def color_alpha(value):
@@ -60,13 +62,13 @@ def active_palette_name(quarto_text=""):
 # 共享结构令牌与组件规则（与色板无关）
 SHARED_CHECKS = [
     ("body line-height 1.75", "line-height: 1.75"),
-    ("content width", "--content-width: 720px"),
-    ("code font 15px", "--code-font-size: 0.9375rem"),
+    ("content width", "--content-width: 840px"),
+    ("code font 16px", "--code-font-size: 1rem"),
     ("code line-height 1.75", "--code-line-height: 1.75"),
     ("code title padding token", "--code-title-padding"),
-    ("ui font stack", '--ui-font: "Fixel Text", "LXGW WenKai Screen"'),
-    ("cjk font fallback", '"LXGW WenKai Screen"'),
-    ("code font stack", '--mono-font: "LXGW Bright Code", "LXGW WenKai Screen"'),
+    ("ui font stack", '--ui-font: "LXGW Bright Medium"'),
+    ("cjk font fallback", '"LXGW Bright Medium"'),
+    ("code font stack", '--mono-font: "LXGW Bright Code"'),
     ("bright code family", '"LXGW Bright Code"'),
     ("code followup gap", "--code-followup-gap: 1rem"),
     ("list code followup spacing", "margin-top: var(--code-followup-gap)"),
@@ -75,6 +77,7 @@ SHARED_CHECKS = [
     ("body block rhythm", "margin-top: 1.55rem"),
     ("paragraphs follow the body column", "max-width: 100%"),
     ("answer disclosure container", "details.answer-disclosure"),
+    ("list marker token color", "li::marker"),
     ("answer disclosure summary", "details.answer-disclosure > summary"),
     ("feature-grid max two columns", "calc((100% - 1.25rem) / 2)"),
 ]
@@ -84,6 +87,7 @@ TOKEN_NAME_CHECKS = [
     ("code title background", "--code-title-bg"),
     ("code title foreground", "--code-title-fg"),
     ("accent dot token", "--dot-accent"),
+    ("body emphasis token", "--emphasis-color"),
     ("callout tip (best-practice semantics)", "--callout-tip-border"),
     ("callout warning (key-insight semantics)", "--callout-warning-border"),
     ("callout important (deep-dive semantics)", "--callout-important-border"),
@@ -102,7 +106,11 @@ PALETTE_VALUE_CHECKS = {
         ("dark body #CDD9E5", "#CDD9E5"),
         ("dark secondary #B1BAC4", "#B1BAC4"),
         ("dark link #539BF5", "#539BF5"),
-        ("callout note border light", "--callout-note-border: #2563EB"),
+        ("callout note border light", "--callout-note-border: #0969DA"),
+        ("light highlight comment #57606a", "#57606a"),
+        ("light highlight keyword #cf222e", "#cf222e"),
+        ("dark highlight comment #9aa1ab", "#9aa1ab"),
+        ("dark highlight keyword #ff7b72", "#ff7b72"),
     ],
 }
 
@@ -117,6 +125,8 @@ CALLOUT_CHECKS = [
 ]
 
 FORBIDDEN_FONT_REFERENCES = [
+    ("Fixel reference", "Fixel"),
+    ("LXGW WenKai Screen reference", "LXGW WenKai Screen"),
     ("Inter reference", "Inter"),
     ("Noto Sans SC reference", "Noto Sans SC"),
     ("Noto Sans Mono CJK SC reference", "Noto Sans Mono CJK SC"),
@@ -291,6 +301,7 @@ def full_layout_required():
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=False,
+        timeout=GIT_TIMEOUT,
     )
     return result.returncode == 1
 
@@ -321,13 +332,18 @@ def browser_layout(book_dir, verbose):
     ]
     if full_layout_required():
         command.append("--all-pages")
-    proc = subprocess.run(
-        command,
-        cwd=str(ROOT),
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
+    try:
+        proc = subprocess.run(
+            command,
+            cwd=str(ROOT),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=MEASURE_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired as exc:
+        output = (exc.output or b"").decode("utf-8", errors="replace")
+        return [f"browser measurement timed out after {MEASURE_TIMEOUT}s"], output.strip(), {}
     output = proc.stdout.decode("utf-8", errors="replace")
     if proc.returncode == 2:
         return [], output.strip(), {}
@@ -457,7 +473,7 @@ def browser_layout(book_dir, verbose):
                 for item in data["languageBlocks"] + data["barePres"]
                 if item["whiteSpace"]
             }
-            if wraps - {"pre-wrap"}:
+            if wraps - {"pre"}:
                 problems.append(f"{label}: 代码 white-space={sorted(wraps)}")
     if verbose:
         for width, pages in metrics["viewports"].items():
@@ -487,25 +503,52 @@ def needs_cjk_coverage(codepoint):
     )
 
 
+def read_font_cmap(path):
+    """用 fontTools 读取字体文件的 cmap 码点集合；不可用时返回 None。"""
+    try:
+        from fontTools.ttLib import TTFont
+    except ImportError:
+        return None
+    try:
+        font = TTFont(str(path), fontNumber=0, lazy=True)
+        cmap = font.getBestCmap()
+        font.close()
+    except Exception:
+        return None
+    return set(cmap)
+
+
 def check_font_coverage(book_dir):
-    """Check Chinese coverage for UI text and code text separately."""
-    css_path = THEME_DIR / "assets" / "theme" / "css" / "fonts.css"
-    css_text = css_path.read_text(encoding="utf-8")
-    ranges = {
-        family: parse_unicode_ranges(css_text, family)
-        for family in FONT_FAMILIES
-    }
+    """Check Chinese coverage for UI text and code text separately.
+
+    声明了 unicode-range 的 face 按声明区间判定；未声明时直接用 fontTools
+    读取字体文件的真实 cmap 判定（起因：子集字符表漏字，正文落到系统宋体）。
+    """
+    css_text = FONTS_CSS.read_text(encoding="utf-8")
+    files_by_family = {}
+    for family, url in font_face_entries(css_text):
+        target = (FONTS_CSS.parent / url).resolve()
+        if target.is_file():
+            files_by_family.setdefault(family, []).append(target)
+    coverage = {}
+    for family in FONT_FAMILIES:
+        declared = parse_unicode_ranges(css_text, family)
+        if declared:
+            points = {
+                point
+                for start, end in declared
+                for point in range(start, end + 1)
+            }
+        else:
+            points = set()
+            for path in files_by_family.get(family, []):
+                cmap = read_font_cmap(path)
+                if cmap is not None:
+                    points.update(cmap)
+        coverage[family] = points
     missing = {family: set() for family in FONT_FAMILIES}
-    if not any(ranges.values()):
-        return ranges, missing
-    range_sets = {
-        family: {
-            point
-            for start, end in family_ranges
-            for point in range(start, end + 1)
-        }
-        for family, family_ranges in ranges.items()
-    }
+    if not any(coverage.values()):
+        return coverage, missing
     for html_path in sorted(book_dir.rglob("*.html")):
         html_text = html_path.read_text(encoding="utf-8", errors="ignore")
         page_parser = VisibleTextParser()
@@ -513,7 +556,7 @@ def check_font_coverage(book_dir):
         code_parser = VisibleTextParser(code_only=True)
         code_parser.feed(html_text)
         for family, chunks in (
-            ("LXGW WenKai Screen", page_parser.chunks),
+            ("LXGW Bright Medium", page_parser.chunks),
             ("LXGW Bright Code", code_parser.chunks),
         ):
             for chunk in chunks:
@@ -521,10 +564,10 @@ def check_font_coverage(book_dir):
                     codepoint = ord(char)
                     if (
                         needs_cjk_coverage(codepoint)
-                        and codepoint not in range_sets[family]
+                        and codepoint not in coverage[family]
                     ):
                         missing[family].add(char)
-    return ranges, missing
+    return coverage, missing
 
 
 def main():
@@ -557,15 +600,20 @@ def main():
     quarto_text = QUARTO_YML.read_text(encoding="utf-8") if QUARTO_YML.is_file() else ""
     palette = active_palette_name(quarto_text)
     palette_tokens = None
+    highlight_theme_texts = []
     if palette:
         palette_tokens = PALETTE_ROOT / palette / "tokens.css"
         theme_css_sources.append(palette_tokens)
+        # 高亮主题是色板资产：注释/关键字色断言的 needle 是小写十六进制，
+        # 与 SCSS 里的大写令牌不串匹配，必须把 .theme JSON 加进搜索集合。
+        for theme_path in sorted(PALETTE_ROOT.joinpath(palette).glob("*.theme")):
+            highlight_theme_texts.append(theme_path.read_text(encoding="utf-8", errors="ignore"))
     source_css_texts = [
         p.read_text(encoding="utf-8", errors="ignore")
         for p in theme_css_sources
         if p.is_file()
     ]
-    search_texts = css_texts + source_css_texts
+    search_texts = css_texts + source_css_texts + highlight_theme_texts
 
     fail = 0
     if not palette or not palette_tokens or not palette_tokens.is_file():
@@ -619,7 +667,7 @@ def main():
     font_asset_problems = check_font_assets(FONTS_CSS.read_text(encoding="utf-8"))
     print(
         f"  {'OK  ' if not font_asset_problems else 'MISS'} font asset set"
-        f"  (Fixel=3, WenKai=1, Bright=1)"
+        f"  (Bright Medium=1, Bright Code=1)"
     )
     for problem in font_asset_problems:
         print(f"       {problem}")
@@ -642,7 +690,7 @@ def main():
     coverage_ok = not any(missing.values())
     print(
         f"  {'OK  ' if coverage_ok else 'MISS'} CJK font coverage"
-        f"  (declared-ranges={sum(map(len, ranges.values()))}, "
+        f"  (covered-codepoints={sum(len(s) for s in ranges.values())}, "
         f"missing={sum(map(len, missing.values()))})"
     )
     for family, chars in missing.items():

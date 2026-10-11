@@ -200,8 +200,7 @@ async function collect(page, pageId, scheme) {
       scheme,
       fontFaces: [...document.fonts]
         .filter((face) => [
-          "Fixel Text",
-          "LXGW WenKai Screen",
+          "LXGW Bright Medium",
           "LXGW Bright Code",
         ].includes(face.family))
         .map((face) => ({

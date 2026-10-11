@@ -5,9 +5,9 @@
    ============================================================ */
 
 body {
-  /* 代码块几何与排版（明暗共用） */
+  /* 代码块几何与排版（明暗共用）；宽度不再二次限窄，贴满 840px 正文内容列 */
   --code-padding: 0.75rem 1rem;
-  --code-font-size: 0.9375rem;
+  --code-font-size: 1rem;
   --code-line-height: 1.75;
   --code-title-font-size: 0.8125rem;
   --code-title-padding: 0.5rem 0.875rem;
@@ -20,9 +20,14 @@ body {
   --radius-md: 12px;
   --radius-lg: 12px;
   --code-radius: 8px;
-  --ui-font: "Fixel Text", "LXGW WenKai Screen", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "Roboto", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  --mono-font: "LXGW Bright Code", "LXGW WenKai Screen", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
-  --content-width: 720px;
+  /* 正文单字面：LXGW Bright Medium（登记 weight 400，层级靠字号）；
+     栈尾 CJK 系统字体兜底：自托管子集缺字时不落浏览器默认宋体 */
+  --ui-font: "LXGW Bright Medium", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  /* 栈尾 CJK 系统字体兜底：自托管子集缺字时不落浏览器默认宋体 */
+  --mono-font: "LXGW Bright Code", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", monospace;
+  /* 正文内容列宽 = body-width(872px) 减去 Quarto 栅格两侧各 1rem 内边距后的 840px；
+     840px 让 100 列代码（834px 内容宽）完整显示并留 6px 余量 */
+  --content-width: 840px;
   color: var(--body-color);
   background-color: var(--page-bg);
   line-height: 1.75;

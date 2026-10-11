@@ -1,0 +1,213 @@
+{
+    "metadata": {
+        "name": "cpp-board-games Primer Light",
+        "revision": 1,
+        "license": "SPDX-License-Identifier: MIT",
+        "copyright": [
+            "SPDX-FileCopyrightText: GitHub Inc. (Primer prettylights, MIT)",
+            "SPDX-FileCopyrightText: 2020 Waqar Ahmed <waqar.17a@gmail.com> (skylighting 结构基础)"
+        ]
+    },
+    "background-color": "#f6f8fa",
+    "editor-colors": {
+        "BackgroundColor": "#f6f8fa",
+        "BracketMatching": "#bef5cb",
+        "CodeFolding": "#f6f8fa",
+        "CurrentLine": "#f6f8fa",
+        "CurrentLineNumber": "#1f2328",
+        "IconBorder": "#f6f8fa",
+        "IndentationLine": "#d7dbe0",
+        "LineNumbers": "#57606a",
+        "MarkBookmark": "#8be9fd",
+        "MarkBreakpointActive": "#cf222e",
+        "MarkBreakpointDisabled": "#8250df",
+        "MarkBreakpointReached": "#bf8700",
+        "MarkError": "#82071e",
+        "MarkExecution": "#44475a",
+        "MarkWarning": "#953800",
+        "ModifiedLines": "#cf222e",
+        "ReplaceHighlight": "#1a7f37",
+        "SavedLines": "#1a7f37",
+        "SearchHighlight": "#ffea7f",
+        "Separator": "#d0d7de",
+        "SpellChecking": "#cf222e",
+        "TabMarker": "#d1d5da",
+        "TextSelection": "#dee6fc",
+        "WordWrapMarker": "#d0d7de"
+    },
+    "text-styles": {
+        "Alert": {
+            "bold": true,
+            "selected-text-color": "#82071e",
+            "text-color": "#82071e"
+        },
+        "Annotation": {
+            "selected-text-color": "#57606a",
+            "text-color": "#57606a"
+        },
+        "Attribute": {
+            "selected-text-color": "#cf222e",
+            "text-color": "#cf222e"
+        },
+        "BaseN": {
+            "selected-text-color": "#0550ae",
+            "text-color": "#0550ae"
+        },
+        "BuiltIn": {
+            "selected-text-color": "#cf222e",
+            "text-color": "#cf222e"
+        },
+        "Char": {
+            "selected-text-color": "#0a3069",
+            "text-color": "#0a3069"
+        },
+        "Comment": {
+            "selected-text-color": "#57606a",
+            "text-color": "#57606a"
+        },
+        "CommentVar": {
+            "selected-text-color": "#57606a",
+            "text-color": "#57606a"
+        },
+        "Constant": {
+            "selected-text-color": "#0550ae",
+            "text-color": "#0550ae"
+        },
+        "ControlFlow": {
+            "selected-text-color": "#cf222e",
+            "text-color": "#cf222e"
+        },
+        "DataType": {
+            "selected-text-color": "#cf222e",
+            "text-color": "#cf222e"
+        },
+        "DecVal": {
+            "selected-text-color": "#0550ae",
+            "text-color": "#0550ae"
+        },
+        "Documentation": {
+            "selected-text-color": "#57606a",
+            "text-color": "#57606a"
+        },
+        "Error": {
+            "selected-text-color": "#82071e",
+            "text-color": "#82071e",
+            "underline": true
+        },
+        "Extension": {
+            "bold": true,
+            "selected-text-color": "#cf222e",
+            "text-color": "#cf222e"
+        },
+        "Float": {
+            "selected-text-color": "#0550ae",
+            "text-color": "#0550ae"
+        },
+        "Function": {
+            "selected-text-color": "#8250df",
+            "text-color": "#8250df"
+        },
+        "Import": {
+            "selected-text-color": "#0a3069",
+            "text-color": "#0a3069"
+        },
+        "Information": {
+            "selected-text-color": "#57606a",
+            "text-color": "#57606a"
+        },
+        "Keyword": {
+            "selected-text-color": "#cf222e",
+            "text-color": "#cf222e"
+        },
+        "Normal": {
+            "selected-text-color": "#1f2328",
+            "text-color": "#1f2328"
+        },
+        "Operator": {
+            "selected-text-color": "#1f2328",
+            "text-color": "#1f2328"
+        },
+        "Others": {
+            "selected-text-color": "#8250df",
+            "text-color": "#8250df"
+        },
+        "Preprocessor": {
+            "selected-text-color": "#cf222e",
+            "text-color": "#cf222e"
+        },
+        "RegionMarker": {
+            "selected-text-color": "#57606a",
+            "text-color": "#57606a"
+        },
+        "SpecialChar": {
+            "selected-text-color": "#0550ae",
+            "text-color": "#0550ae"
+        },
+        "SpecialString": {
+            "selected-text-color": "#0a3069",
+            "text-color": "#0a3069"
+        },
+        "String": {
+            "selected-text-color": "#0a3069",
+            "text-color": "#0a3069"
+        },
+        "Variable": {
+            "selected-text-color": "#953800",
+            "text-color": "#953800"
+        },
+        "VerbatimString": {
+            "selected-text-color": "#0a3069",
+            "text-color": "#0a3069"
+        },
+        "Warning": {
+            "selected-text-color": "#953800",
+            "text-color": "#953800"
+        }
+    },
+    "custom-styles": {
+        "INI Files": {
+            "Section": {
+                "selected-text-color": "#8250df",
+                "text-color": "#8250df"
+            }
+        },
+        "Python": {
+            "Builtin Function": {
+                "selected-text-color": "#8250df",
+                "text-color": "#8250df"
+            },
+            "Import": {
+                "selected-text-color": "#cf222e",
+                "text-color": "#cf222e"
+            },
+            "Special Variable": {
+                "selected-text-color": "#0550ae",
+                "text-color": "#0550ae"
+            }
+        },
+        "Rust": {
+            "Attribute": {
+                "selected-text-color": "#1f2328",
+                "text-color": "#1f2328"
+            },
+            "Macro": {
+                "selected-text-color": "#0550ae",
+                "text-color": "#0550ae"
+            },
+            "Self": {
+                "selected-text-color": "#0550ae",
+                "text-color": "#0550ae"
+            },
+            "Trait": {
+                "selected-text-color": "#1f2328",
+                "text-color": "#1f2328"
+            }
+        },
+        "XML": {
+            "Element": {
+                "selected-text-color": "#116329",
+                "text-color": "#116329"
+            }
+        }
+    }
+}

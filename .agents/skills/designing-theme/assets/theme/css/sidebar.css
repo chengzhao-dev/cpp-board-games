@@ -1,11 +1,12 @@
 /* cpp-notes 共享主题 · 侧栏 / TOC / 翻页卡片（自 common.css 拆分） */
 
 /* ---------- 侧栏 / TOC ---------- */
-/* 分组标题（sidebar 含分组时生成，向前兼容）：冷灰 docs 风——13px 半粗、不大写、正文色 */
+/* 分组标题（sidebar 含分组时生成，向前兼容）：冷灰 docs 风——13px、不大写、正文色；
+   单字面字体下 600 不会变粗，层级靠字号 */
 #quarto-sidebar .sidebar-section .sidebar-item-section > .sidebar-item-text,
 #quarto-sidebar .sidebar-item-section .sidebar-item-text {
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--body-color);
   padding: 0.95rem 0.75rem 0.4rem;
 }
@@ -53,8 +54,9 @@ body::-webkit-scrollbar-thumb {
   border-radius: 5px;
 }
 /* 章节链接：通栏条目（margin 0 + 1.5rem 内边距），默认灰字 14px/400/1.4；
-   当前项 = 左侧 2px 竖条 + 弱背景 + 半粗（冷灰 docs 风，无圆角）。
-   非激活项补 2px 透明左边框，激活切换时不抖动 */
+   当前项 = 左侧 2px 竖条 + 弱背景（冷灰 docs 风，无圆角）。
+   单字面字体 + font-synthesis: none 下 600 不会变粗，当前项靠色条和浅底区分，
+   不写无效字重 */
 #quarto-sidebar .sidebar-item-text.sidebar-link {
   display: block;
   padding: 0.3rem 1.5rem;
@@ -78,7 +80,6 @@ body::-webkit-scrollbar-thumb {
 }
 #quarto-sidebar .sidebar-item-text.sidebar-link.active {
   color: var(--body-color);
-  font-weight: 600;
   background-color: var(--sidebar-active-bg);
   border-left: 2px solid var(--accent);
   border-radius: var(--radius-sm);
@@ -95,10 +96,9 @@ body::-webkit-scrollbar-thumb {
   line-height: 1.4;
   color: var(--sidebar-fg);
 }
-/* 嵌套激活项：提高特异性，避免被上方嵌套规则把 font-weight 覆盖回 500（修左栏当前章节不加粗） */
+/* 嵌套激活项：与上一级激活规则同观感，靠色条和浅底区分 */
 #quarto-sidebar .sidebar-section .sidebar-item-text.sidebar-link.active {
   color: var(--body-color);
-  font-weight: 600;
   background-color: var(--sidebar-active-bg);
   border-left: 2px solid var(--accent);
   border-radius: var(--radius-sm);
@@ -134,10 +134,10 @@ body::-webkit-scrollbar-thumb {
   color: var(--body-color) !important;
   background-color: transparent;
 }
-/* 右 TOC 激活项：黑色竖线 + 加粗正文色（!important 压过 Quarto 的蓝色激活规则），无背景 */
+/* 右 TOC 激活项：与侧栏当前项同策略——正文色 + 2px 色条（!important 压过 Quarto
+   写死的 color:#0969da 激活规则，暗色下必须继续压住，不能漏出亮色蓝），无背景 */
 .sidebar.margin-sidebar nav[role="doc-toc"] a.nav-link.active {
   color: var(--toc-active) !important;
-  font-weight: 600;
   background-color: transparent;
   border-left: 2px solid var(--accent);
 }
@@ -170,7 +170,7 @@ body::-webkit-scrollbar-thumb {
   font-weight: 400;
   color: var(--sidebar-fg);
 }
-/* prev/next 章节导航（卡片式）：文字黑色，箭头改用 < 与 > 符号 */
+/* prev/next 章节导航（卡片式）：文字用 --body-color，箭头改用 < 与 > 符号 */
 nav.page-navigation {
   display: flex;
   gap: 1rem;
@@ -255,7 +255,6 @@ nav.page-navigation {
 #quarto-sidebar ul.list-unstyled.mt-1 > li.sidebar-item-section > .sidebar-item-container > .sidebar-item-text.sidebar-link {
   flex: 1;
   font-size: 0.8125rem;
-  font-weight: 600;
   font-family: var(--ui-font);
   color: var(--body-color);
   padding: 0.375rem 1.5rem;
