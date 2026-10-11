@@ -58,7 +58,7 @@ def run_app(command, moves, timeout=8):
 
 
 def marks_from_cells(cells):
-    """把九格转成坐标图用的 {(row, col): 文本}，空格略去。"""
+    """把九个棋盘格子转成坐标图用的 {(row, col): 文本}，空棋盘格子略去。"""
     marks = {}
     for index, cell in enumerate(cells):
         if cell == " ":

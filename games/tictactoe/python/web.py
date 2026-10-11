@@ -18,6 +18,8 @@ _EOF = object()
 HOST = "127.0.0.1"
 PORT = 8765
 MAX_BODY = 4096
+# app 由旁边的编号目录 03-line-protocol 编出：本目录只启动它，不重复构建。
+STAGE = Path(__file__).resolve().parent.parent / "03-line-protocol"
 
 # 页面只服务这一局。重新选择对局时关掉上一局进程。
 SESSION = None
@@ -98,7 +100,7 @@ class MatchSession:
             return None
 
     def _wait_for(self, marker, timeout=8):
-        """读到含 marker 的一行，或进程结束。返回期间最后一条 JSON。"""
+        """读到含 marker 的一行，或进程结束。函数返回等待期间收到的最后一条 JSON。"""
         latest = None
         waited = 0.0
         while waited < timeout:
@@ -117,7 +119,7 @@ class MatchSession:
         return latest
 
     def begin(self, mode, strength):
-        """先等到对局选择，再送难度，最后返回开局的九格。"""
+        """先等到对局选择，再送难度，最后返回开局的九个棋盘格子。"""
         self._wait_for("请选择对局")
         lines = opening_lines(mode, strength)
         self._write(lines[0])
@@ -207,7 +209,7 @@ const levelBox = document.getElementById("level");
 const playBox = document.getElementById("play");
 const board = document.getElementById("board");
 const status = document.getElementById("status");
-const names = {in_progress: "进行中", x_wins: "X 获胜", o_wins: "O 获胜", draw: "平局"};
+const names = {in_progress: "游戏进行中", x_wins: "X 获胜", o_wins: "O 获胜", draw: "平局"};
 
 function showBoard(snapshot) {
   modeBox.classList.add("hidden");

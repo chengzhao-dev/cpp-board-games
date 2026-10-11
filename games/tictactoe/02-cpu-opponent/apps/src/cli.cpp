@@ -1,12 +1,11 @@
-//===----------------------------------------------------------------------===//
+//===------------------------------------------------------------------------------------------===//
 // cli.cpp - 终端对局的打印与读入。
 //
 // 按行列号打印棋盘，读入两个整数并落子，直到终局。
-//===----------------------------------------------------------------------===//
+//===------------------------------------------------------------------------------------------===//
 
 #include "cli.h"
 
-#include <cstddef>
 #include <cstdint>
 #include <ios>
 #include <istream>
@@ -19,16 +18,7 @@
 #include "opponent.h"
 
 namespace tictactoe {
-namespace {
 
-constexpr const char* kProgramName = "app";
-
-// 把诊断写到调用方给出的错误流。格式为「程序名: 描述」。
-void Report(std::ostream& err, const std::string& message) {
-  err << kProgramName << ": " << message << '\n';
-}
-
-// 把棋盘格子状态转成单个显示字符：空棋盘格子显示为空位。
 char CellSymbol(CellState state) {
   switch (state) {
     case CellState::kEmpty:
@@ -41,7 +31,6 @@ char CellSymbol(CellState state) {
   return ' ';
 }
 
-// 列号对准格子中心，行号写在左边框左侧。
 std::string BoardToString(const Game& game) {
   std::string board = "    0   1   2\n";
   const std::string rule = "  +---+---+---+\n";
@@ -60,11 +49,10 @@ std::string BoardToString(const Game& game) {
   return board;
 }
 
-// 把终局结果转成中文状态行。
-std::string StatusToString(GameResult status) {
-  switch (status) {
+std::string GameResultToString(GameResult result) {
+  switch (result) {
     case GameResult::kInProgress:
-      return "进行中";
+      return "游戏进行中";
     case GameResult::kDraw:
       return "平局";
     case GameResult::kCrossWin:
@@ -72,19 +60,18 @@ std::string StatusToString(GameResult status) {
     case GameResult::kNoughtWin:
       return "O 获胜";
   }
-  return "进行中";
+  return "游戏进行中";
 }
 
-// 一次读取的结果：得到两个整数、需要重试，或输入已经结束。
-enum class ReadResult : std::uint8_t {
-  kOk = 0,     // 读到两个整数。
-  kRetry = 1,  // 本行不是两个整数，已丢掉，需要重试。
-  kEof = 2,    // 输入结束。
-};
+void PrintGame(std::ostream& out, const Game& game) {
+  out << BoardToString(game) << "对局结果：" << GameResultToString(game.GetResult()) << '\n';
+}
 
-// 从输入读两个整数。非数字时清掉错误并丢掉本行，说明写到 err。
-ReadResult ReadRowAndCol(std::istream& in, std::ostream& err, int& row,
-                         int& col) {
+void Report(std::ostream& err, const std::string& message) {
+  err << kProgramName << ": " << message << '\n';
+}
+
+ReadResult ReadRowAndCol(std::istream& in, std::ostream& err, int& row, int& col) {
   std::int64_t input_row = 0;
   std::int64_t input_col = 0;
   if (in >> input_row >> input_col) {
@@ -96,6 +83,8 @@ ReadResult ReadRowAndCol(std::istream& in, std::ostream& err, int& row,
       col = static_cast<int>(input_col);
       return ReadResult::kOk;
     }
+    in.clear();
+    in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     Report(err, "坐标超出可用范围");
     return ReadResult::kRetry;
   }
@@ -108,21 +97,19 @@ ReadResult ReadRowAndCol(std::istream& in, std::ostream& err, int& row,
   return ReadResult::kRetry;
 }
 
-// 拒绝时说明原因。棋盘在 Place 失败后保持原样。
-void ReportRejected(std::ostream& err, const Game& game,
-                    CellPosition position) {
+void ReportRejected(std::ostream& err, const Game& game, CellPosition position) {
   if (!Board::IsValidPosition(position)) {
     Report(err, "坐标超出棋盘");
     return;
   }
   if (game.GetCellState(position) != CellState::kEmpty) {
-    Report(err, "该棋盘格子已占用");
+    Report(err, "棋盘格子已被占用");
     return;
   }
   Report(err, "现在不能落子");
 }
 
-// 读入一整行。这一行要留到比较结束，所以放进 std::string，不借用输入缓冲。
+// 这一整行要留到比较结束，所以放进 std::string，不借用输入缓冲。
 bool ReadOwnedLine(std::istream& in, std::string& line) {
   if (!std::getline(in, line)) {
     return false;
@@ -133,9 +120,7 @@ bool ReadOwnedLine(std::istream& in, std::string& line) {
   return true;
 }
 
-// 1 是双人，2 是人机。其他整行都重试，直到读到这两种或输入结束。
-bool ReadMatchKind(std::istream& in, std::ostream& out, std::ostream& err,
-                   bool& against_cpu) {
+bool ReadMatchKind(std::istream& in, std::ostream& out, std::ostream& err, bool& against_cpu) {
   while (true) {
     out << "请选择对局（1 双人，2 人机）：";
     std::string line;
@@ -155,9 +140,7 @@ bool ReadMatchKind(std::istream& in, std::ostream& out, std::ostream& err,
   }
 }
 
-// 人机才读这一行。1 随机，2 启发式，3 极小极大。
-bool ReadStrength(std::istream& in, std::ostream& out, std::ostream& err,
-                  Strength& strength) {
+bool ReadStrength(std::istream& in, std::ostream& out, std::ostream& err, Strength& strength) {
   while (true) {
     out << "请选择难度（1 随机，2 启发式，3 极小极大）：";
     std::string line;
@@ -181,47 +164,47 @@ bool ReadStrength(std::istream& in, std::ostream& out, std::ostream& err,
   }
 }
 
-}  // namespace
-
-void PrintGame(std::ostream& out, const Game& game) {
-  out << BoardToString(game) << "状态：" << StatusToString(game.GetResult())
-      << '\n';
+HumanMove ReadHumanMove(std::istream& in, std::ostream& err, Game& game) {
+  int row = 0;
+  int col = 0;
+  const ReadResult read = ReadRowAndCol(in, err, row, col);
+  if (read == ReadResult::kEof) {
+    return HumanMove::kInputEnd;
+  }
+  if (read == ReadResult::kRetry) {
+    return HumanMove::kRetry;
+  }
+  const CellPosition position{.row = row, .col = col};
+  const PlaceResult result =
+      game.TryPlace({.position = position, .player = game.GetCurrentPlayer()});
+  if (result == PlaceResult::kRejected) {
+    ReportRejected(err, game, position);
+  }
+  return HumanMove::kPlaced;
 }
 
 int PlayToEnd(std::istream& in, std::ostream& out, std::ostream& err) {
   Game game;
   while (game.GetResult() == GameResult::kInProgress) {
     PrintGame(out, game);
-    const char mark = game.CurrentPlayer() == Player::kCross ? 'X' : 'O';
+    const char mark = game.GetCurrentPlayer() == Player::kCross ? 'X' : 'O';
     out << "轮到 " << mark << "。请输入行和列（0 到 2）：";
-    int row = 0;
-    int col = 0;
-    const ReadResult read = ReadRowAndCol(in, err, row, col);
-    if (read == ReadResult::kEof) {
+    const HumanMove move = ReadHumanMove(in, err, game);
+    if (move == HumanMove::kInputEnd) {
       Report(err, "输入结束");
       return 1;
-    }
-    if (read == ReadResult::kRetry) {
-      continue;
-    }
-    const CellPosition position{.row = row, .col = col};
-    const PlaceResult result =
-        game.Place({.position = position, .player = game.CurrentPlayer()});
-    if (result == PlaceResult::kRejected) {
-      ReportRejected(err, game, position);
     }
   }
   PrintGame(out, game);
   return 0;
 }
 
-int PlayToEnd(std::istream& in, std::ostream& out, std::ostream& err,
-              Strength opponent) {
+int PlayToEnd(std::istream& in, std::ostream& out, std::ostream& err, Strength opponent) {
   Game game;
   while (game.GetResult() == GameResult::kInProgress) {
     PrintGame(out, game);
-    if (game.CurrentPlayer() == Player::kNought) {
-      const PlaceResult placed = game.Place(ChooseMove(game, opponent));
+    if (game.GetCurrentPlayer() == Player::kNought) {
+      const PlaceResult placed = game.TryPlace(ChooseMove(game, opponent));
       if (placed == PlaceResult::kRejected) {
         Report(err, "现在不能落子");
         return 1;
@@ -230,21 +213,9 @@ int PlayToEnd(std::istream& in, std::ostream& out, std::ostream& err,
     }
     const char mark = 'X';
     out << "轮到 " << mark << "。请输入行和列（0 到 2）：";
-    int row = 0;
-    int col = 0;
-    const ReadResult read = ReadRowAndCol(in, err, row, col);
-    if (read == ReadResult::kEof) {
+    if (ReadHumanMove(in, err, game) == HumanMove::kInputEnd) {
       Report(err, "输入结束");
       return 1;
-    }
-    if (read == ReadResult::kRetry) {
-      continue;
-    }
-    const CellPosition position{.row = row, .col = col};
-    const PlaceResult result =
-        game.Place({.position = position, .player = game.CurrentPlayer()});
-    if (result == PlaceResult::kRejected) {
-      ReportRejected(err, game, position);
     }
   }
   PrintGame(out, game);

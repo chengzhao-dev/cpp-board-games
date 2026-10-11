@@ -1,14 +1,14 @@
-//===----------------------------------------------------------------------===//
+//===------------------------------------------------------------------------------------------===//
 // board_test.cpp - Board 的行为测试。
 //
-// 验证空棋盘、占格、非法坐标和不可覆盖写入。
-//===----------------------------------------------------------------------===//
+// 验证空棋盘、占格、非法坐标、不可覆盖写入与下满判定。
+//===------------------------------------------------------------------------------------------===//
 
 #include "board.h"
 
-#include <gtest/gtest.h>
-
 #include <stdexcept>
+
+#include <gtest/gtest.h>
 
 namespace {
 
@@ -16,13 +16,12 @@ using tictactoe::Board;
 using tictactoe::CellPosition;
 using tictactoe::CellState;
 
-// 新建棋盘的每个格子均为空。
+// 新建棋盘的每个棋盘格子均为空。
 TEST(BoardTest, InitialBoardIsEmpty) {
   const Board board;
   for (int row = 0; row < tictactoe::kRows; ++row) {
     for (int col = 0; col < tictactoe::kCols; ++col) {
-      EXPECT_EQ(board.GetCellState({.row = row, .col = col}),
-                CellState::kEmpty);
+      EXPECT_EQ(board.GetCellState({.row = row, .col = col}), CellState::kEmpty);
     }
   }
 }
@@ -30,8 +29,7 @@ TEST(BoardTest, InitialBoardIsEmpty) {
 // 坐标范围包含左上角和右下角。
 TEST(BoardTest, ValidPositionIncludesBothCorners) {
   EXPECT_TRUE(Board::IsValidPosition({.row = 0, .col = 0}));
-  EXPECT_TRUE(Board::IsValidPosition(
-      {.row = tictactoe::kRows - 1, .col = tictactoe::kCols - 1}));
+  EXPECT_TRUE(Board::IsValidPosition({.row = tictactoe::kRows - 1, .col = tictactoe::kCols - 1}));
 }
 
 // 空格写入后保存对应状态。
@@ -50,7 +48,7 @@ TEST(BoardTest, PlacePieceRejectsEmptyState) {
   EXPECT_EQ(board.GetCellState(center), CellState::kEmpty);
 }
 
-// 已占用的格子不能被第二次写入。
+// 已占用的棋盘格子不能被第二次写入。
 TEST(BoardTest, PlacePieceRejectsOccupiedCell) {
   Board board;
   const CellPosition origin{.row = 0, .col = 0};
@@ -64,24 +62,30 @@ TEST(BoardTest, PlacePieceRejectsInvalidPosition) {
   Board board;
   EXPECT_FALSE(board.PlacePiece({.row = -1, .col = 0}, CellState::kCross));
   EXPECT_FALSE(board.PlacePiece({.row = 0, .col = -1}, CellState::kNought));
-  EXPECT_FALSE(
-      board.PlacePiece({.row = tictactoe::kRows, .col = 0}, CellState::kCross));
-  EXPECT_FALSE(board.PlacePiece({.row = 0, .col = tictactoe::kCols},
-                                CellState::kNought));
+  EXPECT_FALSE(board.PlacePiece({.row = tictactoe::kRows, .col = 0}, CellState::kCross));
+  EXPECT_FALSE(board.PlacePiece({.row = 0, .col = tictactoe::kCols}, CellState::kNought));
   EXPECT_EQ(board.GetCellState({.row = 0, .col = 0}), CellState::kEmpty);
 }
 
-// 非法坐标不能用于读取格子状态。
+// 非法坐标不能用于读取棋盘格子状态。
 TEST(BoardTest, GetCellStateThrowsForInvalidPosition) {
   const Board board;
-  EXPECT_THROW((void)board.GetCellState({.row = -1, .col = 0}),
-               std::out_of_range);
-  EXPECT_THROW((void)board.GetCellState({.row = 0, .col = -1}),
-               std::out_of_range);
-  EXPECT_THROW((void)board.GetCellState({.row = tictactoe::kRows, .col = 0}),
-               std::out_of_range);
-  EXPECT_THROW((void)board.GetCellState({.row = 0, .col = tictactoe::kCols}),
-               std::out_of_range);
+  EXPECT_THROW((void)board.GetCellState({.row = -1, .col = 0}), std::out_of_range);
+  EXPECT_THROW((void)board.GetCellState({.row = 0, .col = -1}), std::out_of_range);
+  EXPECT_THROW((void)board.GetCellState({.row = tictactoe::kRows, .col = 0}), std::out_of_range);
+  EXPECT_THROW((void)board.GetCellState({.row = 0, .col = tictactoe::kCols}), std::out_of_range);
+}
+
+// 每落一子之前棋盘都未满，九个棋盘格子全部落子后才为满。
+TEST(BoardTest, IsFullOnlyAfterEveryCellPlaced) {
+  Board board;
+  for (int index = 0; index < tictactoe::kCellCount; ++index) {
+    EXPECT_FALSE(board.IsFull());
+    const int row = index / tictactoe::kCols;
+    const int col = index % tictactoe::kCols;
+    ASSERT_TRUE(board.PlacePiece({.row = row, .col = col}, CellState::kCross));
+  }
+  EXPECT_TRUE(board.IsFull());
 }
 
 }  // namespace

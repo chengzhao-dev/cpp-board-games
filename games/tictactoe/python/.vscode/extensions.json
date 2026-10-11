@@ -1,0 +1,13 @@
+//===------------------------------------------------------------------------------------------===//
+// extensions.json - games/tictactoe/python 的推荐扩展
+//
+// 本目录只有 Python 脚本：推荐 Python 与 Black 格式化器，
+// 不重复 C++ 工具链扩展（clangd 与 CMake Tools 在各阶段目录推荐）。
+//===------------------------------------------------------------------------------------------===//
+{
+  "recommendations": [
+    // Python 与 Black 格式化（Remote - WSL 下需安装在远程端才可用）
+    "ms-python.python",
+    "ms-python.black-formatter"
+  ]
+}

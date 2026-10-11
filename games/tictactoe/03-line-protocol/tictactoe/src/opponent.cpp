@@ -1,13 +1,14 @@
-//===----------------------------------------------------------------------===//
+//===------------------------------------------------------------------------------------------===//
 // opponent.cpp - 随机、启发式与极小极大。
 //
 // 三种强度都只产生当前玩家的一次合法落子，不读取输入也不打印。
-//===----------------------------------------------------------------------===//
+//===------------------------------------------------------------------------------------------===//
 
 #include "opponent.h"
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <random>
 #include <vector>
@@ -16,18 +17,12 @@
 #include "game.h"
 
 namespace tictactoe {
-namespace {
 
-constexpr CellPosition At(int row, int col) {
-  return {.row = row, .col = col};
-}
-
-// 收集还没有棋子的棋盘格子。
 std::vector<CellPosition> EmptyCells(const Game& game) {
   std::vector<CellPosition> cells;
   for (int row = 0; row < kRows; ++row) {
     for (int col = 0; col < kCols; ++col) {
-      const CellPosition position = At(row, col);
+      const CellPosition position = {.row = row, .col = col};
       if (game.GetCellState(position) == CellState::kEmpty) {
         cells.push_back(position);
       }
@@ -36,68 +31,78 @@ std::vector<CellPosition> EmptyCells(const Game& game) {
   return cells;
 }
 
-// 假设把这枚棋子放进这个格子，看是否能凑成三连。
-bool CompletesLine(const Game& game, CellPosition cell, CellState state) {
-  const auto filled = [&](int row, int col) {
-    if (row == cell.row && col == cell.col) {
+bool CompletesLine(const Game& game, CellPosition position, CellState state) {
+  const auto has_state = [&](CellPosition probed) {
+    if (probed.row == position.row && probed.col == position.col) {
+      return true;  // 假设这一格已经放进 state。
+    }
+    return game.GetCellState(probed) == state;
+  };
+  const auto has_line = [&](CellPosition a, CellPosition b, CellPosition c) {
+    const std::array<CellPosition, 3> line{a, b, c};
+    return std::ranges::all_of(line, has_state);
+  };
+
+  for (int row = 0; row < kRows; ++row) {
+    if (has_line({.row = row, .col = 0}, {.row = row, .col = 1}, {.row = row, .col = 2})) {
       return true;
     }
-    return game.GetCellState(At(row, col)) == state;
-  };
-  if (filled(cell.row, 0) && filled(cell.row, 1) && filled(cell.row, 2)) {
-    return true;
   }
-  if (filled(0, cell.col) && filled(1, cell.col) && filled(2, cell.col)) {
-    return true;
+  for (int col = 0; col < kCols; ++col) {
+    if (has_line({.row = 0, .col = col}, {.row = 1, .col = col}, {.row = 2, .col = col})) {
+      return true;
+    }
   }
-  if (cell.row == cell.col && filled(0, 0) && filled(1, 1) && filled(2, 2)) {
-    return true;
-  }
-  return (cell.row + cell.col) == 2 && filled(0, 2) && filled(1, 1) &&
-         filled(2, 0);
+
+  return has_line({.row = 0, .col = 0}, {.row = 1, .col = 1}, {.row = 2, .col = 2}) ||
+         has_line({.row = 0, .col = 2}, {.row = 1, .col = 1}, {.row = 2, .col = 0});
 }
 
-// 在空棋盘格子里等概率选一格。调用时棋盘上至少还有一格空位。
 Move RandomMove(const Game& game) {
+  assert(game.GetResult() == GameResult::kInProgress);
   const std::vector<CellPosition> cells = EmptyCells(game);
-  std::mt19937 generator{std::random_device{}()};
+  static thread_local std::mt19937 generator{std::random_device{}()};
   std::uniform_int_distribution<std::size_t> distribution(0, cells.size() - 1);
-  return {.position = cells[distribution(generator)],
-          .player = game.CurrentPlayer()};
+  return {.position = cells[distribution(generator)], .player = game.GetCurrentPlayer()};
 }
 
-// 能立刻取胜就取胜，否则挡住对方马上能赢的一步，再按中心、四角、四边。
 Move HeuristicMove(const Game& game) {
-  const CellState mine = CellStateFor(game.CurrentPlayer());
-  const CellState theirs = game.CurrentPlayer() == Player::kCross
-                               ? CellState::kNought
-                               : CellState::kCross;
+  assert(game.GetResult() == GameResult::kInProgress);
+  const Player current = game.GetCurrentPlayer();
+  const CellState mine = PlayerToCellState(current);
+  const CellState theirs = current == Player::kCross ? CellState::kNought : CellState::kCross;
   const std::vector<CellPosition> cells = EmptyCells(game);
-  for (const CellPosition cell : cells) {
-    if (CompletesLine(game, cell, mine)) {
-      return {.position = cell, .player = game.CurrentPlayer()};
+  for (const CellPosition position : cells) {
+    if (CompletesLine(game, position, mine)) {
+      return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  for (const CellPosition cell : cells) {
-    if (CompletesLine(game, cell, theirs)) {
-      return {.position = cell, .player = game.CurrentPlayer()};
+  for (const CellPosition position : cells) {
+    if (CompletesLine(game, position, theirs)) {
+      return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  const std::array<CellPosition, 9> order = {
-      At(1, 1), At(0, 0), At(0, 2), At(2, 0), At(2, 2),
-      At(0, 1), At(1, 0), At(1, 2), At(2, 1),
-  };
-  for (const CellPosition cell : order) {
-    if (game.GetCellState(cell) == CellState::kEmpty) {
-      return {.position = cell, .player = game.CurrentPlayer()};
+  const std::array<CellPosition, 9> order = {{
+      {.row = 1, .col = 1},
+      {.row = 0, .col = 0},
+      {.row = 0, .col = 2},
+      {.row = 2, .col = 0},
+      {.row = 2, .col = 2},
+      {.row = 0, .col = 1},
+      {.row = 1, .col = 0},
+      {.row = 1, .col = 2},
+      {.row = 2, .col = 1},
+  }};
+  for (const CellPosition position : order) {
+    if (game.GetCellState(position) == CellState::kEmpty) {
+      return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  return {.position = cells.front(), .player = game.CurrentPlayer()};
+  return {.position = cells.front(), .player = game.GetCurrentPlayer()};
 }
 
-// 终局得分：X 胜为 1，平局为 0，O 胜为 -1。
-int TerminalScore(GameResult status) {
-  switch (status) {
+int TerminalScore(GameResult result) {
+  switch (result) {
     case GameResult::kCrossWin:
       return 1;
     case GameResult::kNoughtWin:
@@ -109,19 +114,42 @@ int TerminalScore(GameResult status) {
   return 0;
 }
 
-// X 取更大分数，O 取更小分数。alpha、beta 剪掉不可能改变选择的分支。
 // NOLINTNEXTLINE(misc-no-recursion)
 int Search(const Game& game, int alpha, int beta) {
   if (game.GetResult() != GameResult::kInProgress) {
     return TerminalScore(game.GetResult());
   }
 
-  const bool maximize = game.CurrentPlayer() == Player::kCross;
+  const Player current = game.GetCurrentPlayer();
+  const CellState mine = PlayerToCellState(current);
+  const CellState theirs = current == Player::kCross ? CellState::kNought : CellState::kCross;
+  const std::vector<CellPosition> cells = EmptyCells(game);
+
+  // 着法序：先试马上能赢的一步，再试必须挡住对方的一步，其余按行序。
+  // 把好棋排在前面，让下面的 beta <= alpha 剪枝更早发生。
+  std::vector<CellPosition> winning;
+  std::vector<CellPosition> blocking;
+  std::vector<CellPosition> rest;
+  for (const CellPosition position : cells) {
+    if (CompletesLine(game, position, mine)) {
+      winning.push_back(position);
+    } else if (CompletesLine(game, position, theirs)) {
+      blocking.push_back(position);
+    } else {
+      rest.push_back(position);
+    }
+  }
+  std::vector<CellPosition> ordered;
+  ordered.reserve(cells.size());
+  ordered.insert(ordered.end(), winning.begin(), winning.end());
+  ordered.insert(ordered.end(), blocking.begin(), blocking.end());
+  ordered.insert(ordered.end(), rest.begin(), rest.end());
+
+  const bool maximize = current == Player::kCross;
   int best = maximize ? -2 : 2;
-  for (const CellPosition cell : EmptyCells(game)) {
+  for (const CellPosition position : ordered) {
     Game next = game;
-    const PlaceResult placed =
-        next.Place({.position = cell, .player = game.CurrentPlayer()});
+    const PlaceResult placed = next.TryPlace({.position = position, .player = current});
     if (placed != PlaceResult::kPlaced) {
       continue;
     }
@@ -134,21 +162,21 @@ int Search(const Game& game, int alpha, int beta) {
       beta = std::min(best, beta);
     }
     if (beta <= alpha) {
-      break;
+      break;  // 剪枝：这一支后续再搜也不会改变上层的选择。
     }
   }
   return best;
 }
 
-// 对每个空棋盘格子搜索一次，留下对当前玩家更好的那一格。
 Move MinimaxMove(const Game& game) {
-  const bool maximize = game.CurrentPlayer() == Player::kCross;
+  assert(game.GetResult() == GameResult::kInProgress);
+  const bool maximize = game.GetCurrentPlayer() == Player::kCross;
   int best = maximize ? -2 : 2;
   CellPosition chosen = EmptyCells(game).front();
-  for (const CellPosition cell : EmptyCells(game)) {
+  for (const CellPosition position : EmptyCells(game)) {
     Game next = game;
     const PlaceResult placed =
-        next.Place({.position = cell, .player = game.CurrentPlayer()});
+        next.TryPlace({.position = position, .player = game.GetCurrentPlayer()});
     if (placed != PlaceResult::kPlaced) {
       continue;
     }
@@ -156,16 +184,15 @@ Move MinimaxMove(const Game& game) {
     const bool better = maximize ? score > best : score < best;
     if (better) {
       best = score;
-      chosen = cell;
+      chosen = position;  // 严格更优才换格，同分保留先出现的格子。
     }
   }
-  return {.position = chosen, .player = game.CurrentPlayer()};
+  return {.position = chosen, .player = game.GetCurrentPlayer()};
 }
 
-}  // namespace
-
-// 按强度选择对应的选法。
 Move ChooseMove(const Game& game, Strength strength) {
+  // 入口先挡不满足前置条件的调用：对局已结束时棋盘已满，选格会越界。
+  assert(game.GetResult() == GameResult::kInProgress);
   switch (strength) {
     case Strength::kRandom:
       return RandomMove(game);

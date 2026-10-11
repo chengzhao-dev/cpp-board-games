@@ -1,0 +1,15 @@
+//===------------------------------------------------------------------------------------------===//
+// settings.json - games/tictactoe/python 的编辑器配置
+//
+// 按当前打开的工作区生效：请把 games/tictactoe/python/ 目录本身
+// 作为 VS Code 工作区打开，配置才会命中本目录。
+//===------------------------------------------------------------------------------------------===//
+{
+  // 通用编辑行为
+  "editor.formatOnSave": true,
+
+  // Python 格式化交给 Black 扩展，与仓库「Python 代码使用 Black 默认风格」一致
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
+}
