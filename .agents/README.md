@@ -1,6 +1,6 @@
 # Agent 工作区
 
-`.agents/` 是本项目 Agent 资源的唯一工作区。根目录 `AGENTS.md` 只保留项目级硬约束；本文件负责定位，不重复规则。本目录结构与 cpp-notes 仓库同构（四区 + 同名知识领域目录），统一决策与保留差异见 `skills/governing-agents/references/structure.md` 第 6 节对照表。
+`.agents/` 是本项目 Agent 资源的唯一工作区。根目录 `AGENTS.md` 只保留项目级硬约束；本文件负责定位，不重复规则。本目录结构与 cpp-notes 仓库同构（五区 + 同名知识领域目录），统一决策与保留差异见 `skills/governing-agents/references/structure.md` 第 6 节对照表。
 
 ## 按任务进入
 
@@ -15,6 +15,7 @@
 | 调整主题、布局和页面资源 | `skills/designing-theme/SKILL.md` |
 | GitHub、提交和发布边界 | `skills/shipping-github/SKILL.md` |
 | 只读代码审查 | `skills/reviewing-code/SKILL.md` |
+| 现行事实与规范条文（现在是什么、怎么做） | `context/README.md` |
 | 领域依据（为什么这样设计） | `knowledge/KNOWLEDGE.md` |
 | 跨会话教训（过去哪里易错） | `memory/MEMORY.md` |
 | 失败复盘（仅排查时） | `incidents/INDEX.md` |
@@ -25,7 +26,8 @@
 
 ```text
 .agents/
-├── knowledge/       # 稳定领域事实与「为什么」：<domain>/<subdomain>/<topic>.md；入口 KNOWLEDGE.md
+├── context/         # 现行事实与规范条文；入口 README.md（任务 → 文件路由）
+├── knowledge/       # 取舍记录、否决理由与正反对照：<domain>/<subdomain>/<topic>.md；入口 KNOWLEDGE.md
 ├── memory/          # 跨会话教训；入口 MEMORY.md
 ├── incidents/       # 失败复盘，仅排查时读；入口 INDEX.md
 ├── mcp/             # 项目级 MCP server 与说明
@@ -33,7 +35,7 @@
 └── README.md        # 本导航
 ```
 
-规则只保留一份权威来源：流程放 `skills/`，设计原因放 `knowledge/`，历史经验放 `memory/`，失败案例放 `incidents/`。知识库索引产物写入根目录 `temp/knowledge-index/`，不入库。不要把临时计划、构建产物或缓存放进本目录。
+规则只保留一份权威来源：流程放 `skills/`，现行事实与条文放 `context/`，取舍原因放 `knowledge/`，历史经验放 `memory/`，失败案例放 `incidents/`。知识库索引产物写入根目录 `temp/knowledge-index/`，不入库。不要把临时计划、构建产物或缓存放进本目录。
 
 ## 运行入口
 
@@ -41,4 +43,4 @@
 
 脚本不得从当前工作目录推断仓库根；移动或新增脚本后，必须检查 `Path(__file__)` 的根目录解析，并更新所有统一入口、测试和文档引用。
 
-游戏代码按编号阶段目录组织在 `games/<game>/` 下：每个阶段（如 `01-cli-game/`）是拥有自身 `.clang-format`、`.vscode/`、构建和测试的完整项目，配置归属阶段目录本身；格式模板在 `skills/cpp-development/assets/config/.clang-format`；判断依据见 `knowledge/agent-workspace/navigation/staged-game-layout.md`。
+游戏代码按编号阶段目录组织在 `games/<game>/` 下：每个阶段（如 `01-cli-game/`）是拥有自身 `.clang-format`、`.vscode/`、构建和测试的完整项目，配置归属阶段目录本身；格式模板在 `skills/cpp-development/assets/config/.clang-format`；判断依据见 `context/conventions/stages.md`。

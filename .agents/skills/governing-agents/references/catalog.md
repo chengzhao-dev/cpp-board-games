@@ -2,13 +2,12 @@
 
 本文件只做短路由，控制在 3000 字符以内。普通任务先读命中的 `SKILL.md`，再按其中的局部路由读取必要 reference，不加载完整索引。
 
-## skill 与 knowledge 的分工
+## skill、context 与 knowledge 的分工
 
-同一个知识点只允许有一个出处：怎么做（流程、格式约定、硬约束）留 `references/`，为什么（领域结论与取舍依据）进
-`.agents/knowledge/`。`references/` 优先写稳定 `kb_id`，确需检索时再给一行带 `--domain` 的 `run.ps1 kb-search`
-入口，不复制知识正文。
+同一个知识点只允许有一个出处：怎么做（流程、格式约定、硬约束）留 `references/`，现在是什么、现在怎么做（现行事实与规范条文）进 `.agents/context/`，为什么（取舍记录与正反例）进 `.agents/knowledge/`。`references/` 优先写稳定 `kb_id`，确需检索时再给一行带 `--zone` 的 `run.ps1 kb-search`
+入口，不复制条文正文。
 
-新增或迁移 `.agents/knowledge/` 文件后运行 `kb-index`、`kb-check` 和 `kb-eval`。索引产物统一放在 `temp/`，缺失时脚本会自动重建。
+新增或迁移 `.agents/context/`、`.agents/knowledge/` 文件后运行 `kb-index --rebuild`、`kb-check` 和 `kb-eval`。索引产物统一放在 `temp/`，缺失时脚本会自动重建。
 
 ## L1 入口（每次只读命中的那一个）
 
@@ -30,9 +29,10 @@
 - 游戏阶段与章节文件的对应关系以 `cpp-development/references/stages/<game>.md` 阶段路由表为准，由 `scope` 自动选中。
 - `cpp-development/references/cpp-spine.md`: 改 C++、CMake、阶段脚本和三份 Clang 配置时的工序唯一入口（每步登记打开的文件与 `##`）。
 
+- `.agents/context/`：现行事实与规范条文，按任务打开 `context/README.md` 路由的那一个文件。
 - `.agents/knowledge/<领域>/`：领域目录为名词 kebab（`agent-workspace`、`cpp-teaching`、`quarto-writing`），`domain` 字段取同名领域目录值，`subdomain` 取同名子域目录值。`visual-theme/`（designing-theme）与 `repo-github/`（shipping-github）在出现第一个文件时再创建。
-- `.agents/knowledge/KNOWLEDGE.md`：知识库规范和新增流程。新增或迁移知识后运行 `kb-index`、`kb-check` 和 `kb-eval`。
-- `.agents/knowledge/agent-workspace/retrieval/retrieval-governance.md`：skills、knowledge、memory、incidents 与 MCP 的职责边界，以及统一检索协议。
+- `.agents/knowledge/KNOWLEDGE.md`：知识库规范和新增流程。新增或迁移知识后运行 `kb-index --rebuild`、`kb-check` 和 `kb-eval`。
+- `.agents/knowledge/agent-workspace/retrieval/retrieval-governance.md`：skills、context、knowledge、memory、incidents 与 MCP 的职责边界，以及统一检索协议。
 - `writing-quarto/references/zh/writing-spine.md`：写作任务的次序唯一入口（写作工序 / 标题归并 / 增量链）。
 - `designing-theme/references/theme-spine.md`：主题任务的次序唯一入口（定表面 / 定字体 / 定尺度 / 定颜色 / 定组件 / 过闸）。
 - `writing-quarto/references/zh/writing-howto.md`：中文降噪规则、信号表、润色五步与小节主线 how（原 writing-principles / polish-pass / section-focus-and-density 合并）。

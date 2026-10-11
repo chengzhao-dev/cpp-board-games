@@ -254,8 +254,15 @@ def resolve_repo_domain(target, root):
             "label": "mcp",
             "reads": [".agents/mcp/README.md", rel_path],
         }
+    if parts[:2] == [".agents", "context"]:
+        reads = [".agents/context/README.md"]
+        if len(parts) > 2 and path.is_file():
+            reads.append(rel_path)
+        elif len(parts) > 2 and path.is_dir():
+            reads.append(rel_path + "/")
+        return {"kind": "repo", "label": "context", "reads": reads}
     if parts[:2] == [".agents", "knowledge"]:
-        reads = [".agents/knowledge/KNOWLEDGE.md"]
+        reads = [".agents/knowledge/KNOWLEDGE.md", ".agents/context/README.md"]
         if len(parts) > 2 and path.is_file():
             reads.append(rel_path)
         elif len(parts) > 2 and path.is_dir():
