@@ -1,0 +1,16 @@
+Self-hosted fonts in this directory are licensed under SIL Open Font License 1.1:
+
+- LXGW Bright (Medium subset) — https://github.com/lxgw/LxgwBright
+  Based on Klee One (Fontworks) and Ysabeau Office:
+  - Klee — https://github.com/fontworks-fonts/Klee
+  - Ysabeau — https://github.com/CatharsisFonts/Ysabeau
+  Subset source file: LXGWBright/LXGWBright-Medium.ttf (v5.528)
+  Web subset generated with fontTools/pyftsubset for WOFF2 delivery.
+- LXGW Bright Code v2.922 — https://github.com/lxgw/LxgwBright-Code
+  Based on Klee One (Fontworks) and Monaspace Argon:
+  - Monaspace — https://github.com/githubnext/monaspace
+  Subset source commit: 6106564927bc6e1099a3eeb625d76a3e5a684595
+  Source file: LxgwBrightCode/LXGWBrightCode-Regular.ttf
+  Web subset generated with fontTools/pyftsubset for WOFF2 delivery.
+
+Full license text: https://openfontlicense.org

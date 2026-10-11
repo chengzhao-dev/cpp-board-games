@@ -1,0 +1,438 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "C++ 棋盘游戏实践",
+    "section": "",
+    "text": "当前游戏\n这个项目用可运行、可测试的棋盘游戏承载 C++ 工程实践。内容从需求和规则开始，逐步说明程序边界、构建、测试与可观察的运行结果。当前从井字棋这个完整样例开始。",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>C++ 棋盘游戏实践</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#当前游戏",
+    "href": "index.html#当前游戏",
+    "title": "C++ 棋盘游戏实践",
+    "section": "",
+    "text": "井字棋\n按顺序查看井字棋的完整演进：从对局规则、工程目录到棋盘存储，再到电脑对手与局面快照。\n进入井字棋 →",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>C++ 棋盘游戏实践</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#后续棋类",
+    "href": "index.html#后续棋类",
+    "title": "C++ 棋盘游戏实践",
+    "section": "后续棋类",
+    "text": "后续棋类\n\n\n四子棋\n井字棋完成后再写。\n\n\n五子棋\n工具链与井字棋相同，规则另写。\n\n\n黑白棋\n至少两个游戏真实复用同一规则之前，不抽共享库。",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>C++ 棋盘游戏实践</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/index.html",
+    "href": "content/tictactoe/index.html",
+    "title": "井字棋",
+    "section": "",
+    "text": "在终端下完一局双人井字棋。按顺序阅读即可。\n\n\n对局规则\n两名玩家轮流在 3×3 棋盘上落子，三连获胜，棋盘下满为平局。\n\n\n工程目录\n查看井字棋动态库、终端程序和测试目录如何分工。\n\n\n棋盘存储\n把九个棋盘格子存进数组，用行列坐标读写。\n\n\n一次落子\n把一次落子写进棋盘，并判定对局是否结束。\n\n\n终端对局\n首次配置、编译、测试和运行井字棋工程。\n\n\n电脑对手\n另一名玩家由电脑担任，按同样的规则产生落子。\n\n\n局面快照\n每次打印棋盘时，用一行 JSON 记下九个棋盘格子、轮到谁和对局结果。",
+    "crumbs": [
+      "井字棋"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/01-rules.html",
+    "href": "content/tictactoe/01-rules.html",
+    "title": "对局规则",
+    "section": "",
+    "text": "行为与画面\n这一章只确定一局井字棋要做什么。\n程序答应做的事要逐项核对，先看程序回应，再看终局画面里各部分对应什么。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>对局规则</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/01-rules.html#行为与画面",
+    "href": "content/tictactoe/01-rules.html#行为与画面",
+    "title": "对局规则",
+    "section": "",
+    "text": "程序回应\n两名玩家轮流在 3×3 棋盘上落子。程序对输入的回应有下面四项：\n\n显示棋盘：程序每一轮都先显示当前棋盘，再提示接下来轮到谁落子。\n拒绝非法输入：行列越界、棋盘格子已被占用或格式错误时，程序说明原因并保持棋盘不变，要求重新输入。\n判定对局结果：在一行、一列或一条对角线上三连即获胜，棋盘下满且没有三连则是平局。\n结束对局：对局一旦结束，程序就打印明确的对局结果，不再接受落子。\n\n\n\n终局画面\nX 在第一行三连时，程序的终局画面如下：\n\n\n运行效果\n\n    0   1   2\n  +---+---+---+\n0 | X | X | X |\n  +---+---+---+\n1 | O | O |   |\n  +---+---+---+\n2 |   |   |   |\n  +---+---+---+\n对局结果：X 获胜\n\n从上往下读这段画面，依次会看到三处信息：\n\n行列标记：列号排在棋盘上方，行号写在左边框左侧，玩家输入的就是这些数字。\n棋盘格子：空棋盘格子显示为框里的空位，落子后棋盘格子里显示对应的 X 或 O。\n结果提示：末行的 对局结果：X 获胜 报告获胜方，平局与 O 获胜也用这一行显示。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>对局规则</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/01-rules.html#自测问题",
+    "href": "content/tictactoe/01-rules.html#自测问题",
+    "title": "对局规则",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。\n\n什么情况下是平局？\n\n查看答案\n九个棋盘格子都已落子，并且任何一行、一列或一条对角线都没有三连。\n\n同一个棋盘格子已经有 X，再输入它的行和列会怎样？\n\n查看答案\n程序拒绝这次落子，棋盘保持不变，并要求重新输入。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>对局规则</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/01-rules.html#本章回顾",
+    "href": "content/tictactoe/01-rules.html#本章回顾",
+    "title": "对局规则",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经能对照终局画面说明程序的每一步回应。下一章把这些可观察结果对应到工程里的目录和文件。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>对局规则</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/02-project-layout.html",
+    "href": "content/tictactoe/02-project-layout.html",
+    "title": "工程目录",
+    "section": "",
+    "text": "目录与文件\n对局规则确定了玩家能看到的输入、输出和对局结果。这一章把这些外部表现对应到井字棋工程中的目录和文件。\n井字棋工程有四个目录：\n目录和文件的位置如下，每行的行尾注释说明这一行是什么：",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>工程目录</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/02-project-layout.html#目录与文件",
+    "href": "content/tictactoe/02-project-layout.html#目录与文件",
+    "title": "工程目录",
+    "section": "",
+    "text": "井字棋动态库：tictactoe/ 目录保存棋盘与对局规则，这些代码编译成动态库供终端程序调用。\n终端程序：apps/ 目录实现打印棋盘与读入坐标，编译出玩家直接使用的程序。\n测试：tests/ 目录保存动态库的测试，用来检查落子与对局结果是否符合预期。\n构建产物：build/ 目录由构建过程生成，存放可执行文件与动态库文件。\n\n\n\n\n01-cli-game/\n\ngames/tictactoe/01-cli-game/\n├── build-and-run.sh           # 构建与验收入口\n├── CMakeLists.txt             # 顶层构建规则\n├── .clang-format              # 代码排版规则\n├── .clang-tidy                # 静态检查与命名规则\n├── .clangd                    # 编辑器未构建时的解析配置\n├── tictactoe/                 # 动态库\n│   ├── include/board.h        # 棋盘尺寸、坐标与棋盘格子状态\n│   ├── include/game.h         # 玩家、落子与对局结果\n│   └── src/                   # 动态库实现\n├── apps/                      # 终端程序\n│   ├── include/cli.h          # 打印棋盘与读入坐标\n│   └── src/                   # 终端程序实现\n├── tests/                     # 动态库的测试\n└── build/                     # 构建产物目录\n    ├── bin/                   # 可执行文件\n    └── lib/                   # 井字棋动态库文件",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>工程目录</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/02-project-layout.html#自测问题",
+    "href": "content/tictactoe/02-project-layout.html#自测问题",
+    "title": "工程目录",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。\n\n要查找棋盘格子的保存位置，先看 apps/、tests/ 还是 tictactoe/ 目录？\n\n查看答案\n先看井字棋动态库目录 tictactoe/，棋盘格子的定义在其中的 include/board.h，实现放在 src/board.cpp。\n\n打印棋盘由终端程序实现，还是由井字棋动态库实现？\n\n查看答案\n由终端程序实现。打印棋盘和读入坐标属于文本交流，在 apps/ 目录；井字棋动态库只保存棋盘与对局规则，供终端程序调用。\n\n构建完成后，可执行文件和井字棋动态库文件分别落在 build/ 的 bin/ 还是 lib/？\n\n查看答案\n可执行文件在 build/bin/，动态库文件在 build/lib/。树的最后两行就是这两层。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>工程目录</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/02-project-layout.html#本章回顾",
+    "href": "content/tictactoe/02-project-layout.html#本章回顾",
+    "title": "工程目录",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经能在工程目录里定位井字棋动态库、终端程序和测试目录。下一章棋盘存储。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>工程目录</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/03-board.html",
+    "href": "content/tictactoe/03-board.html",
+    "title": "棋盘存储",
+    "section": "",
+    "text": "格子定义\n工程目录已经指出井字棋动态库的头文件位置。这一章实现可以检查坐标的棋盘读写，接口与实现在头文件 board.h 和源文件 board.cpp 里。\n在对局规则的画面里，玩家用行列数字选中一个棋盘格子。这一节先写出行列坐标，再区分格子状态。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘存储</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/03-board.html#格子定义",
+    "href": "content/tictactoe/03-board.html#格子定义",
+    "title": "棋盘存储",
+    "section": "",
+    "text": "行列坐标\n棋盘尺寸由行数 kRows、列数 kCols 和棋盘格子总数 kCellCount 确定，棋盘格子的位置用结构体 CellPosition 表达。它们都定义在 board.h 里：\n\n\nboard.h\n\n/// 棋盘的行数。\ninline constexpr int kRows = 3;\n/// 棋盘的列数。\ninline constexpr int kCols = 3;\n/// 棋盘格子总数。\ninline constexpr int kCellCount = kRows * kCols;\n\n/// 棋盘格子的行列坐标。\nstruct CellPosition {\n  int row = 0;  ///&lt; 行坐标。\n  int col = 0;  ///&lt; 列坐标。\n};\n\n三条约定都来自上面的四个定义：\n\n坐标：一对行列写成 (row, col)，按先行后列写入 CellPosition 的两个字段。\n取值：行和列从 0 开始，合法范围由 kRows 和 kCols 界定，在这块棋盘上都是 0 到 2。\n尺寸：kCellCount 由 kRows 乘 kCols 得出，改这两个数字时棋盘格子总数跟着变。\n\n下面的图标出这块棋盘上可用的 (row, col)。\n\n\n\n\n\n\n\ncol\n\n\nrow\n0\n1\n2\n0\n1\n2\n\n(0,0)\n\n(0,1)\n\n(0,2)\n\n(1,0)\n\n(1,1)\n\n(1,2)\n\n(2,0)\n\n(2,1)\n\n(2,2)\n\n\n\n行向下、列向右，左上角是 (0, 0)\n\n\n\n\n格子状态\n棋盘格子上除了 X 和 O，还没有落子的空格也是一种状态，CellState 用三种取值区分它们：\n\n\nboard.h\n\n/// 棋盘格子的状态。\nenum class CellState : std::uint8_t {\n  kEmpty = 0,   ///&lt; 空格。\n  kCross = 1,   ///&lt; X 棋子。\n  kNought = 2,  ///&lt; O 棋子。\n};\n\n棋盘上还没有棋子的空格取 kEmpty，写入 kCross 或 kNought 后，终端程序显示对应的字母。三种状态都保存在井字棋动态库里，终端程序决定画成什么样。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘存储</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/03-board.html#读写格子",
+    "href": "content/tictactoe/03-board.html#读写格子",
+    "title": "棋盘存储",
+    "section": "读写格子",
+    "text": "读写格子\nBoard 对内用一个数组和一次下标换算存放九个棋盘格子，对外只暴露检查后的读写入口。出界坐标进不了棋盘，下标换算也绕不过去。\n\n存储数组\n九个棋盘格子的状态存放在 board.h 里 private: 下的数组 cells_ 中：\n\n\nboard.h\n\n private:\n  // 棋盘格子的存储数组，按行依次存放。\n  std::array&lt;CellState, static_cast&lt;std::size_t&gt;(kCellCount)&gt; cells_{};\n\n棋盘一共九个格子，数量从开局到终局不变。这个数量编译期就能确定，所以 cells_ 用 std::array 存放，长度取常量 kCellCount，下标范围是 0 到 8。\n\n\n下标换算\n九个棋盘格子在 cells_ 里按一个下标存放，Board::ToFlatIndex 把 row 和 col 换成这个下标，实现写在 board.cpp 里：\n\n\nboard.cpp\n\nstd::size_t Board::ToFlatIndex(CellPosition position) noexcept {\n  return (static_cast&lt;std::size_t&gt;(position.row) * kCols) + static_cast&lt;std::size_t&gt;(position.col);\n}\n\n每一行有 kCols 个棋盘格子，第 0 行占下标 0、1、2。要落到第 row 行，先跳过前面 row 个整行，这一行的第一个格子就在 row 乘以 kCols 的位置。col 再从这里往后数，列号从 0 起算。(1, 2) 里 row 是 1，col 是 2，kCols 是 3，算式是 1 * 3 + 2，下标是 5。\n下面的图按行排开 cells_ 的九个下标，加粗的 5 就是这次代入。\n\n\n\n\n\nrow = 0\n\nrow = 1\n\nrow = 2\n\n\n0\n(0,0)\n\n1\n(0,1)\n\n2\n(0,2)\n\n3\n(1,0)\n\n4\n(1,1)\n\n5\n(1,2)\n\n6\n(2,0)\n\n7\n(2,1)\n\n8\n(2,2)\n\n\n\n数组下标 0–8 与行列坐标的对应\n\n\n\n\n读写入口\nBoard 把存储和换算收在 private: 下，读写用 IsValidPosition、GetCellState、PlacePiece 和 IsFull，Board() 只建出空棋盘。\n\n\nboard.h\n\n/// 井字棋的棋盘。\n///\n/// 提供获取棋盘格子状态、放置棋子和检查棋盘是否已满的功能；棋盘为 3 行 3 列。\nclass Board {\n public:\n  /// 检查坐标是否在棋盘范围内。\n  [[nodiscard]] static bool IsValidPosition(CellPosition position) noexcept;\n\n  /// 构造函数：创建一个所有棋盘格子均为空的棋盘。\n  Board() = default;\n\n  /// 获取指定坐标处的棋盘格子状态。\n  [[nodiscard]] CellState GetCellState(CellPosition position) const;\n\n  /// 在指定坐标放置棋子。\n  [[nodiscard]] bool PlacePiece(CellPosition position, CellState state);\n\n  /// 检查棋盘是否已满（每个棋盘格子都有棋子；不含胜负或平局判定）。\n  [[nodiscard]] bool IsFull() const noexcept;\n\n读取和写入都先检查坐标，出界和占用分开处理：\n\n出界坐标：说明调用方算错了行列，没有可返回的棋盘格子，GetCellState 直接抛出 std::out_of_range。\n棋盘格子被占用：PlacePiece 返回 false，棋盘保持不变，调用方另选棋盘格子就行。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘存储</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/03-board.html#常见错误",
+    "href": "content/tictactoe/03-board.html#常见错误",
+    "title": "棋盘存储",
+    "section": "常见错误",
+    "text": "常见错误\n\n自己算下标\n想在 Board 之外自己用行列数算下标时，负坐标和 3 这类出界行列不会遇到任何检查。\n\n出错的原因：下标换算收在 Board 的 private: 下，出界检查发生在读写入口里，绕开读写入口就同时绕开了这两道保护，算出的下标可能落在九个棋盘格子之外。\n正确的做法：把坐标交给读写入口，出界的行列由 IsValidPosition 拒绝，合法坐标由 ToFlatIndex 换算。\n\n\n\n空格当棋子\n给 Board::PlacePiece 传入 CellState::kEmpty 时，放置失败并返回 false，棋盘保持不变。\n\n出错的原因：kEmpty 是还没有棋子的空格，不是一种棋子，Board 把它当作无效落子拒绝。\n正确的做法：落子时传 kCross 或 kNought。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘存储</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/03-board.html#自测问题",
+    "href": "content/tictactoe/03-board.html#自测问题",
+    "title": "棋盘存储",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。\n\n为什么行号 -1 和 3 都会被拒绝？\n\n查看答案\nBoard::IsValidPosition 要求行号从 0 到 kRows - 1。kRows 是 3，所以 -1 和 3 都不属于棋盘。\n\n向已有 X 的棋盘格子再落一次 O，棋盘会变吗？\n\n查看答案\n不会。Board::PlacePiece 在棋盘格子已被占用时返回 false，棋盘保持不变。\n\n坐标 (1, 2) 换算后的数组下标是多少？\n\n查看答案\nToFlatIndex 按 row * kCols + col 换算：1 * 3 + 2 = 5，即下标 5。\n\n九个棋盘格子的个数在对局中会变吗？\n\n查看答案\n不会变。棋盘从开局到终局都是九个格子，这个数量编译期就能确定。\n\n棋盘格子的个数写在常量 kRows、kCols 还是 kCellCount 里？\n\n查看答案\n写在 kCellCount 里，它由 kRows 乘 kCols 得出。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘存储</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/03-board.html#本章回顾",
+    "href": "content/tictactoe/03-board.html#本章回顾",
+    "title": "棋盘存储",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经能把九个棋盘格子存进数组，并通过 Board 的入口读写它们。下一章一次落子，决定哪些落子能写入。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>棋盘存储</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/04-game.html",
+    "href": "content/tictactoe/04-game.html",
+    "title": "一次落子",
+    "section": "",
+    "text": "对局数据\n棋盘存储写出的 Board 已经能保存每一个棋盘格子。这一章在 Board 之上完成一次落子。声明与实现分别在 game.h 和 game.cpp 里。\n落子前先记下下子的玩家、落子的格子、棋盘有没有写入、对局有没有结束。这一节先列出对局类型，再写出对局成员。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>一次落子</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/04-game.html#对局数据",
+    "href": "content/tictactoe/04-game.html#对局数据",
+    "title": "一次落子",
+    "section": "",
+    "text": "对局类型\n对局玩家用枚举 Player 表示，先手使用 X 棋子：\n\n\ngame.h\n\n/// 对局玩家。\nenum class Player : std::uint8_t {\n  kCross = 0,   ///&lt; 先手：使用 X 棋子。\n  kNought = 1,  ///&lt; 后手：使用 O 棋子。\n};\n\n一次落子要带上目标位置和落子的玩家，用结构体 Move 表示：\n\n\ngame.h\n\n/// 一名玩家的一次落子。\nstruct Move {\n  CellPosition position;           ///&lt; 落子的行列坐标。\n  Player player = Player::kCross;  ///&lt; 执行落子的玩家。\n};\n\n这次落子有没有写进棋盘，用 PlaceResult 表示：\n\n\ngame.h\n\n/// 一次落子的处理结果。\nenum class PlaceResult : std::uint8_t {\n  kPlaced = 0,    ///&lt; 落子已写入。\n  kRejected = 1,  ///&lt; 落子被拒绝，局面保持不变。\n};\n\n整局进行到了哪一步，用 GameResult 表示：\n\n\ngame.h\n\n/// 对局的结果。\nenum class GameResult : std::uint8_t {\n  kInProgress = 0,  ///&lt; 游戏进行中：对局尚未结束，可继续落子。\n  kCrossWin = 1,    ///&lt; X 获胜：达成三连。\n  kNoughtWin = 2,   ///&lt; O 获胜：达成三连。\n  kDraw = 3,        ///&lt; 平局：棋盘已满且双方均未三连。\n};\n\n\n\n对局成员\n四个数据成员都在 game.h 的 private: 下，board_ 用 Board，current_player_ 用 Player，result_ 用 GameResult，history_ 按顺序保存 Move：\n\n\ngame.h\n\n private:\n  Board board_;                                  // 对局的棋盘。\n  Player current_player_ = Player::kCross;       // 当前轮到的对局玩家，X 先手。\n  GameResult result_ = GameResult::kInProgress;  // 当前对局结果。\n  std::vector&lt;Move&gt; history_;                    // 本局落子历史。\n\nGame() 默认构造之后，四个数据成员是下面这样：\n\n棋盘：board_ 是空棋盘。\n轮次：current_player_ 为 Player::kCross。\n结果：result_ 为 GameResult::kInProgress。\n历史：history_ 还没有落子。\n\n四项都在对象内部，读取函数可以查看，只有写入落子的函数会改它们。history_ 按落子先后排列，查询它就能回放这一局。PlaceResult 不在这四项里，它是后面 TryPlace 的返回值。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>一次落子</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/04-game.html#终局判定",
+    "href": "content/tictactoe/04-game.html#终局判定",
+    "title": "一次落子",
+    "section": "终局判定",
+    "text": "终局判定\n落子写入棋盘后，Game 先检查有没有形成三连。接着判定对局结果是继续、获胜还是平局。\n\n三连\nHasPlayerLine 检查刚落子的玩家有没有连成一条线，写在 game.h 的 private: 下：\n\n\ngame.h\n\n private:\n  /// 检查棋盘上是否已形成三连获胜线。\n  ///\n  /// @param board 被检查的棋盘。\n  /// @param state 要比对的棋盘格子状态。\n  /// @returns 任一行、任一列或任一条对角线上的三个棋盘格子都是 state。\n  [[nodiscard]] static bool HasPlayerLine(const Board& board, CellState state);\n\n实现写在 game.cpp 里，先准备两个检查助手：\n\n\ngame.cpp\n\nbool Game::HasPlayerLine(const Board& board, CellState state) {\n  const auto has_state = [&](CellPosition position) {\n    return board.GetCellState(position) == state;\n  };\n  const auto has_line = [&](CellPosition a, CellPosition b, CellPosition c) {\n    const std::array&lt;CellPosition, 3&gt; line{a, b, c};\n    return std::ranges::all_of(line, has_state);\n  };\n\nhas_line 把三个坐标收进数组交给 std::ranges::all_of，按行、列、对角线调用：\n\n\ngame.cpp\n\n  for (int row = 0; row &lt; kRows; ++row) {\n    if (has_line({.row = row, .col = 0}, {.row = row, .col = 1}, {.row = row, .col = 2})) {\n      return true;\n    }\n  }\n  for (int col = 0; col &lt; kCols; ++col) {\n    if (has_line({.row = 0, .col = col}, {.row = 1, .col = col}, {.row = 2, .col = col})) {\n      return true;\n    }\n  }\n\n  return has_line({.row = 0, .col = 0}, {.row = 1, .col = 1}, {.row = 2, .col = 2}) ||\n         has_line({.row = 0, .col = 2}, {.row = 1, .col = 1}, {.row = 2, .col = 0});\n}\n\n三类线正好覆盖八条可能的三连：\n\n三行：每行三个棋盘格子由循环里的三个坐标确定。\n三列：每列同样由循环里的三个坐标确定。\n两条对角线：主对角与副对角直接写出坐标，任一条满足就返回 true。\n\n\n\n对局结果\n棋盘只认棋子不认玩家，PlayerToCellState 把玩家换算成要写入的格子状态，定义在 game.h 里：\n\n\ngame.h\n\n/// 由对局玩家得到应写入的棋盘格子状态。\n///\n/// Player::kCross 对应 CellState::kCross。\nconstexpr CellState PlayerToCellState(Player player) {\n  return player == Player::kCross ? CellState::kCross : CellState::kNought;\n}\n\n三连没有出现时，对局也可能因为棋盘下满而结束，判定顺序是先胜负、再平局，ResultAfterMove 写在 game.h 的 private: 下：\n\n\ngame.h\n\n  /// 判定落子后的对局结果。\n  ///\n  /// 刚落子的玩家获胜则判胜，否则棋盘下满判平局，都未发生则对局继续。\n  ///\n  /// @param board 落子后的棋盘。\n  /// @param player 刚落子的对局玩家。\n  [[nodiscard]] static GameResult ResultAfterMove(const Board& board, Player player);\n\n实现写在 game.cpp 里：\n\n\ngame.cpp\n\nGameResult Game::ResultAfterMove(const Board& board, Player player) {\n  if (HasPlayerLine(board, PlayerToCellState(player))) {\n    // 刚落子的玩家已连成线，先判胜负。\n    return player == Player::kCross ? GameResult::kCrossWin : GameResult::kNoughtWin;\n  }\n  if (board.IsFull()) {\n    return GameResult::kDraw;  // 未分胜负且棋盘已满，判平局。\n  }\n  return GameResult::kInProgress;  // 仍可继续落子。\n}\n\nIsFull 来自上一章的棋盘入口，只回答棋盘是否下满，三连判定由 HasPlayerLine 另行回答。Game 因此把两个答案组合成终局结果，棋盘本身不保存对局结果。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>一次落子</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/04-game.html#落子写入",
+    "href": "content/tictactoe/04-game.html#落子写入",
+    "title": "一次落子",
+    "section": "落子写入",
+    "text": "落子写入\n类型、数据和检查都齐了，最后把一次落子接起来。Game::TryPlace 收下一次落子，声明在 game.h 里：\n\n\ngame.h\n\n  /// 尝试执行一次落子。\n  ///\n  /// 落子合法时，把落子玩家的棋子写入棋盘并轮到另一名玩家。\n  /// 对局已结束、落子的玩家不是当前玩家、坐标无效或目标棋盘格子已被占用时拒绝，\n  /// 棋盘和轮次保持不变。\n  ///\n  /// @param move 待执行的落子。\n  /// @returns 落子执行成功返回 kPlaced，被拒绝返回 kRejected。\n  [[nodiscard]] PlaceResult TryPlace(const Move& move);\n\nGame::TryPlace 在下面几种情况拒绝落子，返回 PlaceResult::kRejected，棋盘和当前玩家保持不变：\n\n对局已结束：结果已经确定，不再改变。\n没轮到落子：落子的玩家不是当前玩家。\n位置不可用：坐标无效，或棋盘格子已被占用。\n\n实现写在 game.cpp 里，把校验、写入和判定串在一次调用里：\n\n\ngame.cpp\n\nPlaceResult Game::TryPlace(const Move& move) {\n  if (result_ != GameResult::kInProgress || move.player != current_player_) {\n    return PlaceResult::kRejected;  // 对局已结束，或落子的玩家不是当前玩家。\n  }\n\n  const CellState state = PlayerToCellState(move.player);\n  if (!board_.PlacePiece(move.position, state)) {\n    return PlaceResult::kRejected;  // 棋盘拒绝落子，局面保持不变。\n  }\n\n  result_ = ResultAfterMove(board_, move.player);  // 落子写入后立即判定终局。\n  history_.push_back(move);                        // 成功写入才记录落子历史。\n  if (result_ == GameResult::kInProgress) {\n    // 对局未结束才把轮次交给另一名玩家。\n    current_player_ = current_player_ == Player::kCross ? Player::kNought : Player::kCross;\n  }\n  return PlaceResult::kPlaced;\n}\n\n成功的落子先用 PlayerToCellState 从对局玩家得到要写入的棋盘格子状态，再交给上一章的棋盘入口写入。被拒绝的落子不改任何数据成员，轮次、结果、历史和棋盘都保持调用前的样子。调用方从返回值就能分辨两种结局：kPlaced 只表示已经写入，对局仍是进行中才轮到另一名玩家；kRejected 表示没有写入，仍是同一名玩家重试。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>一次落子</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/04-game.html#常见错误",
+    "href": "content/tictactoe/04-game.html#常见错误",
+    "title": "一次落子",
+    "section": "常见错误",
+    "text": "常见错误\n\n重复落子\n第二次写入同一个棋盘格子时，Board::PlacePiece 返回 false，原有状态保留，先手的棋子才不会被后手覆盖。\n\n\n误判平局\n最后一子同时形成三连时，要先判定获胜，再检查棋盘是否下满，顺序颠倒会把获胜记成平局。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>一次落子</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/04-game.html#自测问题",
+    "href": "content/tictactoe/04-game.html#自测问题",
+    "title": "一次落子",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。\n\n空棋盘开局，轮到 X。没轮到的一方来落子时，棋盘会改变吗？\n\n查看答案\n不会。落子的玩家不是当前玩家，TryPlace 返回 kRejected，棋盘和轮次都保持原样。\n\n刚创建的一局对局，轮到谁落子？\n\n查看答案\n轮到 X。Game() 默认构造后，current_player_ 的默认值是 Player::kCross。\n\n最后一子既让棋盘下满，又形成三连时，对局结果是什么？\n\n查看答案\n判获胜，不判平局。ResultAfterMove 先检查 HasPlayerLine，刚落子的玩家已经连成线就是获胜。只有未分出胜负时，才检查棋盘是否下满。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>一次落子</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/04-game.html#本章回顾",
+    "href": "content/tictactoe/04-game.html#本章回顾",
+    "title": "一次落子",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经能在 Board 之上完成一次落子。下一章终端对局，首次完成这个工程的配置、编译、测试和运行。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>一次落子</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/05-terminal-play.html",
+    "href": "content/tictactoe/05-terminal-play.html",
+    "title": "终端对局",
+    "section": "",
+    "text": "终端步骤\n一次落子已经把棋盘状态变成可结束的对局。这一章首次把井字棋动态库接到终端程序，并在 WSL Ubuntu 中完成配置、编译、测试和运行。构建与验收入口是 build-and-run.sh。\n这一节先验证脚本与测试，再核对排版，然后输入坐标运行一局。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>终端对局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/05-terminal-play.html#终端步骤",
+    "href": "content/tictactoe/05-terminal-play.html#终端步骤",
+    "title": "终端对局",
+    "section": "",
+    "text": "执行脚本\n在装好 CMake 4.2、Clang 和 Ninja 的 WSL Ubuntu 中进入 games/tictactoe/01-cli-game，执行脚本。\n\n\nWSL Ubuntu（工程目录）\n\n./build-and-run.sh\n\n脚本依次完成配置、编译、格式与静态检查、测试和管道棋谱，首次运行生成 build/ 目录并复用。各步对应的工具：\n\n配置：CMake（跨平台的构建系统）读取构建规则，在 build/ 下生成构建文件，目录由仓库根的 .gitignore 排除。\n编译：Ninja（构建执行工具）按构建计划把源码编译成可执行文件。\n格式与静态检查：clang-format 读取本目录的 .clang-format 核对源码排版，clang-tidy 检查常见缺陷模式。编辑器保存文件时读取仓库根的 .editorconfig。\n测试：CTest（CMake 自带的测试运行工具）运行 tests/ 里的测试。\n运行：管道棋谱送入可执行文件 app，打印对局画面与结果行。\n\n\n\n核对结果\ntests/ 里的 board_test.cpp 和 game_test.cpp 直接读头文件 board.h 和 game.h 来核对规则，测试不启动终端程序。GameTest 覆盖这些场景：\n\n拒绝不是当前玩家的落子。\n按行、按列和两条对角线获胜，含最后一子同时三连。\n棋盘下满且没有三连时记平局。\n对局结束后、棋盘格子被占用或坐标出界时落子被拒绝。\n历史按落子顺序保存。\n\n成功时先确认工程验证完成：\n\n配置：CMake 配置成功，生成 Ninja 构建文件。\n编译与检查：编译、格式检查和静态检查退出码为 0。\n测试：CTest 报告全部测试通过。\n\n随后确认端到端对局完成：末尾打印完整结果行 对局结果：X 获胜，与对局规则中的终局画面一致。两项都通过，本章验收完成。\n\n\n查看排版\n棋盘的文本排版由 cli.cpp 决定，结果标签由其中的 PrintGame 追加：\n\n\ncli.cpp\n\n  std::string board = \"    0   1   2\\n\";\n  const std::string rule = \"  +---+---+---+\\n\";\n\n列号对准棋盘格子中心，横线分隔每一行，行号写在左边框左侧。PrintGame 把棋盘文本与 对局结果：... 结果行写入调用方提供的输出流。井字棋动态库不做终端 I/O。\n\n\n输入坐标\n构建成功后，可在工程目录直接启动 app 输入行列，也可把让 X 获胜的棋谱送入标准输入：\n\n\nWSL Ubuntu（工程目录）\n\nprintf '%s\\n' '0 0' '1 0' '0 1' '1 1' '0 2' | ./build/bin/app\n\n输入行列时，PlayToEnd 循环打印棋盘、读取坐标并调用 Game::TryPlace，非法输入时报告原因并要求重试。输出应包含完整结果行 对局结果：X 获胜。这次运行与脚本末尾的管道棋谱是同一组落子，画面组成见对局规则中的终局示例。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>终端对局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/05-terminal-play.html#常见错误",
+    "href": "content/tictactoe/05-terminal-play.html#常见错误",
+    "title": "终端对局",
+    "section": "常见错误",
+    "text": "常见错误\n\n反复提示\n非法输入让 std::cin 进入失败状态，之后程序反复提示同一句：\n\n出错的原因：失败状态未清除时，下一次读入会立刻再次失败。\n正确的做法：先用 clear 清除失败状态，再按行丢掉剩余输入，然后重新提示。\n\n\n\n找不到动态库\n如果配置和编译成功，但运行时报告动态库无法加载，先确认命令在工程目录执行。\n\n回到井字棋工程目录，重新执行 build-and-run.sh。\n只清理可重建的 build/，再重新执行脚本。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>终端对局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/05-terminal-play.html#自测问题",
+    "href": "content/tictactoe/05-terminal-play.html#自测问题",
+    "title": "终端对局",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。\n\n管道棋谱走完后，终端打印的结果行是什么？\n\n查看答案\n对局结果：X 获胜。脚本末尾的管道棋谱与手动送入的棋谱使用同一组落子，走完后终端打印这行结果。\n\n棋盘上印出的列号和玩家输入的数字是同一套吗？\n\n查看答案\n是同一套。棋盘上印的行列号和玩家输入的数字都从 0 开始，不用换算。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>终端对局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/05-terminal-play.html#本章回顾",
+    "href": "content/tictactoe/05-terminal-play.html#本章回顾",
+    "title": "终端对局",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经首次配置、编译、测试并运行终端对局，完整走完了一局。下一章电脑对手，在不改变 Game::TryPlace 的前提下替换后手输入。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>终端对局</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/06-opponent.html",
+    "href": "content/tictactoe/06-opponent.html",
+    "title": "电脑对手",
+    "section": "",
+    "text": "后手输入\n终端对局已经验证了双人终端工程。这一章把后手输入替换为对手产生的一次 Move，落子仍调用同一个 Game::TryPlace。代码在 02-cpu-opponent。\n后手的落子改由对手产生。这一节先看输入协议多了什么，再看落子选择怎么选出。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>电脑对手</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/06-opponent.html#后手输入",
+    "href": "content/tictactoe/06-opponent.html#后手输入",
+    "title": "电脑对手",
+    "section": "",
+    "text": "输入协议\n本章命令都在 02-cpu-opponent 目录执行，先运行该目录的构建与验收入口：\n\n\nWSL Ubuntu（工程目录）\n\n./build-and-run.sh\n\n人机对局的输入协议在坐标前增加一个难度值。下面的管道棋谱把 1 放在坐标前面，终局输出仍包含 对局结果：X 获胜：\n\n\nUbuntu Bash\n\nprintf '%s\\n' '1' '0 0' '1 0' '0 1' '1 1' '0 2' | ./build/bin/app\n\n三个难度值对应三种落子选择：\n\n1 随机选择空位，保证落子合法。\n2 优先取胜或封堵，再按中心、四角、四边选格。\n3 比较终局结果，选择更有利的一步。\n\n三种难度各自的落子选择都有测试核对，双方都用极小极大自对弈时对局判平局。三种难度都只改变选择的方式，返回的落子始终指向空棋盘格子、出自当前玩家。\n\n\n落子选择\nopponent.h 只声明落子选择：ChooseMove 读当前对局，返回当前玩家的一次合法 Move。\n\n\nopponent.h\n\n[[nodiscard]] Move ChooseMove(const Game& game, Strength strength);\n\nChooseMove 与 Game 位于同一个动态库。终端程序在 apps/ 中调用它，轮到 O 时传入当前对局和难度，再把返回值交给 Game::TryPlace。先手仍从标准输入读取两个整数。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>电脑对手</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/06-opponent.html#常见错误",
+    "href": "content/tictactoe/06-opponent.html#常见错误",
+    "title": "电脑对手",
+    "section": "常见错误",
+    "text": "常见错误\n\n对手改盘\n对手绕过 Game::TryPlace 自己写入棋盘时，终端里的下一次落子会因棋盘格子已占用被拒绝，而 ChooseMove 只能返回 Move。\n\n\n库内打印\n井字棋动态库的头文件不包含输入输出，ChooseMove 只返回 Move，打印和读入留在 apps/ 的终端程序里。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>电脑对手</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/06-opponent.html#自测问题",
+    "href": "content/tictactoe/06-opponent.html#自测问题",
+    "title": "电脑对手",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。\n\n电脑选出的一步，由谁决定能不能写入棋盘？\n\n查看答案\n仍由 Game::TryPlace 决定。对手只产生 Move，这一步是否写入、何时终局，和双人读入走的是同一条路径。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>电脑对手</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/06-opponent.html#本章回顾",
+    "href": "content/tictactoe/06-opponent.html#本章回顾",
+    "title": "电脑对手",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经能让后手产生一次 Move，并仍用 Game::TryPlace 落子。下一章在每次打印后追加一行 JSON，把九个棋盘格子、轮到谁和对局结果写给别的程序。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>电脑对手</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/07-line-protocol.html",
+    "href": "content/tictactoe/07-line-protocol.html",
+    "title": "局面快照",
+    "section": "",
+    "text": "快照协议\n电脑对手已经确定了启动输入，并保留了双人和人机两种模式。这一章定义输出协议，在给人看的棋盘后追加一行版本化 JSON，写明九个棋盘格子、轮到谁和对局结果，其他程序直接读取这行 JSON。实现在 03-line-protocol 目录里。\n每次打印后都多一行 JSON 快照。这一节先读快照字段，再把快照还原成棋盘。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>局面快照</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/07-line-protocol.html#快照协议",
+    "href": "content/tictactoe/07-line-protocol.html#快照协议",
+    "title": "局面快照",
+    "section": "",
+    "text": "快照字段\n本章命令都在 03-line-protocol 目录执行，先运行该目录的构建与验收入口：\n\n\nWSL Ubuntu（工程目录）\n\n./build-and-run.sh\n\nJSON 快照供回放等程序逐行解析，中文棋盘继续显示 对局结果：X 获胜 给人看。X 三连后的快照如下：\n\n\n快照示例\n\n{\"version\":1,\"sequence\":5,\"cells\":[\"X\",\"X\",\"X\",\"O\",\"O\",\" \",\" \",\" \",\" \"],\"player\":\"X\",\"status\":\"x_wins\",\"winner\":\"X\"}\n\n这行快照的每个字段记录一项信息，中文棋盘末行的 对局结果：X 获胜 对应其中的 status 和 winner：\n\nversion：快照格式的版本号，当前是 1。\nsequence：已落子的次数，每执行一次有效落子加一。\ncells：按行依次排列的九个棋盘格子，每三个是一行。\nplayer：当前轮到的对局玩家，对局结束后不再轮转。\nstatus：对局状态，进行中是 in_progress，X 获胜是 x_wins，O 获胜是 o_wins，平局是 draw。\nwinner：获胜方，X 获胜时是 X，O 获胜时是 O，其余为空。\n\n\n\n还原棋盘\n下面的图把快照里的九个棋盘格子画成棋盘，第一行正是三个 X。\n\n\n\n\n\n\n\ncol\n\n\nrow\n0\n1\n2\n0\n1\n2\n\n\n\n\n\n\n(1,2)\n\n(2,0)\n\n(2,1)\n\n(2,2)\n\n\nX\nX\nX\nO\nO\n\n逐行 JSON 里的第一行三连\n\n\nWriteSnapshot 在 cli.cpp 中紧接棋盘文本写出一行 JSON，解析方只读取该行的稳定字段。仓库里的回放脚本就是这样一个解析方，读入一行快照，按字段还原棋盘与终局，上面的图即由它画出。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>局面快照</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/07-line-protocol.html#常见错误",
+    "href": "content/tictactoe/07-line-protocol.html#常见错误",
+    "title": "局面快照",
+    "section": "常见错误",
+    "text": "常见错误\n\n只留 JSON\n把中文棋盘删掉、只输出 JSON 时，玩家就看不到行列号。\n\n出错的原因：行列号只印在中文棋盘上，JSON 里没有行列信息。\n正确的做法：中文棋盘照常打印，JSON 只追加在每次打印之后。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>局面快照</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/07-line-protocol.html#自测问题",
+    "href": "content/tictactoe/07-line-protocol.html#自测问题",
+    "title": "局面快照",
+    "section": "自测问题",
+    "text": "自测问题\n先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。\n\n中文棋盘的排版改了之后，别的程序要读九个棋盘格子，读的是中文棋盘那一行还是 JSON 快照那一行？\n\n查看答案\n读追加的那一行 JSON 里的 cells。中文排版一变，画出来的棋盘会变，一行 JSON 把九个棋盘格子、轮到谁和对局结果写明，解析只核对这行的字段。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>局面快照</span>"
+    ]
+  },
+  {
+    "objectID": "content/tictactoe/07-line-protocol.html#本章回顾",
+    "href": "content/tictactoe/07-line-protocol.html#本章回顾",
+    "title": "局面快照",
+    "section": "本章回顾",
+    "text": "本章回顾\n你已经能在每次打印后读到九个棋盘格子、轮到谁和对局结果。人机参数和双人管道都还能用。",
+    "crumbs": [
+      "井字棋",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>局面快照</span>"
+    ]
+  }
+]
