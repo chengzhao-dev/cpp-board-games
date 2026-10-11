@@ -1,18 +1,45 @@
 ---
-title: "用一行 JSON 记下局面"
+title: "局面快照"
 engine: jupyter
 ---
 
-[让电脑产生一次落子](06-opponent.qmd)已经固定了启动输入，并保留了双人和人机两种模式。这一章定义输出协议：在给人看的棋盘后追加一行版本化 JSON，把九格和终局写明，别的程序不用从中文棋盘里抠格子。代码在 [03-line-protocol](https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tictactoe/03-line-protocol)。
+[电脑对手](06-opponent.qmd)已经确定了启动输入，并保留了双人和人机两种模式。这一章定义输出协议，在给人看的棋盘后追加一行版本化 JSON，写明九个棋盘格子、轮到谁和对局结果，其他程序直接读取这行 JSON。实现在 [03-line-protocol](https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tictactoe/03-line-protocol) 目录里。
 
-## 追加局面输出协议
+## 快照协议
 
-[cli.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/03-line-protocol/apps/src/cli.cpp) 仍先打印行列号棋盘。`WriteSnapshot` 紧接着写一行 JSON，包含版本、序号、九格、轮到谁、状态和胜者。
+每次打印后都多一行 JSON 快照。这一节先读快照字段，再把快照还原成棋盘。
+
+### 快照字段
+
+本章命令都在 `03-line-protocol` 目录执行，先运行该目录的构建与验收入口：
+
+```{.bash filename="WSL Ubuntu（工程目录）"}
+./build-and-run.sh
+```
+
+JSON 快照供回放等程序逐行解析，中文棋盘继续显示 `对局结果：X 获胜` 给人看。X 三连后的快照如下：
+
+```{.text filename="快照示例"}
+{"version":1,"sequence":5,"cells":["X","X","X","O","O"," "," "," "," "],"player":"X","status":"x_wins","winner":"X"}
+```
+
+这行快照的每个字段记录一项信息，中文棋盘末行的 `对局结果：X 获胜` 对应其中的 `status` 和 `winner`：
+
+- `version`：快照格式的版本号，当前是 1。
+- `sequence`：已落子的次数，每执行一次有效落子加一。
+- `cells`：按行依次排列的九个棋盘格子，每三个是一行。
+- `player`：当前轮到的对局玩家，对局结束后不再轮转。
+- `status`：对局状态，进行中是 `in_progress`，X 获胜是 `x_wins`，O 获胜是 `o_wins`，平局是 `draw`。
+- `winner`：获胜方，X 获胜时是 `X`，O 获胜时是 `O`，其余为空。
+
+### 还原棋盘
+
+下面的图把快照里的九个棋盘格子画成棋盘，第一行正是三个 `X`。
 
 ```{python}
 #| echo: false
 #| warning: false
-#| fig-cap: "图 1：逐行 JSON 里的第一行三连"
+#| fig-cap: "逐行 JSON 里的第一行三连"
 #| fig-align: center
 
 import sys
@@ -28,31 +55,32 @@ sys.path.append(str(root / ".agents/skills/writing-quarto/scripts/diagrams"))
 from coords_grid import render_grid
 from replay import marks_from_cells, parse_snapshot
 
-line = '{"version":1,"sequence":0,"cells":["X","X","X","O","O"," "," "," "," "],"player":"X","status":"x_wins","winner":"X"}'
+line = '{"version":1,"sequence":5,"cells":["X","X","X","O","O"," "," "," "," "],"player":"X","status":"x_wins","winner":"X"}'
 snapshot = parse_snapshot(line)
 HTML(render_grid(marks=marks_from_cells(snapshot["cells"])))
 ```
 
-九格按行依次排列，每三个是一行。管道棋谱结束时，`status` 是 `x_wins`，`winner` 是 `X`；标准输出仍有 `X 获胜`。别的程序要九格和终局，读这一行 JSON 就够；中文棋盘继续给人看。
+`WriteSnapshot` 在 [cli.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/03-line-protocol/apps/src/cli.cpp) 中紧接棋盘文本写出一行 JSON，解析方只读取该行的稳定字段。仓库里的回放脚本就是这样一个解析方，读入一行快照，按字段还原棋盘与终局，上面的图即由它画出。
 
 ## 常见错误
 
-### 只留下 JSON
+### 只留 JSON
 
-删掉中文棋盘后，人就看不到行列号。
+把中文棋盘删掉、只输出 JSON 时，玩家就看不到行列号。
 
-- 棋盘文本保留。JSON 只追加在每次打印之后。
+- **出错的原因**：行列号只印在中文棋盘上，JSON 里没有行列信息。
+- **正确的做法**：中文棋盘照常打印，JSON 只追加在每次打印之后。
 
 ## 自测问题
 
 先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。
 
-1. 为什么不从中文棋盘里把 X 和 O 抠出来？
+1. 中文棋盘的排版改了之后，别的程序要读九个棋盘格子，读的是中文棋盘那一行还是 JSON 快照那一行？
 
    ::: {.answer}
-   中文排版一变，抠出来的格子就会错。一行 JSON 把九格和终局写明，解析只核对这行的字段。
+   读追加的那一行 JSON 里的 `cells`。中文排版一变，画出来的棋盘会变，一行 JSON 把九个棋盘格子、轮到谁和对局结果写明，解析只核对这行的字段。
    :::
 
 ## 本章回顾
 
-你已经能在每次打印后读到版本、序号、九格、轮到谁、状态和胜者。人机参数和双人管道都还能用。
+你已经能在每次打印后读到九个棋盘格子、轮到谁和对局结果。人机参数和双人管道都还能用。

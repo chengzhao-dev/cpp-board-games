@@ -16,7 +16,7 @@ body-classes: homepage
 ::: {.landing-card}
 ### [井字棋](content/tictactoe/index.qmd)
 
-按顺序查看井字棋从规则、目录和棋盘到对手与逐行协议的完整演进。
+按顺序查看井字棋的完整演进：从对局规则、工程目录到棋盘存储，再到电脑对手与局面快照。
 
 [进入井字棋 →](content/tictactoe/index.qmd){.cta}
 :::
