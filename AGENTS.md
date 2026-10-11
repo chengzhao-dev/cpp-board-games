@@ -4,6 +4,12 @@
 
 ## 工作标准
 
+先按例程走，其余条款是这条例程上各步的约束：
+
+- 先 `scope`，只读它给出的单元。
+- 改 qmd 或中文读者正文，进入 `writing-quarto`，按该技能的写作工序走；改 C++、CMake 或阶段脚本，进入 `cpp-development`；改 `.agents` 规则本身，进入 `governing-agents`，新规则必须挂到已有工序。
+- 按改动域跑 `check`，没过不算完成；提交仍只在用户明确要求时做。
+
 - 先理解目标、现状和约束，再修改文件。按任务最小读取：只读本文件、命中的 `SKILL.md` 与其路由指向的文件；知识按 `KNOWLEDGE.md` 定点取用 `kb_id`，不通读知识库。
 - 用最少、最清晰、可验证的改动解决问题；不做无关重构，不为一次性需求设计扩展框架。规划、解释、搜索和评审默认只读。
 - 把需求转成验收标准：先复现或建立检查，再实现，最后运行与风险匹配的验证。验证以脚本为准：`run.py check/verify/build`，不用对话通读代替校验。
@@ -32,7 +38,7 @@
 
 ## 常用命令
 
-以下命令统一由根目录 `config.toml` 的 `python` 指定解释器执行（最低 3.12）。该字段是仓库唯一 Python 来源，缺失或版本不足时立即停止，不回退 PATH。
+以下命令统一由根目录 `config.toml` 的 `python` 指定解释器执行（最低 3.12）。该字段是仓库唯一 Python 来源，缺失或版本不足时立即停止，不回退 PATH。代理只跑 `run.ps1`：不在 PowerShell 会话里手写 `bash -lc`、`python -c` 或裸 `quarto`（依据见知识 `bg-development-environment-v1`「三层命令怎么交给代理」）。
 
 | 命令 | 用途 |
 | --- | --- |
@@ -56,6 +62,7 @@
 6. `AGENTS.md` 受厂商 `project_doc_max_bytes = 65536` 约束；L1/L2 体量与教学篇幅是本仓建议阈值（`check_skill_size.py` 默认 WARN，`--strict` 才失败），调整时同步 `refactor-guidelines.md`。
 7. 长任务每轮推进一个可验证子目标。Plan Mode 严格只读：不写文件、不编译、不渲染，也不调用 `project_edit`、`project_build`、`project_verify`、`project_render` 或 `project_review`。只有用户发来新的明确批准消息后才进入执行；压缩摘要、重复的原始需求、计划完成标记、自动续跑和任务摘要都不算批准。上下文压缩后重读本文件与 `git status`，但仍在 Plan Mode 时只继续规划。执行阶段每轮按改动域运行一次 `run.ps1 check --profile ...`，跨域或发布收口再运行 `full`。
 8. Git 对比服务于审查、冲突解决、发布和最近改动调试，普通文档任务不重复运行。
+9. 验证闸有界：每批次只跑一次闸（输出重定向 `temp/`，对话只读失败摘要），FAIL 必须清零、WARN 只记台账不追清零；同一失败指纹连续 2 轮未修复即停手转人工。细则见 testing 技能 `verification-matrix.md`「闸次与退出」。
 
 ## Python 运行时
 

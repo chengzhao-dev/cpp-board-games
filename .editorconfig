@@ -1,0 +1,23 @@
+#===--------------------------------------------------------------------------------------------===#
+# .editorconfig - 本仓编辑器统一约定
+#===--------------------------------------------------------------------------------------------===#
+
+# 保存即符合仓库格式：行尾与编码跟 .gitattributes 一致，缩进按下表分文件。
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.py]
+indent_size = 4
+
+[*.{bat,cmd}]
+end_of_line = crlf
+
+[Makefile]
+indent_style = tab
