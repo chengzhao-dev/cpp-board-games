@@ -111,8 +111,8 @@ def main() -> int:
 
     allowed_root = {
         ".agents", ".github", "content", "games", "shared", "_freeze",
-        ".gitattributes", ".gitignore", "AGENTS.md", "config.toml",
-        "index.qmd", "LICENSE", "README.md", "_quarto.yml",
+        ".gitattributes", ".gitignore", ".editorconfig", "AGENTS.md", "config.toml",
+        "index.qmd", "LICENSE", "README.md", "CONTRIBUTING.md", "_quarto.yml",
     }
     unexpected_root = []
     for path in ROOT.iterdir():

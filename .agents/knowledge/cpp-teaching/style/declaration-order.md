@@ -7,9 +7,9 @@ tags: [declaration-order, google-style, headers, code-review]
 level_range: [0, 5]
 dependencies: [bg-google-cpp-style-v1]
 created: "2026-09-30"
-updated: "2026-10-04"
+updated: "2026-10-06"
 chunk_strategy: "semantic_heading"
-estimated_tokens: 900
+estimated_tokens: 1200
 ---
 
 # 声明顺序标准
@@ -24,7 +24,7 @@ estimated_tokens: 900
 2. 仅 `struct` 可把非 static 数据成员放最前（聚合初始化需要）；`class` 不适用；
 3. 静态常量（`static constexpr`，`k` 前缀）；
 4. 工厂函数；
-5. 静态无状态谓词（用户定案排在构造之前，如 `Board::IsValidPosition`；这类声明是类对外的边界检查入口，先于构造读更像能力清单）；
+5. 静态无状态谓词（用户定案排在构造之前，如 `Board::IsValidPosition`；这类声明是类对外的边界检查入口，先于构造读更像能力清单）；`private static` 的编排助手（如 `Game::ResultAfterMove`、`Game::HasPlayerLine`）随 `private` 段的「其余成员函数」，按被调用顺序排在数据成员之前；
 6. 构造、赋值、析构；
 7. 其余成员函数；
 8. 其余数据成员。
@@ -35,15 +35,18 @@ estimated_tokens: 900
 
 1. 文件头横幅 + `#pragma once` + includes（分组见 `bg-google-cpp-style-v1` 各章采纳要点）；
 2. `namespace` 打开；
-3. `inline constexpr` 常量（`k…`，如 `kRows` / `kCols`）；
+3. `inline constexpr` 常量（`k…`，如 `kRows` / `kCols`——头文件里的 `constexpr` 变量必须加 `inline`，否则每个翻译单元各留一份实体）；
 4. `enum class`（按依赖与主题分组；同一主题的状态码相邻，如 `Player`、`CellState` 相邻）；
 5. `struct` 聚合类型（被依赖者在前：`CellPosition` 先于 `Move`）；
-6. 自由函数（映射：`CellStateFor`；无状态谓词可作类内 public static 成员，如 `Board::IsValidPosition`）；
-7. `namespace` 关闭。
+6. 自由函数（映射与换算：`PlayerToCellState`；AI 探测与收集：`opponent.h` 的 `EmptyCells`、`CompletesLine`、`Search` 等。只服务某个类型自身不变量、无外部调用方的编排助手不进命名空间作用域，收进该类的 `private static`，如 `Game::ResultAfterMove` / `Game::HasPlayerLine`；无状态谓词可作类内 public static 成员，如 `Board::IsValidPosition`）；
+7. `class` 公开接口类型（如 `Game`）；
+8. `namespace` 关闭。
 
 ## C. `.cpp` 定义顺序
 
-对应头文件的 include 放第一位；函数定义顺序与头文件中声明顺序一致，读者在两个文件间往返时不需重新定位。拷贝/移动/析构等特殊成员在头文件只留声明，其 `= default` 与有函数体的定义都写在本文件；例外（用户定案）：零参默认构造在头文件类内写 `Board() = default;`，本文件不再重复定义。落点依据见标识 `bg-google-cpp-style-v1` 的知识文件「特殊成员」。
+对应头文件的 include 放第一位；函数定义顺序与头文件中声明顺序一致，读者在两个文件间往返时不需重新定位。实现文件不再设匿名命名空间收纳库内助手（用户定案：`.cpp` 源码零匿名、测试文件例外）：助手声明在头文件，定义顺序与声明一致。拷贝/移动/析构等特殊成员在头文件只留声明，其 `= default` 与有函数体的定义都写在本文件；例外（用户定案）：零参默认构造在头文件类内写 `Board() = default;`，本文件不再重复定义。落点依据见标识 `bg-google-cpp-style-v1` 的知识文件「特殊成员」。
+
+判例（`Game`，三阶段同步）：定义序为 `GetCurrentPlayer` → `GetResult` → `GetCellState` → `GetHistory` → `TryPlace` → `HasPlayerLine` → `ResultAfterMove`，随 `game.h` 的声明序；`Game()` 是头文件 `= default`，`.cpp` 不出现。自由函数、`PlayerToCellState` 等命名空间作用域定义同样随对应头文件声明顺序出现。凡有对应头文件的 `.cpp`（`game.cpp`/`board.cpp`/`opponent.cpp`/`cli.cpp`）逐一建立「头文件声明序 ↔ `.cpp` 定义序」对照并重排，不可只改一处；仅含 `main` 的文件记「不适用」。
 
 ## D. 与教学摘录的关系
 

@@ -12,7 +12,7 @@ Quarto 章节里的 ``{python}`` 可执行单元调用本助手生成坐标轴�
 # 常量
 #===------------------------------------------------------------------------===#
 
-FONT_FAMILY = "Fixel Text, LXGW WenKai Screen, system-ui, sans-serif"
+FONT_FAMILY = "LXGW Bright Medium, system-ui, sans-serif"
 
 
 #===------------------------------------------------------------------------===#
@@ -29,7 +29,7 @@ def render_grid(rows=3, cols=3, labels="coords", origin="top-left",
     col 0 在左）。axis 为 True 时画两条带箭头的轴：横轴 `col` 从
     原点向右增长，纵轴 `row` 向下增长，轴与网格之间的数字是各列/
     各行的下标；左上格外角画一个原点记号，箭头方向与原点位置直观
-    呈现「row 向下增长、原点在左上角」这两处程序事实。轴名与代码
+    呈现「row 向下增长、原点在左上角」这两个程序事实。轴名与代码
     字段 `Position::row` / `Position::col` 及 `kRows` / `kCols` 对应。
     marks：{(r,c): 文本}，在对应格子居中放大绘制棋子等标记，
     覆盖该格的坐标标注；highlight：(r,c)，为该格加一圈加粗描边，
@@ -166,7 +166,7 @@ def render_index_strip(count, cols=3, highlight=None, cell=56, font_size=14):
     """渲染一维下标与行列坐标的对应条带图，返回 SVG 字符串。
 
     count：数组长度；cols：每 cols 个下标分成一组，对应 kCols。
-    每组上方标 row = N 并画一条组线，格内标一维下标，格下标换算
+    每组上方标 row = N 并画一条组线，格内标一维下标，格下标出换算
     前的 (row, col)；highlight 指定加粗的下标，用于标出公式示例
     （如 (1, 2) 换算出的 5）。越界参数直接抛 ValueError。
     """

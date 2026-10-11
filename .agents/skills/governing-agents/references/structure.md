@@ -11,7 +11,7 @@
 | `memory/` | 过去哪里容易出错 | 每个任务开始时读 `MEMORY.md` 索引 |
 | `incidents/` | 这次失败有没有先例 | **仅排查失败时**读 `INDEX.md`，平时视为不存在 |
 
-一个知识点只允许一个出处：同一规则不要在多个区完整复制；引用用路径或 `kb_id` 指回唯一出处。
+一个知识点只允许一个出处：同一规则不要在多个区完整复制；引用时用路径或 `kb_id` 指回唯一出处。
 
 ## 2. 目标结构
 
@@ -83,6 +83,12 @@
 | C++ 技能 | `cpp-development`（游戏工程用法）+ `game-design`（规则建模）+ `python-tooling` | `writing-cpp`（语言机制系统讲解） | 教学内容互补：本仓讲工程用法，notes 讲语言机制；本仓读者正文（`content/**`）禁语言课旁白，硬边界见 `writing-quarto` 技能 `.agents/skills/writing-quarto/references/zh/chapter-writing.md`「叙事范围」 |
 | 任务路由 | 阶段路由表 `.agents/skills/cpp-development/references/stages/<game>.md`，`scope.py` 解析 game/stage | 任务矩阵（notes 侧 `writing-cpp` 技能按 part 分册的任务表），`scope.py` 解析 part/chapter，另有任务矩阵检查脚本 | 本仓不移植任务矩阵与其检查脚本 |
 | C++ 验证 | 各阶段 `build-and-run.sh`（配置、编译、格式与静态检查、CTest、运行），`run.py build <game>/<stage>` 进 WSL；C++ 不进 CI | `verify_examples.py`，`run.py verify`，CI 不编译 | 验证入口不同，`scope` 输出的读取边界语义一致 |
+
+## 7. 分层加载与全量润色调用序
+
+读取与校验按 L0 → L1 → L2 → knowledge → scripts 分层：L0 `AGENTS.md` 只放结构、命令与硬边界（不塞长文，必要时一句链到定案 `kb_id`）；L1 读命中的 `SKILL.md` 任务路由；L2 读 `references/` 的可执行 how（含 `.agents/skills/writing-quarto/references/zh/writing-howto.md` 的信号表与润色流程）；`knowledge/` 按 `kb_id` 定点取 why 与正反例；`scripts/` 承担机械闸（`check_zh_lint.py`、`verify_content.py`、`run.py check/verify/build`）。profile 映射不变：`fast` 走编码与中文体检、`verify` 走增量 qmd 内容、`build <game>/<stage>` 走阶段工程、`full` 走收口。子目录不再放 `AGENTS.md`：工作目录一变，宿主拼出的说明前缀就从那里断开，提示缓存的命中率随之下降（与知识文件 `bg-skills-engineering-v1` 的决定相同，此处写明原因）。
+
+大型文风/注释润色（如井字棋全量）按固定波次执行，波次与定案绑定，禁止跨波次或跳过：先建台账（覆盖清单 = 改写范围）→ 改 `.agents` 权威并合并双轨 → 登记新棋类等规划 kb → 扩闸并跑 `fast`/kb → 改源码 → 核工具链 → 改 qmd 围栏 → 分阶段 `build` → `render` + `full` 并逐条复核。任一 pending 波次未完成时不得宣告完成；禁止 qmd 先于源码、禁止只改样例。闸序与波次细节随任务计划给出，本文件不复制其条目（避免与 `AGENTS.md` 命令表双写）。
 | `run.py` 子命令 | check/verify/render/scope/build/status/kb-* | check/verify/render/scope/build/status/kb-* | 同名同义；`verify` 在本仓包装 verify_content，在 notes 包装 verify_examples |
 | Python 来源 | 根 `config.toml` 的 `python`，最低 3.12，失败即停 | 同左 | CI 用 `sed` 把该字段指向 runner 的 python3 |
 | 体量阈值 | L0/listing 厂商硬约束；L1/L2/catalog 为本仓建议（WARN，`--strict` 失败） | L0–L3 数字硬顶 | 落点表与「预算按仓可调」原则见各自 `refactor-guidelines.md` |
@@ -90,5 +96,5 @@
 | 异常文案 | 业务结果用结果类型；契约违反可 `std::out_of_range`；英文 `what()` 句式；不用日志框架；权威见 `bg-exception-message-format-v1` | 同构：权威见 `cpp-exception-message-format-v1`；语言章讲 `[]`/`at` 见 `cpp-subscript-and-at-v1` | 工程用法在 board-games，机制讲解在 notes |
 | apps 私有布局 | 组件式 `apps/`：`include/` + `src/`（全部 `.cpp` 含 `main` 在 `src/`），PRIVATE include | notes 示例工程按各自模板；不强制复制 apps 布局 | 本仓游戏 CLI 专用 |
 | 算术括号与枚举行尾 | 混合优先级算术显式括号（`readability-math-missing-parentheses` 保留不关闭）；同一 `enum` 内不自明成员行尾齐全、自明成员不写；权威见 `bg-google-cpp-style-v1` 与 `bg-comment-style-v1` | 同构：权威见 `cpp-naming-format-v1` 与 `cpp-teaching-source-comments-v1`，`verify --style` 致命检查集计失败 | 两仓同步新增；闸门入口不同：本仓阶段脚本 format+tidy，notes `verify_examples.py` |
-| 工具配置 YAML 注释 | `.clang-format` / `.clang-tidy` / `.clangd`：短 LLVM 文件头 + 邻接/单行分组；禁政策头与 kb 指针；权威见 `bg-comment-style-v1`「工具配置 YAML」 | 同构：权威见 `cpp-teaching-source-comments-v1` 同名专节 | 两仓同步；阶段/示例外观一致，键值可按仓微调 |
+| 工具配置 YAML 注释 | `.clang-format` / `.clang-tidy` / `.clangd` 三文件短横幅相同，注释粒度按文件分开；权威见 `bg-comment-style-v1`「键值配置」的三个小节 | 同构：权威见 `cpp-teaching-source-comments-v1` 同名专节 | 两仓同步；阶段/示例外观一致，键值可按仓微调 |
 | 主题资产 | 同一套 GitHub palette 与组件 CSS | 同左 | `check_layout.py` 环境变量前缀 `BOARD_GAMES_*` vs `CPP_MEMO_*` |

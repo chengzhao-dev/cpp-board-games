@@ -210,7 +210,7 @@ def resolve_path(target, root):
 DOMAIN_READ = {
     "theme": [".agents/skills/designing-theme/SKILL.md",
               ".agents/skills/designing-theme/references/theme-system.md"],
-    "dev": [".agents/skills/governing-agents/assets/config/editorconfig",
+    "dev": [".editorconfig",
             ".agents/skills/maintaining-python/scripts/scaffold/"],
     "repo": ["AGENTS.md", ".agents/skills/governing-agents/references/catalog.md",
              ".agents/skills/governing-agents/references/structure.md"],

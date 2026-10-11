@@ -3,7 +3,8 @@
 
 边界规则（对齐知识库规范）：## 是 Parent 边界，### 是 Child 边界，#### 及更深的
 标题并入所属 Child 不再单独成块，否则父子映射会出现三层歧义。首个 ## 之前的概述
-单独成一个 Parent，否则文档开头会被静默丢掉。
+单独成一个 Parent，否则文档开头会被静默丢掉。正文只有指向本文锚点的链接列表
+的整节（纯目录）不产出 Parent/Child，见 is_self_anchor_list。
 
 每个 Child 在正文前注入标题路径前缀（形如 [文档标题 > 阶段 > Level 5：智能指针]），
 让脱离上下文的小块仍能独立成句——这是「小块精准召回、大块返回给 LLM」成立的前提。
@@ -24,6 +25,7 @@ Parent 不注入前缀，因为它本身就带标题。只有标题没有正文�
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -32,9 +34,31 @@ import kb_common as kb  # noqa: E402
 
 STRATEGY = "semantic_heading"
 
+# 自锚点列表项：`- [标题](#锚点)`，指向本文件内部锚点的无序列表行。
+SELF_ANCHOR_ITEM_RE = re.compile(r"^[-*] \[[^\]]+\]\(#[^)]*\)$")
+
+
+def is_self_anchor_list(block: str) -> bool:
+    """整块正文只有指向本文锚点的链接列表：纯本文件锚点目录，不收成块。
+
+    目录块正文就是后面各节的标题，改写查询里的词在目录里出现一次即可拿满
+    精排覆盖率，又比真正作答的那一节短，会占住候选位。按形态判断，不写死
+    标题「目录」；正文混有任何散文行或外部链接就照常入库。
+    """
+    saw_item = False
+    for line in block.split(kb.NL):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if SELF_ANCHOR_ITEM_RE.match(stripped):
+            saw_item = True
+            continue
+        return False
+    return saw_item
+
 
 def slug(heading: str) -> str:
-    """标题转稳定 id 片段：ASCII 可读前缀 + 短哈希，避免中文 id 与同名冲突。"""
+    """标题转稳定 id 片段：ASCII 可读前缀 + 短哈希，避免中文标题生成的 id 同名冲突。"""
     ascii_part = "".join(ch if ch.isalnum() and ord(ch) < 128 else "-" for ch in heading)
     ascii_part = "-".join(part for part in ascii_part.split("-") if part)[:28] or "sec"
     return ascii_part + "-" + kb.content_hash(heading)[-8:]
@@ -89,6 +113,8 @@ def split_doc(path: Path) -> tuple[dict, list[dict]]:
 
     for heading, start, stop in ranges:
         block = kb.NL.join(lines[start - 1:stop]).strip()
+        if is_self_anchor_list(block):
+            continue  # 纯本文件锚点目录：只是导航辅助，不入库、不占候选位
         parent_id = doc_id + "__P__" + slug(heading)
         chain = title + " > " + heading
         subs = [row for row in kb.headings(body) if row[1] == 3 and start < row[0] <= stop]

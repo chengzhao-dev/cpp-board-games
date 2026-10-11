@@ -96,6 +96,8 @@ def main() -> int:
                 path.read_text(encoding="utf-8", errors="replace")
                 for path in figures.rglob("*.svg")
             )
+        if "coords_grid" not in source:
+            continue
         if "coords-grid" not in page and "coords-grid" not in figure_text:
             problems.append(f"{rel}: 坐标图页面缺少 coords-grid")
 

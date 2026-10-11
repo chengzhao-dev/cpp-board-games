@@ -10,6 +10,7 @@
 - 技能目录名 ≤ 20 字符，动作 + 对象（如 `shipping-github`），且必须与 `SKILL.md` 的 `name` 字段一致。
 - 字符集仅 `a-z`、`0-9`、`-`、`_`、`.`；禁止连续连字符；文档路径一律纯 ASCII，中文只出现在文件内容里。
 - 技能内 Python 脚本用 `snake_case`（`check_health.py`）；Shell 用 kebab-case（`build-and-run.sh`）；Lua filter 用 kebab-case（`answer-disclosure.lua`）。
+- 路径遵守本规范的连字符与固定入口；已经能看懂的英文名不为了和中文标题一样短而改写。仍禁止 `utils`、`misc` 和读不出对象的缩写。
 
 ## 2. 各类命名
 

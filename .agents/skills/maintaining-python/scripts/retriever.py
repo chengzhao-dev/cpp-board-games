@@ -47,6 +47,9 @@ RESCUE_RANK = 5
 CANDIDATE_POOL = 20
 # 融合分只作为精排之后的补充信号，不让检索名次盖过正文词面命中。
 RRF_SCORE_WEIGHT = 8.0
+# 封顶词频：每个查询词在候选正文里的出现次数按 3 次封顶后计入精排，让真正
+# 反复讨论查询词的那一节胜过只提到一次的交叉引用与短节；封顶防止长文靠重复刷分。
+TF_CAP = 3
 QUOTE = chr(34)
 SYMBOL_PATTERN = r"[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z0-9_~]+)+"
 DOTTED_PATTERN = r"[A-Za-z_][A-Za-z0-9_]{3,}"
@@ -59,6 +62,12 @@ BARE_WORD_RE = re.compile(DOTTED_PATTERN)
 CONTRAST_RE = re.compile('|'.join(["区别", "不同", "对比", "比较", "哪个更", "优劣", "差异", "vs"]))
 CODE_RE = re.compile('|'.join(["代码", "示例", "写法", "怎么实现", "implement"]))
 NAV_RE = re.compile('|'.join(["目录", "大纲", "章节"]))
+# 内容型问题保护：含具体疑问词的查询即使出现「目录/章节」也不是导航意图
+# （本仓大量正文以「目录」指文件系统目录，如「apps 目录的 include 和 src 怎么摆」），
+# 返回正文 chunks 而不是摘要地图。
+CONTENT_QUESTION_RE = re.compile('|'.join(
+    ["为什么", "怎么", "如何", "怎样", "哪个", "哪些", "何时", "多少",
+     "吗", "能不能", "可不可以"]))
 NOISE_RE = re.compile("^(请问|帮我|麻烦|能不能|可以|解释一下|讲讲|说下)+")
 # 精排专用的口语疑问二元组：只从查询侧覆盖率分母里剔除，索引侧 tokens()
 # 保持不变。中文二元组切不出词界，「什么」会连带产生「学什/么后/和什」这类碎片，
@@ -106,7 +115,7 @@ class TokenBudgetController:
 def classify(query: str) -> dict:
     """意图分类（轻量规则，不用 LLM）：决定 BM25 与图谱两路的相对权重。"""
     symbols = SYMBOL_RE.findall(query)
-    if NAV_RE.search(query):
+    if NAV_RE.search(query) and not CONTENT_QUESTION_RE.search(query):
         kind = "navigation"
     elif symbols:
         kind = "symbol"
@@ -370,7 +379,7 @@ def rrf_fusion(lists: list[list[str]], weights: tuple) -> dict:
 
 
 def rerank_score(query: str, content: str) -> float:
-    """精排（词面重合度回退实现）：查询词覆盖率 + 符号命中奖励。
+    """精排（词面重合度回退实现）：查询词覆盖率 + 封顶词频 + 符号命中奖励。
 
     这不是 Cross-Encoder。换成 bge-reranker 之类模型时只替换本函数，
     排序接口与预算裁剪都不用动。
@@ -379,10 +388,12 @@ def rerank_score(query: str, content: str) -> float:
                 if len(t) > 1 and t not in RERANK_QUERY_NOISE]
     if not q_tokens:
         return 0.0
-    c_tokens = set(tokens(content))
-    coverage = sum(1 for t in q_tokens if t in c_tokens) / len(q_tokens)
+    c_tokens = tokens(content)
+    c_set = set(c_tokens)
+    coverage = sum(1 for t in q_tokens if t in c_set) / len(q_tokens)
+    frequency = sum(min(c_tokens.count(t), TF_CAP) for t in q_tokens) / (len(q_tokens) * TF_CAP)
     symbols = sum(1 for s in LOOSE_SYMBOL_RE.findall(query) if s.lower() in content.lower())
-    return coverage + 0.25 * min(symbols, 4)
+    return coverage + 0.5 * frequency + 0.25 * min(symbols, 4)
 
 
 def index_of(listing: list[str], chunk_id: str):

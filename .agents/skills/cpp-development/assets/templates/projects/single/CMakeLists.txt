@@ -1,5 +1,5 @@
 # 构建 {{CMAKE_PROJECT_NAME}} 可执行目标。
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 4.2)
 project({{CMAKE_PROJECT_NAME}} LANGUAGES CXX)
 
 # 使用 C++20，并把可执行文件统一输出到 build/bin。

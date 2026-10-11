@@ -29,7 +29,7 @@ Quarto 只执行 ` ```{mermaid} ` 属性围栏；plain 的 ` ```mermaid ` 围栏
 每个 `{mermaid}` 块的第一行写：
 
 ```text
-%%{init: {"fontFamily": "Fixel Text, LXGW WenKai Screen, system-ui, sans-serif"}}%%
+%%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif"}}%%
 ```
 
 mermaid 用 init 指令中的字体测量标签宽度，页面 CSS 按 `--ui-font` 渲染文字；两者使用同一字体栈，标签测量与最终渲染一致，避免文字溢出或留白。`mermaid.css` 的排版守卫依赖这一约定。

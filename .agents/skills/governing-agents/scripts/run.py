@@ -37,6 +37,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 MIN_PYTHON = (3, 12)
+# 子进程超时（秒）：探测类命令短超时，其余命令统一 30 分钟上限。
+PROBE_TIMEOUT = 30
+DEFAULT_TIMEOUT = 1800
 CONFIG = ROOT / "config.toml"
 
 
@@ -50,6 +53,7 @@ def python_version(candidate):
         result = subprocess.run(
             [candidate, "-c", "import sys; print(sys.version_info[:2])"],
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, check=False,
+            timeout=PROBE_TIMEOUT,
         )
         value = result.stdout.strip().strip("()")
         major, minor = (int(part.strip()) for part in value.split(","))
@@ -123,6 +127,8 @@ CHECKS = [
     ("content", ".agents/skills/writing-quarto/scripts/verify_content.py", False, ()),
     ("content-selftest", ".agents/skills/writing-quarto/scripts/test_verify_content.py", False, ()),
     ("docs", ".agents/skills/governing-agents/scripts/check_docs.py", False, ()),
+    ("zh-lint", ".agents/skills/governing-agents/scripts/check_zh_lint.py", False, ()),
+    ("zh-lint-selftest", ".agents/skills/governing-agents/scripts/test_check_zh_lint.py", False, ()),
     ("layout", ".agents/skills/designing-theme/scripts/check_layout.py", True, ()),
     ("callouts", ".agents/skills/writing-quarto/scripts/check_callouts.py", True, ()),
     ("dom", ".agents/skills/governing-agents/scripts/check_dom_contracts.py", True, ()),
@@ -134,7 +140,10 @@ CHECKS = [
 ]
 
 PROFILE_CHECKS = {
-    "fast": {"encoding", "agent-controls", "size", "ascii", "links", "content", "content-selftest", "docs", "identity"},
+    "fast": {
+        "encoding", "agent-controls", "size", "ascii", "links", "content",
+        "content-selftest", "docs", "zh-lint", "zh-lint-selftest", "identity",
+    },
     "book": {"layout", "callouts", "dom", "book-output"},
     "knowledge": {"kb", "kb-eval", "conflict"},
     "python": {"scaffold"},
@@ -152,6 +161,8 @@ CHECK_LABELS = {
     "content": "文档内容",
     "content-selftest": "内容自测",
     "docs": "文档结构",
+    "zh-lint": "中文体检",
+    "zh-lint-selftest": "中文体检自测",
     "layout": "布局",
     "callouts": "提示框",
     "dom": "页面结构",
@@ -194,8 +205,12 @@ def to_wsl_path(win_path):
     return "/mnt/" + s[0].lower() + s[2:]
 
 
-def run(argv, cwd=ROOT):
-    """执行命令并捕获输出（bytes 手工解码，绕开 PowerShell 与 GBK 问题）。"""
+def run(argv, cwd=ROOT, timeout=DEFAULT_TIMEOUT):
+    """执行命令并捕获输出（bytes 手工解码，绕开 PowerShell 与 GBK 问题）。
+
+    子进程统一带超时：渲染、构建、pip 安装等都可能卡在网络或磁盘上，
+    超时按 124 返回，调用方照常按退出码分支，不再无限等待。
+    """
     command = list(argv)
     if command and not Path(command[0]).is_file():
         command[0] = resolve_tool(command[0])
@@ -204,8 +219,14 @@ def run(argv, cwd=ROOT):
         child_env["PYTHONIOENCODING"] = "utf-8"
         # Quarto 的 jupyter 引擎经 QUARTO_PYTHON 定位解释器；本仓仍只认 config.toml 的 python。
         child_env["QUARTO_PYTHON"] = PY
-    proc = subprocess.run(command, cwd=str(cwd), env=child_env, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT)
+    try:
+        proc = subprocess.run(command, cwd=str(cwd), env=child_env,
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                              timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        text = (exc.output or b"").decode("utf-8", errors="replace")
+        note = f"[timeout] 命令超过 {timeout}s 未结束：{' '.join(command)}"
+        return 124, text + chr(10) + note
     text = proc.stdout.decode("utf-8", errors="replace")
     return proc.returncode, text
 

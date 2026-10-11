@@ -44,7 +44,7 @@ estimated_tokens: 1150
 
 ## 配置注释约定
 
-- `.clang-format`、`.clang-tidy`、`.clangd` 遵循标识 `bg-comment-style-v1` 的知识文件「工具配置 YAML」：短 LLVM 文件头、单行分组或邻接注释；禁止文件顶部长篇政策块、知识库 id 指针与模板元叙述。脚手架从 `assets/config/` 复制后，阶段可按需补阶段特有 `-I…` 邻接注释，不得把「两仓/复制本文件」类旁白留在阶段副本。
+- `.clang-format`、`.clang-tidy`、`.clangd` 遵循标识 `bg-comment-style-v1` 的知识文件「键值配置」：短 LLVM 文件头、单行分组或邻接注释；禁止文件顶部长篇政策块、知识库 id 指针与模板元叙述。脚手架从 `assets/config/` 复制后，阶段可按需补阶段特有 `-I…` 邻接注释，不得把「两仓/复制本文件」类旁白留在阶段副本。
 - `.vscode/settings.json` 和 `extensions.json` 保持 JSONC 格式，使用注释分段；不得改写成严格 JSON。
 - `CMakeLists.txt` 与 `build-and-run.sh` 按职责分段，文件头与段使用 LLVM 式定宽 `===` 横幅，注释解释意图与取舍，面向新人可读；完整规范见 标识 `bg-comment-style-v1` 的知识文件。
 - Python 相关编辑器配置不提前保留为整条路线的编辑器预设，跟随首个真实包含 Python 代码的阶段配置（black-formatter 需 WSL 远程端安装，未用即噪音）。
@@ -58,4 +58,4 @@ estimated_tokens: 1150
 ## 实现方式边界
 
 - 阶段之间采用复制快照或持续演进实现，由实际变更成本决定；无论哪种方式，每个阶段都必须保持可配置、可构建、可测试和可追溯。
-- 井字棋前三个阶段已经实现并分别可独立构建：`01-cli-game` 保留双人终端，`02-cpu-opponent` 在同一规则模型上增加对手，`03-line-protocol` 在应用层追加机器可读快照。终端打印和读入留在 `apps/`，规则与对手源码编进阶段内 `tictactoe` 动态库；Python 回放和本地 Web 适配属于协议层之后的辅助程序。
+- 井字棋前三个阶段已经实现并分别可独立构建：`01-cli-game` 保留双人终端，`02-cpu-opponent` 在同一规则模型上增加对手，`03-line-protocol` 在应用层追加机器可读快照。终端打印和读入留在 `apps/`，规则与对手源码编进阶段内 `tictactoe` 动态库；Python 回放和本地 Web 适配属于协议层之后的辅助程序。尚未实现的阶段不预建空目录，出现新的真实行为才新建。

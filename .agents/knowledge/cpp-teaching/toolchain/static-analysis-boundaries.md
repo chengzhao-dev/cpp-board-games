@@ -28,4 +28,4 @@ estimated_tokens: 1200
 
 ## 配置注释职责
 
-Google 主标准、偏离白名单与 `at()` 选型论证写在本文件与标识 `bg-google-cpp-style-v1` 的知识文件，不写进 `.clang-tidy` / `.clangd` / `.clang-format` 文件头。三配置的短横幅与邻接注释外形见标识 `bg-comment-style-v1` 的知识文件「工具配置 YAML」。
+Google 主标准、偏离白名单与 `at()` 选型论证写在本文件与标识 `bg-google-cpp-style-v1` 的知识文件，不写进 `.clang-tidy` / `.clangd` / `.clang-format` 文件头。三配置的短横幅与邻接注释外形见标识 `bg-comment-style-v1` 的知识文件「键值配置」。

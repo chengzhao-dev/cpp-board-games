@@ -28,11 +28,14 @@
 ## 详细路由
 
 - 游戏阶段与章节文件的对应关系以 `cpp-development/references/stages/<game>.md` 阶段路由表为准，由 `scope` 自动选中。
+- `cpp-development/references/cpp-spine.md`: 改 C++、CMake、阶段脚本和三份 Clang 配置时的工序唯一入口（每步登记打开的文件与 `##`）。
 
 - `.agents/knowledge/<领域>/`：领域目录为名词 kebab（`agent-workspace`、`cpp-teaching`、`quarto-writing`），`domain` 字段取同名领域目录值，`subdomain` 取同名子域目录值。`visual-theme/`（designing-theme）与 `repo-github/`（shipping-github）在出现第一个文件时再创建。
 - `.agents/knowledge/KNOWLEDGE.md`：知识库规范和新增流程。新增或迁移知识后运行 `kb-index`、`kb-check` 和 `kb-eval`。
 - `.agents/knowledge/agent-workspace/retrieval/retrieval-governance.md`：skills、knowledge、memory、incidents 与 MCP 的职责边界，以及统一检索协议。
-- `writing-quarto/references/zh/writing-principles.md`：所有中文文档任务的最高优先规则。
+- `writing-quarto/references/zh/writing-spine.md`：写作任务的次序唯一入口（写作工序 / 标题归并 / 增量链）。
+- `designing-theme/references/theme-spine.md`：主题任务的次序唯一入口（定表面 / 定字体 / 定尺度 / 定颜色 / 定组件 / 过闸）。
+- `writing-quarto/references/zh/writing-howto.md`：中文降噪规则、信号表、润色五步与小节主线 how（原 writing-principles / polish-pass / section-focus-and-density 合并）。
 - `writing-quarto/references/zh/chapter-writing.md`：章节骨架、页面类型与新手成功路径。
 
 普通任务只读取命中的 `SKILL.md`、目标文件和其中明确要求的 reference。需要了解知识文件规范时读取 `.agents/knowledge/KNOWLEDGE.md`，不维护第二份手工目录。

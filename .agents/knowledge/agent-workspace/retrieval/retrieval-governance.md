@@ -7,7 +7,7 @@ tags: [retrieval, knowledge, mcp, scope]
 level_range: [0, 5]
 dependencies: []
 created: "2026-09-28"
-updated: "2026-09-28"
+updated: "2026-10-11"
 chunk_strategy: "semantic_heading"
 estimated_tokens: 1100
 ---
@@ -45,5 +45,7 @@ estimated_tokens: 1100
 ## 评测闭环
 
 改知识库正文、frontmatter、分词或融合参数后，不能只靠 `kb-search` 抽查：按 `kb-index --rebuild` → `kb-check` → `kb-eval` 顺序收口。标注集在 `.agents/skills/maintaining-python/scripts/eval_set.py`，新增 `kb_id` 必须补查询条目，让召回率可验证而不是自我声明。评测口径与交付给 LLM 的内容一致（Parent 回溯后的结果）。
+
+评测闭环的固定裁决：阈值保持 92%，不靠下调阈值换通过；一个答案在期望片段与知识正文之间只留一个权威，标题改名或内容搬家后同步 `eval_set.py`，不为召回堆关键词；纯本文件锚点目录（正文只有指向本文锚点的链接列表的整节）不单独成块，分块器按形态丢弃。召回过线后为某一节补检索查询时，确认它命中且总分仍不低于 92%。
 
 索引产物在 `temp/knowledge-index/`（不入库，缺失时 `run.py` 的 kb-* 子命令会自动重建）。

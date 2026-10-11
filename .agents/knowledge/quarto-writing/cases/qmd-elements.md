@@ -7,9 +7,9 @@ tags: [code-blocks, filename, captions, qmd-elements]
 level_range: [0, 5]
 dependencies: [bg-qmd-element-cases-v1]
 created: "2026-09-29"
-updated: "2026-09-30"
+updated: "2026-10-05"
 chunk_strategy: "semantic_heading"
-estimated_tokens: 850
+estimated_tokens: 1230
 ---
 
 # Quarto 元素写法正反对照
@@ -56,7 +56,15 @@ constexpr bool IsValidPosition(CellPosition position) { … }
 图后：图外坐标一律拒绝。
 ````
 
-判定信号：两个围栏之间只有空行；图后直接进入与图无关的下一块；块前引语同时推进多个对象（如 `CellPosition` 与 `IsValidPosition` 各讲一句）。
+```text
+不佳（图前图例句复述图注的方位信息，一段三句三个主题）：
+`CellPosition` 把坐标交给 `Board`，负数和行列为 `3` 的位置都会被拒绝。下面的图标出可用的 `(row, col)`。左上角是 `(0, 0)`，行向下增加，列向右增加。
+
+改写（方位与图例由 fig-cap 独自承载，正文只留行为句与桥接句）：
+调用方把 `CellPosition` 交给 `Board`，行列出现负数或 `3` 都会被拒绝。下面的图标出可用的 `(row, col)`。
+```
+
+判定信号：两个围栏之间只有空行；图后直接进入与图无关的下一块；块前引语同时推进多个对象（如 `CellPosition` 与 `IsValidPosition` 各讲一句）；图注已写明的方位与图例信息，桥接段或图后正文再讲一遍。
 
 ## 图后一句一中心对照
 
@@ -118,12 +126,27 @@ struct Move { … };
 
 判定信号：代码项的解释出现在图之后；或图后正文复述代码注释。固定序列见 `writing-quarto` 技能 `references/quarto/authoring.md`「代码与图的桥接」。
 
+## 摘录导语只报出处
+
+导语点名读者要在块内观察的代码标识符，再给出处；只报出处的句子让读者把「行列坐标」这类中文概念对不上围栏里的名字。条文见标识 `bg-qmd-element-cases-v1` 的知识文件「内容块前后的闭环」。以 03 章定义坐标范围节改稿前为对照：
+
+```text
+不佳（导语只报出处，句中没有任何块内标识符）：
+棋盘的尺寸常量和定位格子的行列坐标都定义在 board.h 里：
+（围栏：kRows / kCols / kCellCount / CellPosition）
+
+改写（导语点名块内对象，再给出处）：
+棋盘的行数、列数和格子总数写成 `kRows`、`kCols` 和 `kCellCount` 三个常量，格子的行列坐标写成结构体 `CellPosition`，都定义在 board.h 里：
+```
+
+判定信号：导语句里没有一个块内将出现的标识符；「行列坐标」这类中文概念在块内对不上任何标识符；删掉围栏后导语仍完整成立——出处句不依赖块内容。
+
 ## 递进片段拆围栏对照
 
-递进依赖链的判定与豁免见标识 `bg-qmd-element-cases-v1` 的知识文件「内容块前后的闭环」；句段对照见标识 `bg-chinese-style-cases-v1` 的知识文件「递进片段合并」。
+同源围栏的合并已收窄：只有紧邻常量与其直接使用行才放在同一个围栏；类型定义和后一步使用它的函数是两步，分成两块，每块各配一句完整导语。判定与豁免见标识 `bg-qmd-element-cases-v1` 的知识文件「内容块前后的闭环」；句段对照见标识 `bg-chinese-style-cases-v1` 的知识文件「递进片段合并」。
 
 ````text
-不佳（同一组递进定义拆成三个同源围栏，各配半句导语，首句点名了后块符号）：
+不佳（拆成三个同源围栏，各配半句导语，首句点名了后块符号）：
 棋盘固定为 3 行 3 列；…调规模只改这一处：
 ```{.cpp filename="board.h"}
 inline constexpr int kRows = 3;
@@ -140,19 +163,22 @@ struct CellPosition { … }
 constexpr bool IsValidPosition(CellPosition position) { … }
 ```
 
-改写（合并为一个围栏，块前一句交代整链，块后列表分项）：
-board.h 定义棋盘尺寸、格子坐标与越界检查这三个对象，终端程序打印棋盘和测试遍历棋盘格子都读它们：
-
+改写（三块各配一句完整导语，中段不再引用后块符号；旧改法「合并为一个围栏」已废除）：
+棋盘固定为 3 行 3 列，`kCellCount` 由 `kRows` 乘 `kCols` 得出，三个常量都定义在 board.h 里：
 ```{.cpp filename="board.h"}
-（kRows/kCols → CellPosition → IsValidPosition 按源码相对顺序摘录为一个围栏）
+（kRows/kCols/kCellCount 按源码相对顺序摘录为一个围栏）
 ```
 
-- kRows / kCols：调整棋盘规模只改这一处；
-- CellPosition：各层传递格子坐标共用这一类型；
-- IsValidPosition：提交动作前的坐标检查都经过这个入口。
-````
+棋盘上的位置由行和列一起确定，`CellPosition` 把一对行列写成两个字段：
+```{.cpp filename="board.h"}
+（CellPosition 结构体）
+```
 
-判定信号：同一小节内同源围栏 ≥2、后块使用前块已展示的符号、中间没有 `{python}` / `{mermaid}` 或独立验证盒子打断。
+提交动作前的坐标检查都经过同一个入口，`IsValidPosition` 比对行列与常量给出的范围：
+```{.cpp filename="board.h"}
+（IsValidPosition 实现）
+````
+判定信号：块前导语点名了后块才出现的符号，或同一常量的讲解被拆成块前半句加块后半句；同源围栏数量本身不是违规信号。
 
 ## 正确形态正例
 

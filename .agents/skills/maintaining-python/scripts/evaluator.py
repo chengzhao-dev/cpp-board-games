@@ -6,13 +6,13 @@
   前 5 个候选按 Stage 5 的口径计：Child 与它回溯出的 Parent 都算召回内容，
   因为检索器实际交给 LLM 的是 Parent。只按 Child id 计分会让导航类查询恒定差一层。
   期望答案写成标题片段（见 eval_set.py），运行时展开为真实 chunk_id。
-  片段命中 0 个或多个文档之外的解析失败都算 ERROR，避免评测集悄悄过期。
+  片段任一部分命中 0 个 Leaf 即记 ERROR（一个片段跨多个文档属正常），避免评测集悄悄过期。
 指标：Top-5 召回率 >= 92%（样本 >= MIN_SAMPLES，且不得少于评测集行数）、P95 < 200ms、单次注入 <= 6000 令牌。
 
 用法：
     python scripts/evaluate.py                 # 全量评测
     python scripts/evaluate.py --topk 5        # 改 K
-    python scripts/evaluate.py --verbose       # 列出未命中查询
+    python scripts/evaluate.py --verbose       # 列出未命中查询（含标题路径与最佳名次）
     python scripts/evaluate.py --skip-latency  # 只卡召回率与样本数（延迟由体检负责）
 退出码：0 = 达标，1 = 未达标，3 = 评测集或索引有问题（不是检索质量差）。
 """
@@ -40,6 +40,7 @@ INJECTION_HARD_LIMIT = kb.MAX_CONTEXT_TOKENS
 
 CHILDREN_OF: dict[str, list] = {}
 PARENT_OF: dict[str, str] = {}
+TITLE_OF: dict[str, str] = {}
 
 
 def leaf_index() -> dict:
@@ -52,6 +53,7 @@ def leaf_index() -> dict:
         if chunk.get("status") == "deprecated":
             continue
         leaf = chunk["heading_path"].split(" > ")[-1]
+        TITLE_OF[chunk_id] = chunk["heading_path"]
         mapping.setdefault(leaf, set()).add(chunk_id)
         if chunk.get("kind") == "child" and chunk.get("parent_id"):
             CHILDREN_OF.setdefault(chunk["parent_id"], []).append(chunk_id)
@@ -77,12 +79,22 @@ def toc_chunks(result: dict, topk: int) -> list:
     """摘要地图的命中口径：取地图里前 topk 个 Parent，并展开它们的子块。
 
     导航查询按规范返回的是章节地图而不是正文排名（见 3.4 渐进式披露），
-    它契约要做对的事是把你指到正确的章节，所以这里按 Parent 展开计分。
+    它的契约是把你指到正确的章节，所以这里按 Parent 展开计分。
     """
     ids: list = []
     for row in result["parents"][:topk]:
         ids.append(row["ref_id"])
         ids.extend(CHILDREN_OF.get(row["ref_id"], []))
+    return ids
+
+
+def expand_rows(rows: list) -> list:
+    """Stage 5 回溯：Child 命中后实际注入的是它的 Parent（见 3.4），
+    评测必须按「LLM 真正看到的内容」计分，否则导航类查询永远差一层。"""
+    ids: list = []
+    for row in rows:
+        ids.append(row["chunk_id"])
+        ids.append(PARENT_OF.get(row["chunk_id"], row["chunk_id"]))
     return ids
 
 
@@ -103,15 +115,12 @@ def measure(queries: list, topk: int):
         if result.get("mode") == "toc":
             # 导航意图按规范返回摘要地图，不是正文排名。这里把地图里的 Parent
             # 展开成它的 Child，再按同一口径判命中，否则导航永远算不中。
+            full = toc_chunks(result, len(result["parents"]))
             ranked = toc_chunks(result, topk)
         else:
-            # Stage 5 回溯：Child 命中后实际注入的是它的 Parent（见 3.4），
-            # 评测必须按「LLM 真正看到的内容」计分，否则导航类查询永远差一层。
-            ranked = []
-            for row in result["ranked"][:topk]:
-                ranked.append(row["chunk_id"])
-                ranked.append(PARENT_OF.get(row["chunk_id"], row["chunk_id"]))
-        hits.append((query, ranked, used, result["intent"]["kind"]))
+            full = expand_rows(result["ranked"])
+            ranked = expand_rows(result["ranked"][:topk])
+        hits.append((query, ranked, used, result["intent"]["kind"], full))
     con.close()
     return hits, latencies, injected_max
 
@@ -136,11 +145,12 @@ def run(topk: int, verbose: bool, skip_latency: bool) -> int:
 
     by_category: dict[str, list] = {}
     misses = []
-    for (query, expected, category), (_, ranked, used, intent) in zip(cases, results):
+    for (query, expected, category), (_, ranked, used, intent, full) in zip(cases, results):
         ok = bool(expected.intersection(ranked))
         by_category.setdefault(category, []).append(ok)
         if not ok:
-            misses.append((query, category, ranked[:topk], sorted(expected)[:3]))
+            best = next((pos for pos, cid in enumerate(full, 1) if cid in expected), None)
+            misses.append((query, category, ranked[:topk], sorted(expected)[:3], intent, best, full))
 
     total = len(cases)
     passed = total - len(misses)
@@ -170,10 +180,15 @@ def run(topk: int, verbose: bool, skip_latency: bool) -> int:
 
     if verbose and misses:
         print("      未命中明细:")
-        for query, category, ranked, expected in misses:
-            print("      [" + category + "] " + query)
-            print("          期望 " + " / ".join(leaf[:70] for leaf in expected))
-            print("          实得 " + " / ".join(leaf[:70] for leaf in ranked))
+        for query, category, ranked, expected, intent, best, full in misses:
+            pool = list(dict.fromkeys(full))
+            print("      [" + category + "] " + query + "  intent=" + intent)
+            print("          期望 " + " / ".join(TITLE_OF.get(i, i)[:70] for i in expected))
+            print("          实得 " + " / ".join(TITLE_OF.get(i, i)[:70] for i in pool[:topk]))
+            if best is None:
+                print("          最佳名次 无（不在前 " + str(len(pool)) + " 条候选池）")
+            else:
+                print("          最佳名次 " + str(best) + "/" + str(len(pool)))
     if reasons:
         print("FAIL  evaluate  " + "; ".join(reasons))
         return 1

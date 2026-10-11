@@ -7,7 +7,7 @@ tags: [cmake, build, clangd, ninja]
 level_range: [0, 5]
 dependencies: []
 created: "2026-09-26"
-updated: "2026-10-01"
+updated: "2026-10-11"
 chunk_strategy: "semantic_heading"
 estimated_tokens: 4200
 ---
@@ -19,6 +19,8 @@ estimated_tokens: 4200
 ## 构建入口与根目录边界
 
 撤销此前引入的根 `CMakeLists.txt` 编排（原设想为 `add_subdirectory` 逐阶段追加）。现行约定：每个阶段目录自带完整 `CMakeLists.txt`，通过该目录的 `build-and-run.sh` 独立完成配置、编译、测试和运行；根目录不放任何 CMake 文件，一次性脚本与中间产物只进 `temp/`。规则出处是 AGENTS.md「CMake 约定」与「工作规则」。
+
+**`cmake_minimum_required` 保留 4.2（用户定案，保留不降）**：本机与 WSL 的 CMake 均为 4.x（`build/CMakeFiles/4.2.3/`），4.2 是本仓实际验证过的版本；版本约束注释保持简洁一句「保证本目录使用的命令可用」，不在注释里展开版本史。CMake 3.x 的兼容写法（如为 3.16 降级）会把 `FetchContent` 的 `CMP0135` 行为与 Ninja 生成器差异重新引入，收益为零、风险由 CI 与本地两侧分担，故不采纳。四个脚手架模板（`cpp-development/assets/templates/projects/`）与阶段同取 4.2，模板落后于阶段即视为漂移。
 
 ## C++ 标准声明方式
 
@@ -59,7 +61,7 @@ CMake 对命令和关键字大小写不敏感，无官方强制风格；本项�
 
 联网核实（CMake 输出目录属性文档、GNUInstallDirs 文档、llvm-project `llvm/CMakeLists.txt` 原文）后确定：各阶段产物按 LLVM 构建树惯例归入 `build/bin`、`build/lib`，不在 `build/` 根平铺。
 
-- **默认行为**：不设置任何输出属性时，产物落在当前二进制目录（`CMAKE_CURRENT_BINARY_DIR`）；单目录阶段即 `build/` 根——阶段 01 初版正是如此，现已改为归类。
+- **默认行为**：不设置任何输出属性时，产物落在当前二进制目录（`CMAKE_CURRENT_BINARY_DIR`），单目录阶段即 `build/` 根（阶段 01 初版即如此，已改）。
 - **三组输出属性分工**：
 
  | 属性 | 收纳产物 |
@@ -94,20 +96,23 @@ CMake 对命令和关键字大小写不敏感，无官方强制风格；本项�
 阶段从单文件演进为组件式布局，首个使用目录是 `01-cli-game/`：
 
 - 顶层 `CMakeLists.txt` 只做工程声明、产物目录、`enable_testing()` 和 `add_subdirectory`；各组件 target 由组件目录自己的 `CMakeLists.txt` 定义。库组件 `tictactoe/` 拥有扁平 `include/`（头文件直接放在该目录下，如 `include/game_state.h`）、`src/` 与库 target `tictactoe`；`apps/` 拥有主程序；`tests/` 拥有测试。禁止再建 `include/tictactoe/` 这类命名空间子目录。
-- `apps/` 采用私有 `include/` + `src/`：全部 `.cpp`（含 `main.cpp`）在 `apps/src/`，助手头在 `apps/include/`；`add_executable` 显式列出源文件；`target_include_directories(app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")`。`apps/include` 不是 PUBLIC 规则库头，仅供本可执行目标使用。
+- `apps/` 采用私有 `include/` + `src/`：全部 `.cpp`（含 `main.cpp`）在 `apps/src/`，助手头在 `apps/include/`；`add_executable` 显式列出源文件。**CLI 实现编成静态库 `tictactoe_cli`**：源为 `src/cli.cpp`，`target_include_directories(tictactoe_cli PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")`，`target_link_libraries(tictactoe_cli PUBLIC tictactoe)`；`app` 只留 `src/main.cpp` 并链接 `tictactoe_cli`，测试同样链接该库而**不再**把 `../apps/src/cli.cpp` 写进测试源列表。依据：GoogleTest/CMake 惯用「生产代码编成库、测试链接库」，生产 `.cpp` 塞进测试可执行文件会重复编译并让 include 根分散在测试目标上。
+- 库与可执行物分组件目录是主流布局（LLVM 的 `include`/`lib`/`tools`、OpenCV 的 `modules/` 与顶层 `apps/`），判据是依赖方向而非领域相关性：工具代码与库领域强相关仍分目录，换来「井字棋动态库不依赖终端」在 CMake 层的机械可检查性（定案见标识 `bg-project-decisions-v1` 的知识文件「apps/ 分层经主流复核维持」）。
 - `target_include_directories` 的 PUBLIC 根指向库组件的 `include/`：使用方按裸文件名引号 include（`#include "game_state.h"`），与标识 `bg-google-cpp-style-v1` 的知识文件「Header Files」及有意偏离白名单第 9 条一致。
-- **路径一律加双引号**：凡展开后是文件系统路径的变量（如 `"${CMAKE_CURRENT_SOURCE_DIR}/include"`、`"${CMAKE_BINARY_DIR}/bin"`、`BUILD_RPATH "$ORIGIN/../lib"`）都写成双引号包裹；避免路径含空格时被 CMake 拆成多个参数。相对目录名字面量（如模板里的 `include`）无变量时可省略引号。- 组件化阶段顶层 `CMakeLists.txt` 显式 `set(CMAKE_EXPORT_COMPILE_COMMANDS ON)`，不只依赖 `build-and-run.sh` 的 `-D` 参数；阶段目录本身可独立作为工作区打开。
+- **路径一律加双引号**：凡展开后是文件系统路径的变量（如 `"${CMAKE_CURRENT_SOURCE_DIR}/include"`、`"${CMAKE_BINARY_DIR}/bin"`、`BUILD_RPATH "$ORIGIN/../lib"`）都写成双引号包裹；避免路径含空格时被 CMake 拆成多个参数。相对目录名字面量（如模板里的 `include`）无变量时可省略引号。
+- 组件化阶段顶层 `CMakeLists.txt` 显式 `set(CMAKE_EXPORT_COMPILE_COMMANDS ON)`，不只依赖 `build-and-run.sh` 的 `-D` 参数；阶段目录本身可独立作为工作区打开。
 - 目标命名固定为下表，与本仓模板 `shared-library`（`greeting` 库 + `app` 可执行文件）一致：
 
  | 角色 | 命名 | 本仓示例 |
  |---|---|---|
  | 库 target | 与组件目录同名，不加 `lib` 前缀 | `add_library(tictactoe SHARED …)` → `libtictactoe.so` |
+ | CLI 实现库 target | 规则库名 + 层名 `_cli` | `add_library(tictactoe_cli STATIC src/cli.cpp)` → `libtictactoe_cli.a` |
  | 阶段主程序 target | 固定用 `app` | `build/bin/app` |
  | 冒烟测试名 | 跟随主程序 | `app_smoke` |
- | 行为测试可执行文件 | 按被测行为命名 | `tictactoe_game_state_test` |
+ | 行为测试可执行文件 | 按被测行为命名 | `tictactoe_test`、`tictactoe_scripted_match` |
  | 脚本主程序常量 | `APP_NAME` | `readonly APP_NAME="app"` |
 
- 依据：CMake 逻辑 target 全局唯一，库与可执行文件不能同名（CMP0002），库名用组件名、主程序用 `app` 作别名即可区分；库名手写 `lib` 前缀会得到 `liblib….so`，平台前缀由 CMake 自动加。不引入 `OUTPUT_NAME` 把逻辑名与文件名拆开。旧写法 `tictactoe_core` / `tictactoe_cli` 偏离模板，已废弃。
+ 依据：CMake 逻辑 target 全局唯一，库与可执行文件不能同名（CMP0002），库名用组件名、主程序用 `app` 作别名即可区分；库名手写 `lib` 前缀会得到 `liblib….so`，平台前缀由 CMake 自动加。不引入 `OUTPUT_NAME` 把逻辑名与文件名拆开。`tictactoe_cli` 是 `apps/` 内 CLI 实现库的固定名（用户定案）：它与规则库 `tictactoe` 分属两层，名字带 `_cli` 让链接点一眼看出链的是终端层；不再引入 `tictactoe_core` 这类与组件目录不同名的规则库别名。
 - 源码树不建 `lib/` 目录；`lib` 只是 `build/` 下的产物目录（见上文「产物输出目录」）。
 - `enable_testing()` 必须在顶层、`add_subdirectory(tests)` 之前调用；缺失时 `ctest` 报 "No tests were found"。googletest 子目录内的 `enable_testing()` 不会替顶层生效，`01-cli-game` 初版漏写后由一键脚本暴露，已固化为顶层必写项。
 
@@ -125,6 +130,7 @@ CMake 对命令和关键字大小写不敏感，无官方强制风格；本项�
 
 日常 clang-tidy 只传入阶段自己的源文件，项目头文件通过明确的 `--header-filter` 纳入；不使用 `--system-headers`，也不把 `compile_commands.json` 中的 GoogleTest 或其他 FetchContent 编译单元当成项目门禁。第三方 include 保持 system include 语义，项目 include 使用普通 `PUBLIC`/`PRIVATE` 路径。汇总的 `warnings generated` 必须回到具体路径和检查名分类，不能直接称为系统库错误。动态数组访问先验证坐标，再用 `std::array::at` 或有证据的局部例外；完整依据见标识 `bg-static-analysis-boundaries-v1` 的知识文件。
 
+## 测试框架时机
 
 - 首个使用目录 `01-cli-game`：`tests/CMakeLists.txt` 用 `FetchContent_Declare` + `FetchContent_MakeAvailable` 引入，固定版本 `v1.17.0`。
 - 下载地址用 `https://codeload.github.com/google/googletest/tar.gz/refs/tags/v1.17.0` tarball 而非 `GIT_REPOSITORY`：本环境 WSL 对 `github.com` 的 git 协议常超时，codeload 的 HTTPS 下载稳定。

@@ -5,7 +5,7 @@ domain: "quarto-writing"
 subdomain: "rendering"
 tags: [coords, diagram, python-cell, svg, jupyter, quarto]
 level_range: [0, 5]
-dependencies: ["bg-mermaid-conventions-v1", "bg-content-budget-v1"]
+dependencies: ["bg-mermaid-conventions-v1", "bg-chapter-structure-v1"]
 created: "2026-09-29"
 updated: "2026-10-03"
 chunk_strategy: "semantic_heading"
@@ -14,7 +14,7 @@ estimated_tokens: 700
 
 # 坐标轴网格图的生成约定
 
-坐标轴类网格图（棋盘行列、二维数组下标）用共享绘图助手生成 SVG，不用 Mermaid 硬画网格。流程图与坐标图的分工、页面围栏写法、解释器与 CI 依赖都在本文件；token 预算的排除口径见标识 `bg-content-budget-v1` 的知识文件。
+坐标轴类网格图（棋盘行列、二维数组下标）用共享绘图助手生成 SVG，不用 Mermaid 硬画网格。流程图与坐标图的分工、页面围栏写法、解释器与 CI 依赖都在本文件；token 预算的排除口径见标识 `bg-chapter-structure-v1` 的知识文件。
 
 ## 与 Mermaid 的分工
 
@@ -33,7 +33,7 @@ estimated_tokens: 700
 
 坐标图不孤立出现：引出图的代码块与图之间必须有桥接句，说明图核对代码的哪部分契约（如「下面的图标出每个棋盘格子的 (row, col)，与 `IsValid` 接受的范围一致」）；图后先给从图带走的结论，再进入下一块；小节以图收尾时，从图带走的结论可并入桥接段（如 03 章先给 `row` 为 `3` 或 `col` 为 `-1` 这类反例再上图），不在图后孤悬一句。代码块与图之间只有空行视为堆叠，固定序列见 `writing-quarto` 技能 `references/quarto/authoring.md`「代码与图的桥接」与标识 `bg-qmd-element-cases-v1` 的知识文件。
 
-坐标图单元计入盒子密度（口径见标识 `bg-section-focus-density-v1` 的知识文件）：同一 `###` 内坐标图与代码块相邻出现时，桥接句就是盒子之间的承接正文；`verify_content.py` 对两围栏之间无正文给出 WARN 提示，人审与对照案例仍是主闸。
+坐标图单元计入盒子密度（口径见标识 `bg-section-density-v1` 的知识文件）：同一 `###` 内坐标图与代码块相邻出现时，桥接句就是盒子之间的承接正文；`verify_content.py` 对两围栏之间无正文给出 WARN 提示，人审与对照案例仍是主闸。
 
 ## 助手 API 与主题适配
 

@@ -4,12 +4,12 @@
 
 本仓库工作流：`.github/workflows/pages.yml`（发布）、`.github/workflows/render-check.yml`（PR 渲染检查）。CI 只覆盖文档渲染与 agents/qmd 校验；C++ 与游戏代码不进 CI，只在本地对改动阶段运行 `build-and-run.sh`。
 
-两个工作流都先执行 `sed -i 's|^python = .*|python = "/usr/bin/python3"|' config.toml`：config.toml 的 python 字段是仓库唯一解释器来源，CI 机器没有该路径，改写这一个字段即完成解释器切换，不引入第二份配置。
+两个工作流都先执行复合动作 `.github/actions/ci-prepare`：从 `config.toml` 派生 Quarto 版本与 pip 缓存键，再用 `sed -i 's|^python = .*|python = "/usr/bin/python3"|' config.toml` 把解释器指到 runner 的 `python3`。config.toml 的 python 字段是仓库唯一解释器来源，CI 机器没有该路径，改写这一个字段即完成解释器切换，不引入第二份配置。
 
 ### pages.yml
 
 - 触发：`push` 到 `main`，或 `workflow_dispatch`
-- 步骤：checkout（完整历史）→ setup Quarto → setup Python 3.12 → 把 `config.toml` 的 `python` 改成 `/usr/bin/python3` → 用该解释器 `run.py install-quarto-deps` → `run.py check --profile fast` → `run.py render`（注入同一 `QUARTO_PYTHON`，并在渲染后执行 `defer_mermaid.py`）→ `run.py check --profile full` → `peaceiris/actions-gh-pages` 推 `_book/` 到 `gh-pages`（`force_orphan`）→ 读回 Pages source，不是 `gh-pages` `/` 则失败
+- 步骤：checkout（完整历史）→ `.github/actions/ci-prepare`（派生 Quarto 版本与 pip 缓存键 → setup Quarto → setup Python 3.12 带 pip 缓存 → `python` 指到 `/usr/bin/python3` → `run.py install-quarto-deps`）→ `run.py check --profile fast` → `run.py render`（注入同一 `QUARTO_PYTHON`，渲染后执行 `defer_mermaid.py`）→ `run.py check --profile full` → `peaceiris/actions-gh-pages` 推 `_book/` 到 `gh-pages`（`force_orphan`）→ 读回 Pages source，不是 `gh-pages` `/` 则失败
 - 权限：`contents: write`（推分支）、`pages: write`（调 Pages API）
 - 并发：`concurrency: pages`，不取消进行中的发布，避免 gh-pages 半更新
 - Pages 设置：Deploy from a branch → `gh-pages` / `(root)`（见 `github-pages.md`）
@@ -18,7 +18,7 @@
 ### render-check.yml
 
 - 触发：PR 到 `main` 与 `workflow_dispatch`
-- 步骤：`run.py check --profile fast` → `run.py render` → `run.py check --profile full`
+- 步骤：checkout（完整历史）→ `.github/actions/ci-prepare` → `run.py check --profile fast` → `run.py render` → `run.py check --profile full`
 - 范围边界：C++ 游戏代码的配置、编译、CTest 与运行全部留在本地阶段脚本，不作为 CI 门禁。
 
 ## CI 持续集成与检查规范

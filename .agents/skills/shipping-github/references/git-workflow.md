@@ -7,7 +7,7 @@
 - 用户没明确要求时不 commit、push、创建 PR。用户要求提交时只覆盖其列出的路径组与目标分支，不扩展到未列改动、`git add -A`、amend、改 remote 或额外分支。不 force-push main。不建空 commit。
 - 不用 `git commit --amend`（除非修复刚失败且未推送的 commit）。不用 `-i` 交互式。不跳过 hooks。不更新 `git config`（除非明确要求）。
 - 只 `git add` 显式路径，禁止 `git add -A` 裹挟用户既有未提交改动。
-- 提交信息使用 Conventional Commits 前缀：`type(scope): 中文说明`，例如 `docs(content): 章节骨架对齐阶段路由表`、`refactor(agents): 解释器配置并入根目录 config.toml`。`type` 取 `feat`/`fix`/`refactor`/`docs`/`chore`/`ci`/`test`/`perf`/`build`；`scope` 可选，用小写英文（如技能名或目录短名）；冒号后用简洁中文说明改动，只有没有合适中文译名时才保留 `CMake`、`Ninja`、`clangd` 等技术标识。破坏性变更在冒号前加 `!`。让读者不看 diff 就能判断影响面与是否需要跑检查。
+- 提交信息使用 Conventional Commits 前缀：`type(scope): 中文说明`，例如 `docs(content): 章节骨架对齐阶段路由表`、`refactor(agents): 解释器配置并入根目录 config.toml`。`type` 取 `feat`/`fix`/`refactor`/`docs`/`chore`/`ci`/`test`/`perf`/`build`；`scope` 可选，用小写英文（如技能名或目录短名）；冒号后用简洁中文说明改动，仅当没有合适中文译名时才保留 `CMake`、`Ninja`、`clangd` 等技术标识。破坏性变更在冒号前加 `!`。让读者不看 diff 就能判断影响面与是否需要跑检查。
 - 必传 `.agents/skills/**`。必不传本机运行时配置、`_book/`、`.quarto/`、`build/`、`temp/`。项目 Python 唯一来源为已提交的根目录 `config.toml`，不得新增第二份解释器路径。忽略规则统一放根 `.gitignore`，不在嵌套目录放「自忽略 `.gitignore`」。
 
 ## 贡献者与提交身份
@@ -42,6 +42,8 @@ Git 对比服务于当前任务，不要在每个步骤重复运行 `git status`
 ## 仓库格式基线
 
 文本一律 LF、编码一律 UTF-8 无 BOM（`.gitattributes` 已强制 `* text=auto eol=lf`）。二进制扩展名显式声明为 binary，`*.bat`/`*.cmd` 保持 CRLF。中文文件禁止经过系统代码页或 GBK 往返转换。改动 `.qmd` 或规范文档后先跑编码检查。
+
+根上三份点文件是这条基线的机械执行者，改规则去改它们，不在这里复制模式表：`.gitattributes` 定行尾与二进制；`.gitignore` 定不入库的生成物与本地文件（忽略注释的 `#` 必须整行行首）；`.editorconfig` 让保存即符合行尾、编码与缩进（`.ps1` 用 LF，缩进 2、Python 4）。依据见标识 `bg-publish-surface-v1` 的知识文件「仓库根上的入口文件」。
 
 ```bash
 git check-ignore -v _book .quarto games/tictactoe/01-cli-game/build temp

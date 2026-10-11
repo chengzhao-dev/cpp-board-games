@@ -4,7 +4,7 @@
 
 > 速查：外观选项集中在根目录配置的格式块下 · 目录收至三级标题放右侧 · 本仓不用行号、代码块不折叠。自测答案使用 `.answer` 并渲染为原生 details
 
-选项语义、作用域层级与生效边界的唯一出处是本文件与知识库 `bg-section-focus-density-v1`（宽度与节奏）；本文件只留本仓的取值和写作口径：
+选项语义、作用域层级与生效边界的唯一出处是本文件与知识库 `bg-section-density-v1`（宽度与节奏）；本文件只留本仓的取值和写作口径：
 
 ```powershell
 & .agents/skills/governing-agents/scripts/run.ps1 kb-search "正文列宽度" --domain quarto-writing
@@ -17,12 +17,12 @@
 | 选项 | 取值 | 备注 |
 |---|---|---|
 | `theme` | `light: [cosmo, palettes/github/theme-light.scss]` + `dark: [darkly, …]` | 内置主题与项目样式叠加，顺序决定覆盖关系 |
-| `highlight-style` | `light: github-light` + `dark: github-dark` | 明暗分别指定，与 `palettes/github/meta.md` 同步，语义颜色交给引擎 |
+| `highlight-style` | `light:`/`dark:` 指向 `palettes/github/highlight-light.theme` / `highlight-dark.theme` 两份主题文件路径 | 明暗分别指定，与 `palettes/github/meta.md` 同步，语义颜色交给主题文件，CSS 不覆盖 token |
 | `filters` | `.agents/skills/writing-quarto/scripts/answer-disclosure.lua`（顶层 `filters:`） | 将正文 `.answer` 转为默认收起的原生 `details` |
 | `toc` / `toc-depth` / `toc-location` | `true` / `3` / `right` | 右侧目录最多到 H3，窄屏会折叠，不作唯一定位手段 |
 | `number-sections` | `false` | 因此标题不手填序号，见 `basics.md` |
 | `code-copy` / `code-overflow` | `true` / `wrap` | 长行换行，不让读者横向拖动 |
-| `grid` | sidebar 272 / body 720 / margin 256 / gutter 1rem | 正文列约 45 个汉字，对齐 1280 视口 |
+| `grid` | sidebar 300 / body 800 / margin 272 / gutter 1rem | 正文列约 50 个汉字；四值是最大基准值，窄视口由 Quarto 响应缩放 |
 | `lang` | `zh` | 影响部分 HTML 行为与提示框默认词 |
 
 本仓**不开启**代码行号（`code-line-numbers`）与代码折叠（`code-fold`）。站点 QMD 代码块使用 `{.语言 filename="标题"}`；Quarto 会把标题渲染为 `.code-with-filename`，外观与复制按钮位置由主题统一控制。filename 缺失由 `check_docs.py` 拦截，内容语义与篇幅由 `verify_content.py` 负责。
@@ -37,7 +37,7 @@
 
 ### 验证
 
-渲染后确认：目录深度与位置符合预期、明暗两套高亮都可读。渲染产物结构由 `run.py check --profile book`（layout/callouts/dom 三项）自动核对；页面宽度与视觉依据见知识库 `bg-section-focus-density-v1`。主题或目录看起来没生效时先硬刷新排除缓存，再核对选项嵌套层级。
+渲染后确认：目录深度与位置符合预期、明暗两套高亮都可读。渲染产物结构由 `run.py check --profile book`（layout/callouts/dom 三项）自动核对；页面宽度与视觉依据见知识库 `bg-section-density-v1`。主题或目录看起来没生效时先硬刷新排除缓存，再核对选项嵌套层级。
 
 ## 渲染与发布排查索引
 按症状查此表：每条只给可执行处置。行为成因与取舍的唯一出处是知识库，用

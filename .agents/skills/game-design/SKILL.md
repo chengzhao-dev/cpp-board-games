@@ -1,6 +1,6 @@
 ---
 name: game-design
-description: 设计棋盘、棋子、动作、回合和游戏规则；建模游戏状态或判断规则歧义时使用
+description: 设计棋盘、棋子、动作、回合和游戏规则；建模游戏状态或判断规则歧义时使用，不用于改 CMake 或阶段脚本
 metadata:
   short-description: 棋盘游戏规则建模
 ---
@@ -25,7 +25,8 @@ metadata:
 | 项目值类型约定与语言机制讲解 | `.agents/knowledge/agent-workspace/planning/project-decisions.md`；语言机制见 [cpp-notes 语言基础](https://github.com/chengzhao-dev/cpp-notes/tree/main/content/language-basics) |
 | 抽象与共享库决策依据 | `.agents/knowledge/agent-workspace/planning/project-decisions.md` |
 | 游戏开篇/收官章的流程与 STAR 职责 | `.agents/knowledge/agent-workspace/planning/engineering-storyline.md` |
-| 对手与后续阶段是否已实现 | `.agents/knowledge/agent-workspace/planning/roadmap.md`「已设计、未实现」 |
+| 对手与后续阶段是否已实现 | `.agents/knowledge/agent-workspace/planning/roadmap.md`「已实现阶段与辅助适配」 |
+| 后续棋类实现路径 / 是否上 B 族引擎（bitboard、置换表、MCTS 等） | `.agents/knowledge/agent-workspace/planning/future-board-games.md` |
 
 ## P0 硬约束
 

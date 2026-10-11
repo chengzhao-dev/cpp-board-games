@@ -8,6 +8,10 @@
 token）；字节只用在厂商明确按字节定义的 L0（project_doc_max_bytes = 65536）。
 
 阈值分两档（预算按本仓需求可调，不与 cpp-notes 对齐数字）：
+  上位依据：OpenAI skill-creator / Codex 硬顶——project_doc_max_bytes 管 L0 字节；
+    SKILL body 官方 <5k words / <500 行；references 按需加载，>100 行文首加 TOC；
+    限额单位是 token，中文约 1 汉字 ≈ 1 token，禁止用「英文字符/4」估中文。
+    本仓 L1/L2 对中文更紧，字符阈值对中文 ≈ token 数。
   厂商硬约束（默认即失败）：
     L0  AGENTS.md                        <= 65536 字节
         name <= 64 字符、description <= 1024 字符
@@ -15,6 +19,7 @@ token）；字节只用在厂商明确按字节定义的 L0（project_doc_max_by
   本仓建议（默认 WARN，--strict 升级为失败；调整时同步 refactor-guidelines.md）：
     L1  .agents/skills/*/SKILL.md          <= 45 行 且 <= 3000 字符
     L2  .agents/skills/*/references/**/*.md <= 160 行 且 <= 6000 字符
+                                              （目标 <=4000 token，硬顶 6000 token）
     catalog.md                             <= 3000 字符
   教学正文体量不在本脚本：content/**/*.qmd 由 verify_content.py 的 token 预算负责。
 

@@ -20,6 +20,7 @@ metadata:
 | 任务 | 读取 |
 | --- | --- |
 | workflows 清单与 CI 范围 | `.github/README.md` |
+| 发布前闸门验收与上库内容清单 | `references/publish-gate.md` |
 | GitHub 链接约定 | `.agents/knowledge/quarto-writing/rendering/quarto-conventions.md` |
 
 ## P0 硬约束
@@ -33,6 +34,6 @@ metadata:
 
 ## 完成判据
 
-- [ ] 发布前文档校验（`run.ps1 check --profile full` 或等价脚本）通过。
+- [ ] 发布前闸门（`references/publish-gate.md`）通过。
 - [ ] 近期提交作者集合只含 `chengzhao-dev`。
 - [ ] 未执行任何未经用户要求的远端操作。

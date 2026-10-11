@@ -1,5 +1,5 @@
 # 构建 {{CMAKE_PROJECT_NAME}} 工程：根 main.cpp 使用 greeting/ 提供的动态库。
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 4.2)
 project({{CMAKE_PROJECT_NAME}} LANGUAGES CXX)
 
 # 使用 C++20，并把可执行文件和库分别输出到 build/bin 与 build/lib。

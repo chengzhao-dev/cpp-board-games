@@ -2,12 +2,12 @@
 #===------------------------------------------------------------------------===#
 # verify_content.py - content 侧写作规范自动检查
 #
-# 检查 qmd 禁用词、代码片段与源文件的一致性、篇幅预算（含正文段落长度，
-# 链接 URL 不计入）、裸 blob 链接行、枚举释义与目录树全角冒号、相邻围栏
-# 桥接、块后正文复述注释与正文全角分号（后四者只 WARN 不判失败）以及
-# 渲染后的 HTML。在仓库根目录执行；优先用根目录
-# config.toml 的 python 完整路径启动，例如：
-#   D:/ProgramData/miniforge3/python.exe .agents/skills/writing-quarto/scripts/verify_content.py
+# 检查 qmd 禁用词、代码片段与源文件的一致性、篇幅预算（含正文段落
+# 70–220 token 带，任何链接只计锚文本）、围栏外数学模式、裸 blob 链接行、
+# 枚举释义与目录树全角冒号、相邻围栏桥接、块后正文复述注释与正文全角
+# 分号（后四者只 WARN 不判失败）以及渲染后的 HTML。在仓库根目录执行；
+# 优先用根目录 config.toml 指定的 python 完整路径启动，例如：
+#   <config.toml 的 python> .agents/skills/writing-quarto/scripts/verify_content.py
 # 任意 ≥3.11 的 Python 也可作启动器：脚本读 config.toml 后 exec 到受控
 # 解释器；配置缺失或路径不存在立即失败，不回退 PATH。只用标准库；
 # 任何一项失败时退出码为 1。
@@ -35,8 +35,8 @@ from pathlib import Path
 FORBIDDEN_TERMS = [
     "第一版", "探针", "阶段", "切片", "自足", "{{< include",
     "链路", "四步", "片段：", "「", "」",
-    # 压缩隐喻与电报体（规则见标识 bg-terminology-v1、
-    # bg-chinese-voice-register-v1 与 bg-chinese-style-cases-v1 的知识文件）：
+    # 压缩隐喻与电报体（规则见标识 cpp-quarto-terminology-v1、
+    # bg-chinese-voice-register-v1 与 cpp-quarto-chinese-style-v1 的知识文件）：
     # 读者正文写可观察对象与完整主谓句；.agents 内部文档不受限。
     "契约", "契约链", "谁消费", "消费",
     "状态外壳", "地基", "执行纪律", "闭环",
@@ -44,17 +44,20 @@ FORBIDDEN_TERMS = [
     "这条路线", "这条流程", "这套流程", "下面分别精读", "如下分别说明",
     "刻意保持", "只可能", "不可能来自",
     "只包含",
-    "读懂", "务必", "严禁", "千万不要", "千万别",
+    "读懂",
+    # 口语领会词（规则见标识 cpp-quarto-chapter-structure-v1 的知识文件「形式规则」）。
+    "看懂",
+    "务必", "严禁", "千万不要", "千万别",
     # 语气与语域（规则见标识 bg-chinese-voice-register-v1 的知识文件）：
     # 口语讲义腔与规划元叙述套话。
     "动手前", "弄清", "咱们", "搞定", "别慌",
     "本章规划", "落点是", "类型名只是设计方向",
-    # 书面腔动词、倒装强调与元标签开场（规则见标识 bg-terminology-v1、
-    # bg-paragraph-cohesion-v1 的知识文件）。
+    # 书面腔动词、倒装强调与元标签开场（规则见标识 cpp-quarto-terminology-v1、
+    # cpp-quarto-paragraph-craft-v1 的知识文件）。
     "标明", "跑通", "重读", "这正是", "容易混淆",
-    # 测试语境混用与压缩表述（规则见标识 bg-terminology-v1 的知识文件）。
+    # 测试语境混用与压缩表述（规则见标识 cpp-quarto-terminology-v1 的知识文件）。
     "接口桩", "静态到动态",
-    # 语言课旁白（规则见标识 bg-project-decisions-v1、bg-chinese-style-cases-v1
+    # 语言课旁白（规则见标识 bg-project-decisions-v1、cpp-quarto-chinese-style-v1
     # 的知识文件与 chapter-writing.md「叙事范围」）：正文旁白不讲解 C++
     # 语言机制或风格指南条目，只谈工程契约、消费方与验证。
     "翻译单元", "纯数据聚合", "取值封闭", "数据组合用",
@@ -63,15 +66,51 @@ FORBIDDEN_TERMS = [
     "格子内容",
     "用有符号整型承载",
     "选定宽有符号",
+    # 访问说明符指称（规则见标识 bg-cpp-chinese-terms-v1 的知识文件
+    # 「访问说明符」，对照见 cpp-quarto-chinese-style-v1「访问说明符译名
+    # 对照」）：自造比喻「公开段 / 私有段」读者对不上源码，一律停用；
+    # 写 `public:` / `private:` 下（或之后）的成员，成员分别称
+    # 「公开成员 / 私有成员」，数据成员不作「成员变量」。
+    "公开段", "私有段", "公共成员", "成员变量",
     # 头文件指称必须点名具体对象（文件名、include/ 路径、调用方），
     # 或写全「库对外头文件」；省略缩略与「公共」前缀堆叠停用
-    # （规则见标识 bg-terminology-v1 的知识文件）。
+    # （规则见标识 cpp-quarto-terminology-v1 的知识文件）。
     "公共头", "公共值类型",
+    # 章叙述、程序行为与不变量都停用「固定」（规则见标识 cpp-quarto-terminology-v1
+    # 的知识文件「禁用与替换」，对照见 cpp-quarto-chinese-style-v1
+    # 「对局交流不绑定媒介与行为刚性表述」）：约定由章确定，行为遵循
+    # 约定，不变量直陈事实。
+    "固定",
+    # 无铺垫抽象套语与棋类行话（规则见标识 cpp-quarto-terminology-v1 与
+    # cpp-teaching-source-comments-v1 的知识文件，对照见 cpp-quarto-chinese-style-v1
+    # 「无铺垫的规则指称」）：行为列举导语直接点名列表内容，棋子归属
+    # 写「使用 X 棋子」。
+    "遵循同一套", "执 X", "执 O",
+    # 角色话术（规则见标识 cpp-quarto-terminology-v1 的知识文件「禁用与替换」，
+    # 对照见 cpp-quarto-chinese-style-v1「角色总述段」）：目录与文件直接写
+    # 保存、实现或检查的内容，不用角色指称与角色动词。
+    "职责", "负责", "承担",
+    # 生僻动词搭配（规则见标识 cpp-quarto-terminology-v1 的知识文件「禁用与替换」）：
+    # 读者需要停下辨认，改用放在、分成等常用写法。
+    "分进",
+    # 布尔字面值指称（规则见标识 cpp-quarto-terminology-v1 的知识文件「禁用与替换」）：
+    # true、false 是 C++ 关键字，正文用行内代码原样书写，不写「假／真」。
+    "返回假", "返回真",
+    # 声明定义术语标签（口径见标识 cpp-quarto-terminology-v1 的知识文件
+    # 「易混概念：声明与定义」，对照见 cpp-quarto-chinese-style-v1
+    # 「术语标签对照句」）：正文不贴「是定义／是声明」标签、不成对展开
+    # 两者区分；位置与实现写具体事实，「定义在 x.h」式位置动词不受限。
+    "是定义", "是声明", "的声明",
+    # 并列量名省掉被计量的对象（规则见标识 cpp-quarto-paragraph-craft-v1 的
+    # 知识文件「简洁边界」，对照见 cpp-quarto-chinese-style-v1
+    # 「摘录导语只报出处」）：「行数、列数」旁不配光秃的「总数」，
+    # 引入短语写全对象（棋盘格子总数）；只拦两个接续面，不禁「总数」整词。
+    "和总数", "、总数",
 ]
 
 # 词表表达不了的句式用正则：编号指称、统计性凑句与旧片段标注
-# （规则见标识 bg-terminology-v1、bg-paragraph-list-style-v1 与
-# bg-qmd-element-cases-v1 的知识文件）。
+# （规则见标识 cpp-quarto-terminology-v1、cpp-quarto-paragraph-craft-v1 与
+# cpp-quarto-qmd-element-cases-v1 的知识文件）。
 FORBIDDEN_PATTERNS = [
     (r"第 \d+ 章", "第 N 章式编号指称"),
     (r"(?:文件|代码).{0,6}只有.{0,6}\d+\s*行", "统计性凑句"),
@@ -81,32 +120,39 @@ FORBIDDEN_PATTERNS = [
     # 样式说明（如「运行效果（终端中步骤标题为青色加粗）」）写进正文。
     (r'filename="(?!WSL Ubuntu)[^"]*（', "filename 全角括号仅限执行位置标注"),
     # 标题栏只用短名；深层 games/、shared/ 路径由正文 GitHub 链接提供
-    # （规则见标识 bg-qmd-element-cases-v1 的知识文件）。
+    # （规则见标识 cpp-quarto-qmd-element-cases-v1 的知识文件）。
     (r'filename="(?:games|shared)/', "filename 深层路径（改用短名）"),
-    # 元计数导语（规则见标识 bg-chinese-style-cases-v1）。
+    # 元计数导语（规则见标识 cpp-quarto-chinese-style-v1）。
     (r"\d+段命令", "N 段命令式元计数导语"),
-    # 渐进披露元叙述（规则见标识 bg-qmd-element-cases-v1、
-    # bg-terminology-v1 的知识文件）：写作策略不念给读者听。
+    # 结构元词（规则见标识 cpp-quarto-chinese-style-v1「输出引言的结构元词」）：
+    # 引言说出阅读动作与关注点，不描述输出自身的结构分类。
+    (r"并列部分|并列区域|\d+\s*个并列", "结构元词并列（直接说读者看什么）"),
+    # 渐进披露元叙述（规则见标识 cpp-quarto-qmd-element-cases-v1、
+    # cpp-quarto-terminology-v1 的知识文件）：写作策略不念给读者听。
     (r"语法细节留到", "渐进披露元叙述（直接陈述对象和结果）"),
     (r"真正用到时再", "渐进披露元叙述（直接陈述对象和结果）"),
     (r"本章只需认清", "渐进披露元叙述（直接陈述对象和结果）"),
-    # 操作节离题辩白（规则见标识 bg-paragraph-cohesion-v1、
-    # 对照见 bg-chinese-style-cases-v1）：「为何不跳过/幂等」长论不进操作正文。
+    # 操作节离题辩白（规则见标识 cpp-quarto-paragraph-craft-v1、
+    # 对照见 cpp-quarto-chinese-style-v1）：「为何不跳过/幂等」长论不进操作正文。
     (r"配置漂移", "操作节离题辩白（删除或归属排查节）"),
     # 强语气「绝对…」（不拦技术词「绝对链接」）。
     (r"绝对(?:不要|不能|禁止|必须|不行)", "强语气绝对（改可核对条件句）"),
+    # 媒介绝对化（规则见标识 cpp-quarto-terminology-v1 的知识文件，对照见
+    # cpp-quarto-chinese-style-v1「对局交流不绑定媒介与行为刚性表述」）：
+    # 对局交流不写死在具体媒介上，媒介名只指称具体程序或界面。
+    (r"只发生在终端", "媒介绝对化（交流不写死在终端上）"),
     # Mermaid 图表必须用 {mermaid} 属性围栏（规则见标识
     # bg-mermaid-conventions-v1 的知识文件）：plain 围栏被当作代码块。
     (r"^```mermaid\b", "plain mermaid 围栏（改用 {mermaid}）"),
-    # 编号旁注（规则见标识 bg-chapter-page-pattern-v1 的知识文件）：
+    # 编号旁注（规则见标识 cpp-quarto-chapter-structure-v1 的知识文件）：
     # 目录与章节的编号差只在渐进式路线章说明。
     (r"目录编号比章节", "编号旁注（编号差只在渐进式路线章说明）"),
     # 语言课旁白句式（规则见标识 bg-project-decisions-v1、
-    # bg-chinese-style-cases-v1 的知识文件）。
+    # cpp-quarto-chinese-style-v1 的知识文件）。
     (r"用 `enum class` 表达", "语言课旁白（改为领域区分句）"),
     (r"语言机制在", "语言课旁白（删或改尾置若要系统阅读）"),
     # 突兀跨仓依据句（规则见 chapter-writing.md「叙事范围」、
-    # bg-chinese-style-cases-v1「突兀跨仓依据句」）：工程约定不挂
+    # cpp-quarto-chinese-style-v1「突兀跨仓依据句」）：工程约定不挂
     # 「依据见 / 机制见 …」+ cpp-notes。
     (r"(?:写法)?依据见.{0,40}cpp-notes", "突兀跨仓依据句（删除或改尾置若要系统阅读）"),
     (r"(?:语言)?机制见.{0,40}cpp-notes", "突兀跨仓依据句（删除或改尾置若要系统阅读）"),
@@ -115,25 +161,25 @@ FORBIDDEN_PATTERNS = [
     (r"用法见.{0,40}cpp-notes", "突兀跨仓依据句（删除或改尾置若要系统阅读）"),
     (r"陷阱见.{0,40}cpp-notes", "突兀跨仓依据句（删除选型链）"),
     (r"完整讲解在\s*cpp-notes", "突兀跨仓依据句（改本仓固定采用或删）"),
-    # 枚举成员释义进正文（规则见标识 bg-terminology-v1、
-    # bg-chinese-style-cases-v1 的知识文件）：成员含义只写源码行尾注释，
+    # 枚举成员释义进正文（规则见标识 cpp-quarto-terminology-v1、
+    # cpp-quarto-chinese-style-v1 的知识文件）：成员含义只写源码行尾注释，
     # 正文只写谁调用、如何验收、与邻章关系。
     (r"每个状态码对应", "枚举成员释义段（含义写源码行尾注释）"),
     (r"^- `\w+::k\w+`：", "枚举成员释义列表（含义写源码行尾注释）"),
-    # 过程节标题承载回顾职责（规则见标识 bg-file-title-naming-v1）：
+    # 过程节标题承载回顾职责（规则见标识 cpp-quarto-chapter-structure-v1）：
     # 「本章做到哪、后续章接什么」只写在 ## 本章回顾。
     (r"^#{2,4}\s+.*实现边界", "过程节标题含「实现边界」（并入本章回顾）"),
-    # 目录树行尾注释是名词性职责短语（规则见标识 bg-qmd-element-cases-v1）：
+    # 目录树行尾注释是名词性职责短语（规则见标识 cpp-quarto-qmd-element-cases-v1）：
     # 不用全角冒号挂解释。
     (r"^.*[├└]─.*：", "目录树行尾注释含全角冒号（改名词性短语）"),
-    # filename 是短显示名字符串（规则见标识 bg-qmd-element-cases-v1）：
+    # filename 是短显示名字符串（规则见标识 cpp-quarto-qmd-element-cases-v1）：
     # 不塞 Markdown 链接，完整路径靠同节正文 blob 链接提供。
     (r'filename="[^"]*\]\(', "filename 含 Markdown 链接（只写短名）"),
     # 扁平 include：禁止残留 include/tictactoe/ 路径（规则见
     # bg-google-cpp-style-v1 白名单第 9 条、bg-cmake-conventions-v1）。
     (r"include/tictactoe/", "残留 include/tictactoe/（头文件改放 include/）"),
     (r'#include\s+"tictactoe/', "带前缀项目头 include（改裸文件名）"),
-    # 目录树行尾注释写完整职责短语（规则见标识 bg-terminology-v1）：
+    # 目录树行尾注释写完整职责短语（规则见标识 cpp-quarto-terminology-v1）：
     # 头文件目录注释写「库对外头文件」，不写「公开头文件」。
     (r"#\s*公开头文件", "目录树注释改「库对外头文件」"),
     # 课堂类比（规则见 chapter-writing.md「叙事范围」、
@@ -148,19 +194,27 @@ FORBIDDEN_RES = [(re.compile(pattern), label) for pattern, label in FORBIDDEN_PA
 # 上下文相关检查配置：完整符号与 Mermaid 窄屏方向
 #===------------------------------------------------------------------------===#
 
-# 正文裸 `Status`（规则见标识 bg-terminology-v1 的知识文件）：同文件出现
+# 正文裸 `Status`（规则见标识 cpp-quarto-terminology-v1 的知识文件）：同文件出现
 # GameResult 时，正文不得把枚举类型简写成 `Result`，须写完整符号
 # `GameResult` 或成员函数 `Game::Result`；代码围栏内照抄源码不受限。
 BARE_STATUS_RE = re.compile(r"(?<![:\w])`Status`")
 
-# 整行仅为 Markdown 链接（规则见标识 bg-qmd-element-cases-v1 的知识文件）：
+# 整行仅为 Markdown 链接（规则见标识 cpp-quarto-qmd-element-cases-v1 的知识文件）：
 # blob 链接要嵌进同节导语句子，禁止单独成行贴在代码围栏上方。
 BARE_LINK_LINE_RE = re.compile(r"^\[[^\]]*\]\([^)]*\)$")
 
-# `##` 标题汉字数上限（WARN，规则见标识 bg-file-title-naming-v1 的知识
-# 文件）：仅统计汉字，英文与标点不计。
-H2_HAN_LIMIT = 10
+# 标题命名（规则见标识 cpp-quarto-chapter-structure-v1 的知识文件「字数硬限」
+# 「形式规则」）：章节页 title 2-6 汉字、对象名优先，二级 2-6
+# （固定收尾豁免）、任务级三级 2-6、「常见错误」症状三级可到 8；指示
+# （这一步、这次、这个）、过程动词（记下、收进）、关系（用到的）、
+# 把字句开头与「先…再…」不进标题。只扫标题行（YAML title 与 ##、###），
+# 不扫正文；汉字计数只计汉字，英文与标点不计。
 HAN_RE = re.compile(r"[\u4e00-\u9fff]")
+TITLE_HAN_RANGE = (2, 6)
+H2_HAN_RANGE = (2, 6)
+H3_HAN_RANGE = (2, 6)
+SYMPTOM_H3_HAN_MAX = 8
+HEADING_FILLER_RE = re.compile("这一步|这次|这个|记下|收进|用到的|先[^。]{0,8}再")
 
 # {mermaid} 图方向（规则见标识 bg-mermaid-conventions-v1 的知识文件）：
 # flowchart/graph LR 且节点标签数达到阈值时挤爆窄屏视口，改 TB 或拆图。
@@ -170,7 +224,7 @@ MERMAID_DIR_RE = re.compile(r"\b(?:flowchart|graph)\s+LR\b")
 
 # 规划页标记与行内代码路径：含标记的页面是实现目录未创建的设计页，
 # 实现目录一律用中文锚文本 GitHub 链接（规则见标识
-# bg-chapter-page-pattern-v1 的知识文件）。
+# cpp-quarto-chapter-structure-v1 的知识文件）。
 PLANNING_MARKER = "实现并通过验收前按设计页阅读"
 PLANNING_INLINE_PATH_RE = re.compile(r"`(?:games|shared)/[^`]+`")
 
@@ -186,24 +240,32 @@ GITHUB_BLOB_RE = re.compile(
     r"https://github\.com/[^/]+/[^/]+/blob/[^/]+/"
     r"((?:games|shared)/[^)\s]+)"
 )
-HEADING_RE = re.compile(r"^(#{2,3})\s+")
 
 # 省略标记行（strip 后精确匹配）：片段比对时跳过；在源码语言围栏内出现
 # 即报错（省略处直接省略；输出摘录块的 ... 不受限，.text 不在 CODE_LANGS 内）。
 OMISSION_LINES = ("...", "# ...", "// ...")
 
-# Markdown 链接在预算计数前剥离 URL：URL 是机器寻址串，读者扫读时整体
-# 跳过，计入会挤占正文预算（口径见标识 bg-content-budget-v1 的知识文件）。
-# 锚文本保留照常计数。
-LINK_URL_RES = [
-    re.compile(r"\]\([^)\s]*https?://[^)\s]*\)"),
+# Markdown 链接在预算计数前折叠为锚文本：任何链接只计读者看见的锚文本，
+# 不计目标（口径见标识 cpp-quarto-chapter-structure-v1 的知识文件）。绝对链接与
+# 相对链接的 URL、自动链接与裸 URL 都是机器寻址串，读者扫读时整体跳过，
+# 计入会挤占正文预算。顺序：先行内/引用链接（保留锚文本），再自动链接
+# 与裸 URL（计 0）。锚文本保留的模式放 LINK_ANCHOR_RES（替换为组 1），
+# 整体丢弃的模式放 LINK_DROP_RES（替换为空串）。
+LINK_ANCHOR_RES = [
+    re.compile(r"\[([^\]]*)\]\([^)\s]*\)"),
+    re.compile(r"\[([^\]]*)\]\[[^\]]*\]"),
+]
+LINK_DROP_RES = [
     re.compile(r"<https?://[^>\s]+>"),
+    re.compile(r"https?://[^\s\)\]]+"),
 ]
 
 
 def strip_link_urls(text: str) -> str:
-    for pattern in LINK_URL_RES:
-        text = pattern.sub("]()", text)
+    for pattern in LINK_ANCHOR_RES:
+        text = pattern.sub(r"\1", text)
+    for pattern in LINK_DROP_RES:
+        text = pattern.sub("", text)
     return text
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -212,25 +274,36 @@ AGENTS_MD_GLOBS = [".agents/skills/**/*.md", ".agents/knowledge/**/*.md"]
 AGENTS_BODY_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 MIN_PYTHON = (3, 11)
 
-# 篇幅预算限额（计数口径与限额表见标识 bg-content-budget-v1 的知识文件，
+# 篇幅预算限额（计数口径与限额表见标识 cpp-quarto-chapter-structure-v1 的知识文件，
 # 两处必须同步）。
 CJK_RE = re.compile(r"[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef\u3000-\u303f]")
 FILE_TOKENS = 5000
 INTRO_TOKENS = 400
-H2_TOKENS = 1800
-H3_TOKENS = 600
+# 任务级 ## 正文区间（代码与图表不计入）：一章只有一个任务级 ## 时
+# 200–1200，两个及以上时每节 400–1200（与 cpp-quarto-chapter-structure-v1 同步）。
+H2_TOKENS = 1200
+TASK_H2_MIN_SINGLE = 200
+TASK_H2_MIN_MULTI = 400
+# 任务级 ### 正文 120–480；「常见错误」症状 ### 60–240，不套任务级下限。
+H3_TOKENS = 480
+TASK_H3_MIN = 120
+SYMPTOM_H3_MIN = 60
+SYMPTOM_H3_MAX = 240
 H3_COUNT = 4
 TASK_H2_MAX = 4
 FIXED_H2_HEADINGS = {"常见错误", "自测问题", "本章回顾"}
 BLOCK_LINES = 20
-# 图表与可执行单元的独立行数上限（与 bg-content-budget-v1 限额表同步）。
+# 图表与可执行单元的独立行数上限（与 cpp-quarto-chapter-structure-v1 限额表同步）。
 MERMAID_LINES = 40
 PY_CELL_LINES = 30
-# 单个正文段落 token 上限（与 bg-content-budget-v1 限额表同步）。
+# 单个正文段落 token 带（与 cpp-quarto-chapter-structure-v1 限额表同步）：低于
+# PARA_TOKENS_MIN 判电报段失败，豁免清单见 check_file_budget 内说明；
+# 上限 PARA_TOKENS 对豁免类仍然生效。
 PARA_TOKENS = 220
-# 节导语与引用块限额（与 bg-content-budget-v1 限额表同步）：## 节导语
+PARA_TOKENS_MIN = 70
+# 节导语与引用块限额（与 cpp-quarto-chapter-structure-v1 限额表同步）：## 节导语
 # 120 token 且 ≤2 句，### 节导语 80 token 且 ≤1 句，单个 > 引用块
-# 80 token。节导语指导语标题之后、首个代码块/列表/表格/引用/盒子之前
+# 80 token。节导语指从标题之后到首个代码块/列表/表格/引用/盒子之前
 # 的连续正文；空行分段不结束导语。
 LEAD_H2_TOKENS = 120
 LEAD_H2_SENTENCES = 2
@@ -352,12 +425,15 @@ def scan_planning_inline_paths(qmd_files):
 
 
 def find_context_errors(path):
-    """返回上下文相关错误：裸 `Status` 简称与超宽 LR 图。
+    """返回上下文相关错误：裸 `Status` 简称、超宽 LR 图与代词悬空指称。
 
-    两类错误都依赖文件上下文，进不了逐行词表：裸 `Status` 只在
-    同文件存在 GameResult 时才算简称；LR 图只看节点数是否达到阈值。
+    三类错误都依赖文件上下文，进不了逐行词表：裸 `Status` 只在
+    同文件存在 GameResult 时才算简称；LR 图只看节点数是否达到阈值；
+    自测题干与节首代词要拿整篇 qmd 按标题切开判先行词
+    （规则见标识 cpp-quarto-paragraph-craft-v1 的知识文件「代词不能代替未写出的对象」）。
     """
     errors = find_bare_blob_errors(path)
+    errors.extend(find_pronoun_reference_errors(path))
     text = path.read_text(encoding="utf-8")
     if "GameResult" in text:
         in_fence = False
@@ -401,10 +477,308 @@ def find_context_errors(path):
     return errors
 
 
+# 指称对象名（规则见标识 cpp-quarto-paragraph-craft-v1 的知识文件
+# 「代词不能代替未写出的对象」）：自测题干是合上书的一问，禁指称代词；
+# 节首句不得以「这些／这个／这一步」作话题而同句或上一节都列不出对象名。
+QUESTION_PRONOUN_RE = re.compile("这个|那个|这些|那些|哪个|哪些|哪一句|哪一层|哪一行|哪一块")
+LEAD_PRONOUN_RE = re.compile("这一步|这些|那些|这个|那个")
+QMD_HEADING_RE = re.compile(r"^(#{2,3})\s+(.+?)\s*$")
+
+
+def _pronoun_head(sentence: str, match) -> str:
+    """代词短语的头名词：紧跟的 2 个汉字；「这一步」类无尾随名词时为空。"""
+    tail = sentence[match.end():]
+    head = re.match(r"[一-鿿]{2}", tail)
+    return head.group(0) if head else ""
+
+
+def _section_first_sentence(lines):
+    """节的第一个散文句：跳过围栏、列表、引用与 div 标记，取到第一个句号。"""
+    prose: list[str] = []
+    in_fence = False
+    for line in lines:
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        stripped = line.strip()
+        if not stripped or stripped.startswith(("#", "-", ">", "|", "::", "1.", "2.", "3.", "4.", "5.", "6.", "7.")):
+            if prose:
+                break
+            continue
+        prose.append(stripped)
+        if "。" in stripped or "？" in stripped or "！" in stripped:
+            break
+    sentence = "".join(prose)
+    stop = min((i for i in (sentence.find("。"), sentence.find("？"), sentence.find("！")) if i >= 0), default=len(sentence))
+    return sentence[: stop + 1] if stop < len(sentence) else sentence
+
+
+def find_pronoun_reference_errors(path):
+    """按整篇 qmd 检查自测题干与节首代词；句子不脱离文件单独判。
+
+    题干行命中代词表即失败（信息带题号）；答案折叠内的回指不扫。
+    节首句的代词在同句、上一句或上一节列不出头名词时判失败；
+    「这一步」类无头名词的，以上一节已建立同一说法为合法出口。
+    """
+    errors = []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    rel = path.relative_to(REPO_ROOT)
+    headings = []
+    for lineno, line in enumerate(lines):
+        m = QMD_HEADING_RE.match(line)
+        if m:
+            headings.append((lineno, len(m.group(1)), m.group(2).strip()))
+    sections = []
+    for idx, (lineno, level, title) in enumerate(headings):
+        stop = headings[idx + 1][0] if idx + 1 < len(headings) else len(lines)
+        sections.append((level, title, lineno, stop))
+
+    in_quiz = False
+    question_no = 0
+    in_answer = False
+    for order, (level, title, start, stop) in enumerate(sections):
+        if level == 2:
+            in_quiz = title == "自测问题"
+            question_no = 0
+        if in_quiz:
+            for lineno in range(start + 1, stop):
+                stripped = lines[lineno].strip()
+                if stripped.startswith(":::"):
+                    in_answer = not in_answer
+                    continue
+                if in_answer or not re.match(r"(?:\d+\.|[-*+])\s", stripped):
+                    continue
+                question_no += 1
+                if QUESTION_PRONOUN_RE.search(stripped):
+                    errors.append(
+                        f"{rel}:{lineno + 1}: 自测第 {question_no} 题题干用了指称代词"
+                        f"（这个/那个/这些/那些/哪个…），写出被问的对象与候选"
+                    )
+            continue
+        sentence = _section_first_sentence(lines[start + 1: stop])
+        if not sentence:
+            continue
+        if order > 0:
+            prev_start, _prev_title, _s, prev_stop = sections[order - 1]
+            previous_text = "".join(lines[prev_start + 1: prev_stop])
+        else:
+            previous_text = ""
+        offset = start + 1
+        for m in LEAD_PRONOUN_RE.finditer(sentence):
+            head = _pronoun_head(sentence, m)
+            # 「同句列出对象名」＝头名词在本句还有代词短语之外的出处
+            if head:
+                if head in sentence[: m.start()] or head in sentence[m.end() + len(head):]:
+                    continue
+            elif m.group(0) in sentence[: m.start()]:
+                continue
+            if head and head in previous_text:
+                continue
+            if not head and m.group(0) in previous_text:
+                continue
+            errors.append(
+                f"{rel}:{offset}: 节首句以“{m.group(0)}”作话题但同句与上一节"
+                f"都列不出对象名：“{sentence[:40]}”"
+            )
+            break  # 每个节首只报一条，避免同句多个代词重复计数
+    return errors
+
+
+# 句子模块切分（规则见标识 cpp-quarto-paragraph-craft-v1 的知识文件「一次对话」）：
+# 先把全文切成章、节、自然段、句、列表项、表格单元格再判定；围栏、YAML
+# 与链接 URL 不是句子。失败只收三类高精度信号，段中心与对话件数不做正则。
+# 改口信号里的序数只接类型、成员、入口、步骤、结果这类已出现过的对象
+# （允许「数据成员」这类带 ≤3 字定语的名词）；格子、行、列和
+# 「第 N 次写入」这类真实次序不进词表。
+GLANCE_BACK_RE = re.compile(
+    "接着看|第[一二三四]个(?:[^。，；、！？\\s]{0,3})?(?:枚举|类型|结构体|成员|入口|步骤|结果)"
+)
+UNIVERSAL_PHRASE_RE = re.compile("全部信息|所有信息")
+NEXT_SENTENCE_NEGATE_RE = re.compile("不同|另外")
+INLINE_CODE_RE = re.compile(r"`[^`]+`")
+MODULE_COUNT_NAMES = ("章", "节", "段", "句", "列表项", "表元")
+
+
+def _split_qmd_sentences(text):
+    """把一段散文按「。！？」切成句子，保留句尾片段（如冒号导语）。"""
+    return [s for s in re.split(r"[。！？]", text) if s.strip()]
+
+
+def scan_sentence_modules(path):
+    """按模块切分 qmd，返回 (失败列表, 计数字典)，随 content 检查默认全量。
+
+    切分口径：章=正文开头到第一个 `##` 之前；节=`###` 到下一标题；
+    自然段=空行隔开的散文；句=段内按「。！？」切开；列表项与表元按行计。
+    「自测问题」整节不进句子判定（题干是列表项，固定导语与答案折叠豁免）。
+    三类失败：类型接线句（至少两个逗号分句各自含「使用」和行内代码）、
+    改口（「接着看」或「第 N 个」接枚举/类型/结构体/成员/入口/步骤/结果）、
+    全称被下一句否定。
+    """
+    errors = []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    rel = path.relative_to(REPO_ROOT)
+    body_start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                body_start = i + 1
+                break
+    counts = dict.fromkeys(MODULE_COUNT_NAMES, 0)
+
+    headings = []
+    for lineno in range(body_start, len(lines)):
+        m = QMD_HEADING_RE.match(lines[lineno])
+        if m:
+            headings.append((lineno, len(m.group(1)), m.group(2).strip()))
+
+    first_h2 = next((lineno for lineno, level, _ in headings if level == 2), len(lines))
+    if any(lines[i].strip() for i in range(body_start, first_h2)):
+        counts["章"] = 1
+    counts["节"] = sum(1 for _l, level, _t in headings if level == 3)
+
+    # 标题段切块：每段（起行, 止行, 是否自测问题 ## 及其子节）。
+    segments = []
+    in_quiz = False
+    for idx, (lineno, level, title) in enumerate(headings):
+        stop = headings[idx + 1][0] if idx + 1 < len(headings) else len(lines)
+        if level == 2:
+            in_quiz = title == "自测问题"
+        segments.append((lineno, stop, in_quiz))
+    if headings:
+        if headings[0][0] > body_start:
+            segments.insert(0, (body_start, headings[0][0], False))
+    else:
+        segments.append((body_start, len(lines), False))
+
+    # 列表项与表元按行计（围栏外）。
+    in_fence = False
+    for lineno in range(body_start, len(lines)):
+        line = lines[lineno]
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        stripped = line.strip()
+        if re.match(r"(?:[-*+]|\d+[.、)])\s", stripped):
+            counts["列表项"] += 1
+        elif stripped.startswith("|"):
+            if re.fullmatch(r"\|[\s:\-|]+\|?", stripped):
+                continue
+            counts["表元"] += max(stripped.count("|") - 1, 0)
+
+    # 散文自然段按段块归组；围栏、列表、表格、引用与 div 标记跳过。
+    paragraphs = []  # (段块序号, 首行行号, 累积文本)
+    in_fence = False
+    seg_i = 0
+    current = None
+    for lineno in range(body_start, len(lines)):
+        while seg_i + 1 < len(segments) and lineno >= segments[seg_i][1]:
+            seg_i += 1
+        line = lines[lineno]
+        if line.startswith("```"):
+            in_fence = not in_fence
+            if current:
+                paragraphs.append(current)
+                current = None
+            continue
+        if in_fence:
+            continue
+        stripped = line.strip()
+        if (not stripped or stripped.startswith(("#", "-", "*", "+", "|", ">", ":::"))
+                or re.match(r"^\d+[.、)]", stripped)):
+            if current:
+                paragraphs.append(current)
+                current = None
+            continue
+        if current is None:
+            current = [seg_i, lineno, ""]
+        current[2] += stripped
+    if current:
+        paragraphs.append(current)
+
+    counts["段"] = len(paragraphs)
+    seg_sentences = {}  # 段块序号 -> [(首行行号, 句子)]；自测问题段块不进句子判定
+    for seg_index, lineno, text in paragraphs:
+        sentences = _split_qmd_sentences(text)
+        counts["句"] += len(sentences)
+        if segments[seg_index][2]:
+            continue
+        bucket = seg_sentences.setdefault(seg_index, [])
+        for sentence in sentences:
+            bucket.append((lineno, sentence))
+
+    for bucket in seg_sentences.values():
+        for pos, (lineno, sentence) in enumerate(bucket):
+            wiring = sum(
+                1
+                for clause in re.split("[，,]", sentence)
+                if "使用" in clause and INLINE_CODE_RE.search(clause)
+            )
+            if wiring >= 2:
+                errors.append(
+                    f"{rel}:{lineno + 1}: 类型接线句：{wiring} 个逗号分句各自含"
+                    f"「使用」和行内代码；紧邻导语与围栏已写出时整段删除"
+                    f"（cpp-quarto-paragraph-craft-v1「一次对话」）"
+                )
+            terms = list(dict.fromkeys(GLANCE_BACK_RE.findall(sentence)))
+            if terms:
+                errors.append(
+                    f"{rel}:{lineno + 1}: 改口：出现「{'」「'.join(terms)}」；"
+                    f"沿用开头的说法和类型名，每件内容紧挨自己的围栏"
+                    f"（cpp-quarto-paragraph-craft-v1「一次对话」）"
+                )
+            universal = UNIVERSAL_PHRASE_RE.search(sentence)
+            if universal and pos + 1 < len(bucket):
+                next_sentence = bucket[pos + 1][1]
+                if NEXT_SENTENCE_NEGATE_RE.search(next_sentence):
+                    errors.append(
+                        f"{rel}:{lineno + 1}: 全称「{universal.group(0)}」被下一句"
+                        f"否定；改范围或删除（cpp-quarto-paragraph-craft-v1「一次对话」）"
+                    )
+    return errors, counts
+
+
+# 编写腔（规则见标识 cpp-quarto-qmd-element-cases-v1 与 cpp-teaching-source-comments-v1 的
+# 知识文件）：注释怎么写只留在 .agents；qmd 标题、正文与 callout 出现
+# 编写步骤句即失败。只扫围栏外行，代码围栏照抄源码不受限。
+AUTHORING_VOICE_RE = re.compile("由正文交代|第二句信息|两轨分工|成员注释先写")
+
+
+def find_authoring_voice_errors(path):
+    """围栏外出现教作者写注释的句子时判失败，返回错误明细列表。"""
+    errors = []
+    rel = path.relative_to(REPO_ROOT)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                start = i + 1
+                break
+    in_fence = False
+    for i in range(start, len(lines)):
+        line = lines[i]
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        match = AUTHORING_VOICE_RE.search(line)
+        if match:
+            errors.append(
+                f"{rel}:{i + 1}: 编写腔「{match.group(0)}」：注释怎么写只留在 "
+                f".agents，读者句写出对象本身（cpp-quarto-qmd-element-cases-v1）"
+            )
+    return errors
+
+
 def find_bare_blob_errors(path):
     """整行仅为链接且紧贴（可夹空行）代码围栏时判失败。
 
-    blob 链接要嵌进同节导语句子（规则见标识 bg-qmd-element-cases-v1
+    blob 链接要嵌进同节导语句子（规则见标识 cpp-quarto-qmd-element-cases-v1
     的知识文件）：单独成行贴围栏既不像正文也不像说明，读者扫读时
     只剩一个悬空锚点。
     """
@@ -424,18 +798,77 @@ def find_bare_blob_errors(path):
     return errors
 
 
-def find_heading_length_warnings(qmd_files):
-    """`##` 标题超过汉字数上限时记 WARN，返回 [(文件, 行号, 汉字数)]。"""
-    warnings = []
-    for path in qmd_files:
-        for lineno, line in enumerate(
-            path.read_text(encoding="utf-8").splitlines(), start=1
-        ):
-            if line.startswith("## "):
-                han = len(HAN_RE.findall(line))
-                if han > H2_HAN_LIMIT:
-                    warnings.append((path, lineno, han))
-    return warnings
+def find_heading_errors(path):
+    """标题三层字数与填充词检查，返回失败明细列表。
+
+    章节页 YAML title 2-6 汉字、对象名优先（着陆页豁免），二级 2-6 汉字（固定收尾
+    「常见错误」「自测问题」「本章回顾」豁免），任务级三级 2-6 汉字，
+    「常见错误」下的症状三级可到 8 汉字；标题行出现指示、过程动词、
+    关系词、把字句开头或「先…再…」判失败（规则见标识
+    cpp-quarto-chapter-structure-v1 的知识文件「字数硬限」「形式规则」）。
+    """
+    errors = []
+    rel = path.relative_to(REPO_ROOT)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    title = None
+    is_landing = False
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                frontmatter = "\n".join(lines[1:i])
+                if path.name == "index.qmd" and path.parent == REPO_ROOT:
+                    is_landing = True
+                if "index-page" in frontmatter:
+                    is_landing = True
+                match = re.search(r'^title:\s*"?(.*?)"?\s*$', frontmatter, re.MULTILINE)
+                if match and match.group(1).strip():
+                    title = match.group(1).strip()
+                break
+    if title is not None and not is_landing:
+        han = len(HAN_RE.findall(title))
+        if not TITLE_HAN_RANGE[0] <= han <= TITLE_HAN_RANGE[1]:
+            errors.append(
+                f"{rel}: title「{title}」{han} 个汉字，不在 "
+                f"{TITLE_HAN_RANGE[0]}-{TITLE_HAN_RANGE[1]}"
+                "（cpp-quarto-chapter-structure-v1「字数硬限」）"
+            )
+        if HEADING_FILLER_RE.search(title) or title.startswith("把"):
+            errors.append(
+                f"{rel}: title「{title}」含填充词或把字句开头"
+                "（cpp-quarto-chapter-structure-v1「形式规则」）"
+            )
+    h2 = None
+    for lineno, line in enumerate(lines, start=1):
+        match = re.match(r"^(#{2,3})\s+(.+?)\s*$", line)
+        if not match:
+            continue
+        level, text = len(match.group(1)), match.group(2).strip()
+        if level == 2:
+            h2 = text
+            if h2 in FIXED_H2_HEADINGS:
+                continue
+            han = len(HAN_RE.findall(text))
+            if not H2_HAN_RANGE[0] <= han <= H2_HAN_RANGE[1]:
+                errors.append(
+                    f"{rel}:{lineno}: 二级标题「{text}」{han} 个汉字，不在 "
+                    f"{H2_HAN_RANGE[0]}-{H2_HAN_RANGE[1]}"
+                    "（cpp-quarto-chapter-structure-v1「字数硬限」）"
+                )
+        else:
+            han = len(HAN_RE.findall(text))
+            limit = SYMPTOM_H3_HAN_MAX if h2 == "常见错误" else H3_HAN_RANGE[1]
+            if not H3_HAN_RANGE[0] <= han <= limit:
+                errors.append(
+                    f"{rel}:{lineno}: 三级标题「{text}」{han} 个汉字，不在 "
+                    f"{H3_HAN_RANGE[0]}-{limit}"
+                    "（cpp-quarto-chapter-structure-v1「字数硬限」）"
+                )
+        if HEADING_FILLER_RE.search(text) or text.startswith("把"):
+            errors.append(
+                f"{rel}:{lineno}: 标题「{text}」含填充词或把字句开头"
+                "（cpp-quarto-chapter-structure-v1「形式规则」）"
+            )
+    return errors
 
 
 def body_without_frontmatter(text: str) -> str:
@@ -542,21 +975,23 @@ def needs_fragment_check(lang: str, filename: str) -> bool:
 def resolve_fragment_source(lines: list[str], block_index: int, filename: str):
     """把短 filename 解析成 games/ 或 shared/ 下的仓库相对路径。
 
-    在同一 ## 节（含其中的 ###）内、代码块之前查找 GitHub blob 链接；
-    取路径 basename 与 filename 相同的最近一条。找不到返回 None。
+    在本章正文（frontmatter 之后）、代码块之前查找 GitHub blob 链接，
+    取路径 basename 与 filename 相同的最近一条；找不到返回 None。
+    每章每条仓库路径只在章引言挂一次链接，摘录另一阶段目录的同名文件
+    是不同 URL，在切换处再挂一条（规则见 cpp-quarto-qmd-element-cases-v1）。
     """
     if filename.startswith(FRAGMENT_SOURCE_PREFIXES) and not filename.endswith("/"):
         return filename
 
-    section_start = 0
-    for i in range(block_index - 1, -1, -1):
-        heading = HEADING_RE.match(lines[i])
-        if heading and heading.group(1) == "##":
-            section_start = i
-            break
+    start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                start = i + 1
+                break
 
     matches = []
-    for i in range(section_start, block_index):
+    for i in range(start, block_index):
         for blob in GITHUB_BLOB_RE.finditer(lines[i]):
             repo_path = blob.group(1)
             if repo_path.rstrip("/").endswith("/" + filename) or repo_path == filename:
@@ -595,7 +1030,7 @@ def extract_fragments(path):
                     filename,
                     body,
                     [
-                        f"  短 filename={filename!r} 在同节找不到"
+                        f"  短 filename={filename!r} 在本章找不到"
                         f" basename 匹配的 GitHub blob 链接"
                     ],
                 )
@@ -651,7 +1086,7 @@ def check_all_fragments(qmd_files):
 #===------------------------------------------------------------------------===#
 
 def estimate_tokens(text: str) -> int:
-    """按 bg-content-budget-v1 口径估算 token 数：CJK×1.5 + 其他÷4。"""
+    """按 cpp-quarto-chapter-structure-v1 口径估算 token 数：CJK×1.5 + 其他÷4。"""
     cjk = len(CJK_RE.findall(text))
     return int(cjk * 1.5 + (len(text) - cjk) / 4)
 
@@ -702,19 +1137,55 @@ def check_file_budget(path):
     lead_is_h3 = False
     quote_start = None  # 当前引用块首行号
     quote_text = []
+    intro_blocks = []  # 无标题引言里的散文自然段起始行号（首个 ## 之前）
+    in_div = 0  # ::: 盒子嵌套深度；盒子内段落豁免段落下限
+    pending_short: list[tuple[int, int]] = []  # 延迟判定的单句短段（行号, token）
 
     def flush_para():
-        """正文段落超限时报错；无未结算段落时不动作。"""
+        """正文段落超上限或低于下限时报错；无未结算段落时不动作。
+
+        下限豁免（规则见标识 cpp-quarto-chapter-structure-v1 的知识文件「分层上限」）：
+        章引言段（受 400 整块约束）、节导语段（受导语 token 与句数约束）、
+        Callout 盒子内段落与本章回顾。其余段落低于下限且单句时延迟结算：
+        紧邻代码/列表/表/图/盒子的单句块前导语豁免，其余位置报错；多句
+        短段直接报错，修法是补衔接与必要次要概念，不是凑字数句。
+        """
         nonlocal para_start, para_text
         if para_start is not None and para_text:
-            size = estimate_tokens(strip_link_urls("".join(para_text)))
+            body = strip_link_urls("".join(para_text))
+            size = estimate_tokens(body)
             if size > PARA_TOKENS:
                 errors.append(
                     f"{rel}:{para_start}: 正文段落约 {size} token，"
-                    f"超过 {PARA_TOKENS}（见标识 bg-content-budget-v1 的知识文件）"
+                    f"超过 {PARA_TOKENS}（见标识 cpp-quarto-chapter-structure-v1 的知识文件）"
                 )
+            exempt_min = (
+                h2 is None or lead_open or in_div > 0 or h2 == "本章回顾"
+            )
+            if not exempt_min and size < PARA_TOKENS_MIN:
+                if count_sentences(body) <= 1:
+                    pending_short.append((para_start, size))
+                else:
+                    errors.append(
+                        f"{rel}:{para_start}: 正文段落约 {size} token，"
+                        f"低于下限 {PARA_TOKENS_MIN}（见标识 cpp-quarto-paragraph-craft-v1"
+                        f" 与 cpp-quarto-chapter-structure-v1 的知识文件）"
+                    )
+            if h2 is None:
+                intro_blocks.append(para_start)
         para_start = None
         para_text = []
+
+    def resolve_pending_short(fail: bool) -> None:
+        """结算延迟的单句短段：fail=True 报过短错误，False 表示豁免。"""
+        if fail:
+            for lineno, size in pending_short:
+                errors.append(
+                    f"{rel}:{lineno}: 正文段落约 {size} token，"
+                    f"低于下限 {PARA_TOKENS_MIN}（见标识 cpp-quarto-paragraph-craft-v1"
+                    f" 与 cpp-quarto-chapter-structure-v1 的知识文件）"
+                )
+        pending_short.clear()
 
     def flush_lead():
         """节导语超 token 或超句数时报错；导语未开启或为空时不动作。"""
@@ -733,7 +1204,7 @@ def check_file_budget(path):
                 lead_errors.append(
                     f"{rel}:{lead_start}: {kind}节导语约 {size} token / "
                     f"{sentences} 句，超过 {limit} token / {slimit} 句"
-                    f"（见标识 bg-content-budget-v1 的知识文件）"
+                    f"（见标识 cpp-quarto-chapter-structure-v1 的知识文件）"
                 )
         lead_start = None
         lead_text = []
@@ -747,7 +1218,7 @@ def check_file_budget(path):
             if size > QUOTE_TOKENS:
                 quote_errors.append(
                     f"{rel}:{quote_start}: 引用块约 {size} token，"
-                    f"超过 {QUOTE_TOKENS}（见标识 bg-content-budget-v1 的知识文件）"
+                    f"超过 {QUOTE_TOKENS}（见标识 cpp-quarto-chapter-structure-v1 的知识文件）"
                 )
         quote_start = None
         quote_text = []
@@ -778,14 +1249,16 @@ def check_file_budget(path):
             if fence_lang in CODE_LANGS and stripped in OMISSION_LINES:
                 errors.append(
                     f"{rel}:{lineno}: 源码片段省略标记行 {stripped!r}，"
-                    f"省略处直接省略（见标识 bg-qmd-element-cases-v1 的知识文件）"
+                    f"省略处直接省略（见标识 cpp-quarto-qmd-element-cases-v1 的知识文件）"
                 )
             if stripped in OMISSION_LINES:
                 fence_run = 0
             elif stripped.startswith("#|"):
                 # {python} 单元的 #| 选项行是执行配置，不是面向读者的注释。
                 fence_run = 0
-            elif stripped.startswith("#") or stripped.startswith("//"):
+            elif stripped.startswith("#") or (
+                stripped.startswith("//") and not stripped.startswith("///")
+            ):
                 fence_run += 1
                 fence_max_run = max(fence_max_run, fence_run)
             else:
@@ -793,6 +1266,7 @@ def check_file_budget(path):
             continue
         if line.startswith("```"):
             flush_para()
+            resolve_pending_short(fail=False)
             flush_lead()
             flush_quote()
             after = line[3:].strip()
@@ -814,6 +1288,7 @@ def check_file_budget(path):
             continue
         if line.startswith("### ") and h2 is not None:
             flush_para()
+            resolve_pending_short(fail=True)
             flush_lead()
             flush_quote()
             h3 = line[4:].strip()
@@ -826,6 +1301,7 @@ def check_file_budget(path):
             continue
         if line.startswith("## "):
             flush_para()
+            resolve_pending_short(fail=True)
             flush_lead()
             flush_quote()
             h2 = line[3:].strip()
@@ -838,7 +1314,7 @@ def check_file_budget(path):
             continue
         # 正文段落长度检查（2026-09-28 增补）：标题、列表、表格、div 标记
         # 与引用行是段落边界；其余连续文本行累计为段落，口径见标识
-        # bg-content-budget-v1 的知识文件。
+        # cpp-quarto-chapter-structure-v1 的知识文件。
         stripped = line.strip()
         is_prose = (
             bool(stripped)
@@ -849,12 +1325,21 @@ def check_file_budget(path):
         )
         if is_prose:
             if para_start is None:
+                # 新段落开始：上一延迟短段未等到块，确认为过短。
+                resolve_pending_short(fail=True)
                 para_start = lineno
             para_text.append(line)
             if lead_open:
                 lead_text.append(line)
         else:
             flush_para()
+            if stripped:
+                # 列表、表格、盒子与引用行都是块：紧邻的单句短段豁免下限。
+                resolve_pending_short(fail=False)
+                if stripped == ":::":
+                    in_div = max(0, in_div - 1)
+                elif stripped.startswith(":::"):
+                    in_div += 1
             if stripped.startswith(">"):
                 # 引用行结束节导语，并累计到当前引用块。
                 flush_lead()
@@ -869,12 +1354,13 @@ def check_file_budget(path):
         add_token(line)
 
     flush_para()
+    resolve_pending_short(fail=True)
     flush_lead()
     flush_quote()
 
     # 根目录 index.qmd 与游戏入口页（body-classes: index-page）是着陆页：
     # 短引言 + 卡片网格不是章节引言，只核对整章总量与代码块限额，
-    # 不做引言与分节限额（见标识 bg-content-budget-v1 的知识文件）。
+    # 不做引言与分节限额（见标识 cpp-quarto-chapter-structure-v1 的知识文件）。
     frontmatter = "\n".join(raw[:offset])
     is_landing = (
         path.name == "index.qmd"
@@ -888,6 +1374,15 @@ def check_file_budget(path):
     if chapter:
         errors.extend(lead_errors)
         errors.extend(quote_errors)
+        # 章引言形态（2026-10-09 增补）：首选单个自然段，必要时「一段 + 列表」；
+        # 两个散文自然段并立即失败（列表、表格与 Callout 不算散文段），
+        # 形态契约见标识 cpp-quarto-chapter-structure-v1 的知识文件。
+        if len(intro_blocks) > 1:
+            errors.append(
+                f"{rel}:{intro_blocks[1]}: 章引言有 {len(intro_blocks)} 个散文自然段，"
+                "禁止两个散文段并立；并为单段或改「一段 + 列表」"
+                "（见标识 cpp-quarto-chapter-structure-v1 的知识文件）"
+            )
     intro = tokens.get((None, None), 0) if chapter else 0
     if intro > INTRO_TOKENS:
         errors.append(f"{rel}: 引言约 {intro} token，超过 {INTRO_TOKENS}")
@@ -903,8 +1398,34 @@ def check_file_budget(path):
                 fixed_h2.append(h2_key)
         elif h2_key not in task_h2:
             task_h2.append(h2_key)
-        if h3_key is not None and value > H3_TOKENS:
-            errors.append(f"{rel}: 「{h3_key}」约 {value} token，超过 {H3_TOKENS}")
+        if h3_key is None:
+            continue
+        # 三级标题 token 区间（与 cpp-quarto-chapter-structure-v1 同步）：任务级
+        # ### 120–480；「常见错误」症状 ### 60–240；其余固定收尾只守上限。
+        if h2_key == "常见错误":
+            if value < SYMPTOM_H3_MIN:
+                errors.append(
+                    f"{rel}: 「{h3_key}」约 {value} token，低于下限 {SYMPTOM_H3_MIN}"
+                )
+            elif value > SYMPTOM_H3_MAX:
+                errors.append(
+                    f"{rel}: 「{h3_key}」约 {value} token，超过 {SYMPTOM_H3_MAX}"
+                )
+        else:
+            if value < TASK_H3_MIN and h2_key not in FIXED_H2_HEADINGS:
+                errors.append(
+                    f"{rel}: 「{h3_key}」约 {value} token，低于下限 {TASK_H3_MIN}"
+                )
+            if value > H3_TOKENS:
+                errors.append(f"{rel}: 「{h3_key}」约 {value} token，超过 {H3_TOKENS}")
+    # 任务级 ## 下限：一章只有一个任务级 ## 时 200，两个及以上时每节 400。
+    h2_min = TASK_H2_MIN_SINGLE if len(task_h2) == 1 else TASK_H2_MIN_MULTI
+    for h2_key in task_h2:
+        value = h2_totals.get(h2_key, 0)
+        if value < h2_min:
+            errors.append(
+                f"{rel}: 任务级「{h2_key}」约 {value} token，低于下限 {h2_min}"
+            )
     for h2_key, value in h2_totals.items():
         if value > H2_TOKENS:
             errors.append(f"{rel}: 「{h2_key}」共约 {value} token，超过 {H2_TOKENS}")
@@ -912,6 +1433,13 @@ def check_file_budget(path):
         if count > H3_COUNT:
             errors.append(
                 f"{rel}: 「{h2_key}」下 {count} 个三级标题，超过 {H3_COUNT} 个"
+            )
+        elif (
+            chapter and count == 1 and h2_key not in FIXED_H2_HEADINGS
+        ):
+            errors.append(
+                f"{rel}: 「{h2_key}」下只有 1 个三级标题，孤立三级标题"
+                "删去其标题并归回二级正文，或补出同级小节"
             )
     if chapter and len(task_h2) > TASK_H2_MAX:
         errors.append(
@@ -933,13 +1461,58 @@ def check_size_budget(qmd_files):
 
 
 #===------------------------------------------------------------------------===#
+# 检查 3b：围栏外数学模式（FAIL）
+#===------------------------------------------------------------------------===#
+
+# 读者正文的算式用与源码相同的反引号，不使用数学模式（规则见标识
+# cpp-quarto-paragraph-craft-v1 的知识文件「公式不拆列表」）。`$$` 行与行内
+# `$...$` 都判失败；代码围栏内不查。行内模式要求成对 `$` 且闭合 `$`
+# 后不是字母数字，避免误伤 `$ORIGIN` 这类单美元标识符。
+MATH_PAIR_RE = re.compile(r"(?<![`\w$])\$[^$\n]+?\$(?![\w$])")
+
+
+def find_math_mode_errors(path):
+    """围栏外出现 `$$` 或行内 `$...$` 时判失败，返回错误明细列表。"""
+    errors = []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                start = i + 1
+                break
+    in_fence = False
+    for i in range(start, len(lines)):
+        line = lines[i]
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if "$$" in line:
+            errors.append(
+                f"{path.relative_to(REPO_ROOT)}:{i + 1}: 围栏外使用数学模式 $$，"
+                "算式改用与源码相同的反引号（见标识 cpp-quarto-paragraph-craft-v1 "
+                "的知识文件「公式不拆列表」）"
+            )
+            continue
+        if MATH_PAIR_RE.search(line):
+            errors.append(
+                f"{path.relative_to(REPO_ROOT)}:{i + 1}: 围栏外使用行内数学模式 "
+                "$...$，算式改用与源码相同的反引号（见标识 "
+                "cpp-quarto-paragraph-craft-v1 的知识文件「公式不拆列表」）"
+            )
+    return errors
+
+
+#===------------------------------------------------------------------------===#
 # 检查 5：相邻围栏桥接（WARN，不判失败）
 #===------------------------------------------------------------------------===#
 
 def find_bridge_warnings(path):
     """同一小节内两围栏之间只有空行时记 WARN，提示补桥接正文。
 
-    口径见标识 bg-section-focus-density-v1 的知识文件：空行不等于桥接
+    口径见标识 bg-section-density-v1 的知识文件：空行不等于桥接
     正文，人审与对照案例仍是叙事主闸，因此本项只提示不判失败。
     """
     warnings = []
@@ -994,7 +1567,7 @@ def _echo_bigrams(text: str) -> set:
 def find_comment_echo_warnings(path):
     """代码块注释与紧随正文段高重叠时记 WARN，提示块后复述注释。
 
-    口径见标识 bg-qmd-element-cases-v1 与 bg-chinese-style-cases-v1
+    口径见标识 cpp-quarto-qmd-element-cases-v1 与 cpp-quarto-chinese-style-v1
     「块后复述注释」：围栏内 // 与 # 注释已写明的意图，块后正文不得
     同义复述。启发式只算字符二元组重叠度，改写对照仍是主闸，因此
     只提示不判失败；比对对象是围栏后第一个正文段（列表、表格与
@@ -1091,7 +1664,7 @@ def find_progressive_fence_warnings(path):
     """同一小节内相同短 filename 的 cpp/cmake 围栏 ≥2 且中间无图时记 WARN。
 
     递进依赖的同源片段应合并为一个围栏（判定与豁免见标识
-    bg-qmd-element-cases-v1 的知识文件「内容块前后的闭环」）；递进语义
+    cpp-quarto-qmd-element-cases-v1 的知识文件「内容块前后的闭环」）；递进语义
     无法可靠自动判定，只提示人审。{python} / {mermaid} 打断、bash 脚本
     分步与执行位置标题不提示。
     """
@@ -1150,10 +1723,12 @@ def find_progressive_fence_warnings(path):
 def find_prose_semicolon_warnings(path):
     """正文（排除 frontmatter 与围栏）出现全角分号时记 WARN。
 
-    口径见 writing-quarto 技能 references/zh/writing-principles.md
+    口径见 writing-quarto 技能 references/zh/writing-howto.md
     「句子要短，术语要稳」：正文不用分号；删掉任一分句中心仍成立的
-    多中心句改写对照见标识 bg-chinese-style-cases-v1 的知识文件。
-    启发式只提示不判失败。
+    多中心句改写对照见标识 cpp-quarto-chinese-style-v1 的知识文件。
+    两个行内代码主语用分号并列（如旧 03 章概览句）不再豁免——这类
+    句子属于拉链句，按 cpp-quarto-paragraph-craft-v1「拉链句」改写。
+    「先…；再…」式指令链与冒号后堆叠分号仍提示。启发式只提示不判失败。
     """
     warnings = []
     lines = path.read_text(encoding="utf-8").splitlines()
@@ -1169,8 +1744,289 @@ def find_prose_semicolon_warnings(path):
         if line.startswith("```"):
             in_fence = not in_fence
             continue
-        if not in_fence and "；" in line:
+        if in_fence or "；" not in line:
+            continue
+        warnings.append((path, i + 1))
+    return warnings
+
+
+#===------------------------------------------------------------------------===#
+# 检查 5e：同章重复文件链接（FAIL）
+#===------------------------------------------------------------------------===#
+
+def find_duplicate_link_errors(path):
+    """同一章内同一 GitHub URL 出现第二次时判失败。
+
+    每章每条仓库路径只在章引言挂一次链接，后文与各节导语改用行内代码；
+    摘录另一阶段目录的同名文件时 URL 不同，不判重复。规则见标识
+    cpp-quarto-qmd-element-cases-v1 与 cpp-quarto-chinese-style-v1「摘录链接密度」
+    的知识文件。
+    """
+    errors = []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                start = i + 1
+                break
+    seen = {}  # 完整 URL -> 首次出现的行号
+    in_fence = False
+    for i in range(start, len(lines)):
+        line = lines[i]
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        for match in GITHUB_BLOB_RE.finditer(line):
+            url = match.group(0)
+            if url in seen:
+                errors.append((path, seen[url], i + 1, url))
+            else:
+                seen[url] = i + 1
+    return errors
+
+
+#===------------------------------------------------------------------------===#
+# 检查 5f：自测问答链接（WARN，不判失败）
+#===------------------------------------------------------------------------===#
+
+def find_selftest_link_warnings(path):
+    """`## 自测问题` 节内出现 markdown 链接时记 WARN。
+
+    问答中的文件、路径与标识符指称统一用行内代码，不挂链接（全工程
+    统一，链接仅特殊例外）；所属目录在答案前文已确立时，路径可省去
+    重复的顶层前缀。规则见标识 cpp-quarto-chapter-structure-v1 的知识文件
+    「自测问题」。
+    """
+    warnings = []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                start = i + 1
+                break
+    link_re = re.compile(r"\[[^\]]*\]\([^)]*\)")
+    h2 = None
+    in_fence = False
+    for i in range(start, len(lines)):
+        line = lines[i]
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if line.startswith("## "):
+            h2 = line[3:].strip()
+            continue
+        if h2 == "自测问题" and link_re.search(line):
             warnings.append((path, i + 1))
+    return warnings
+
+
+#===------------------------------------------------------------------------===#
+# 检查 5g：段内同义堆叠（WARN，不判失败）
+#===------------------------------------------------------------------------===#
+
+_SYN_RESTART_RE = re.compile(r"^(也就是说|换句话说|换言之|简单来说)")
+
+
+def _han_bigrams(text):
+    han = re.sub(r"[^\u4e00-\u9fff]", "", text)
+    return {han[i:i + 2] for i in range(len(han) - 1)} if len(han) >= 2 else set()
+
+
+def _prose_paragraphs(path):
+    """返回 [(首行行号, 段落文本)]；排除 frontmatter、围栏、标题、列表、表格、引用与 Callout。
+
+    供 5g/5h 共用：两类信号都只作用于散文自然段，列表项、表格单元格与
+    引用块按知识 cpp-quarto-paragraph-craft-v1 的豁免条款不参与判定。
+    """
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                start = i + 1
+                break
+    paragraphs = []
+    current = []  # (首行行号, 文本累积)
+    in_fence = False
+    for i in range(start, len(lines)):
+        line = lines[i]
+        if line.startswith("```"):
+            in_fence = not in_fence
+            if current:
+                paragraphs.append(current)
+                current = []
+            continue
+        if in_fence:
+            continue
+        stripped = line.strip()
+        if (not stripped or stripped.startswith(("#", "-", "*", "+", "|", ">", ":::"))
+                or re.match(r"^\d+[.、)]", stripped)):
+            if current:
+                paragraphs.append(current)
+                current = []
+            continue
+        if not current:
+            current = [i, ""]
+        current[1] += stripped
+    if current:
+        paragraphs.append(current)
+    return [(line_no, text) for line_no, text in paragraphs]
+
+
+def find_intra_paragraph_synonym_stack_warnings(path):
+    """同一段内两句换说法复述同一机制时记 WARN。
+
+    判定信号（见标识 cpp-quarto-paragraph-craft-v1 的知识文件「段内同义堆叠禁令」）：
+    句间出现「也就是说／换句话说」类纯复述连接词，或两句汉字二元组
+    重叠度高（较小句被较大句大量覆盖）且删任一句主线仍闭合。公式递进
+    「定义 — 原理 — 代入」与简洁边界属豁免，启发式只提示人工判。
+    """
+    warnings = []
+    for line_no, text in _prose_paragraphs(path):
+        sentences = [s for s in re.split(r"[。？！]", text) if s.strip()]
+        hit = ""
+        for idx, sentence in enumerate(sentences):
+            if idx and _SYN_RESTART_RE.match(sentence.lstrip()):
+                hit = f"复述连接词「{sentence.lstrip()[:8]}…」"
+                break
+        if not hit:
+            sets = [_han_bigrams(s) for s in sentences]
+            for a in range(len(sets)):
+                for b in range(a + 1, len(sets)):
+                    smaller = min(sets[a], sets[b], key=len)
+                    if len(smaller) < 4:
+                        continue
+                    overlap = len(sets[a] & sets[b]) / len(smaller)
+                    if overlap >= 0.6:
+                        hit = f"两句汉字二元组重叠 {overlap:.0%}"
+                        break
+                if hit:
+                    break
+        if hit:
+            warnings.append((path, line_no + 1, hit))
+    return warnings
+
+
+#===------------------------------------------------------------------------===#
+# 检查 5h：散文伪标签冒号（WARN，不判失败）
+#===------------------------------------------------------------------------===#
+
+def find_pseudo_label_colon_warnings(path):
+    """散文行出现「短话题 / 行内代码 + 全角冒号」词条腔时记 WARN。
+
+    规则见标识 cpp-quarto-paragraph-craft-v1 的知识文件「散文伪标签冒号禁令」：
+    冒号只保留两种合法场合（完整句引出列表/围栏/图；列表项引导词后）。
+    豁免：下一非空行是列表/围栏/表格/图/Callout 的导语；冒号在引号内
+    （引用示例）；协议字面量（如「对局结果：」）；行内代码内部的冒号。
+    """
+    warnings = []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                start = i + 1
+                break
+    exempt_topics = {"对局结果", "当前回合", "轮到", "获胜"}
+    in_fence = False
+    for i in range(start, len(lines)):
+        line = lines[i]
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        stripped = line.strip()
+        if (not stripped or stripped.startswith(("#", "-", "*", "+", "|", ">", ":::"))
+                or re.match(r"^\d+[.、)]", stripped)):
+            continue
+        # 冒号位置扫描：跳过行内代码内部
+        colon_positions = []
+        in_code = False
+        for j, ch in enumerate(line):
+            if ch == "`":
+                in_code = not in_code
+                continue
+            if ch == "：" and not in_code:
+                colon_positions.append(j)
+        for j in colon_positions:
+            boundary = 0
+            for k, ch in enumerate(line[:j]):
+                if ch in "。？！；":
+                    boundary = k + 1
+            topic = line[boundary:j].strip()
+            # 引号内的冒号是引用示例，豁免
+            if line[:j].count("「") > line[:j].count("」"):
+                continue
+            has_code = "`" in topic
+            han_len = len(re.sub(r"[^\u4e00-\u9fff]", "", topic))
+            if not has_code and han_len > 12:
+                continue
+            if topic in exempt_topics or topic.endswith(tuple(exempt_topics)):
+                continue
+            # 下一非空行是列表/围栏/表格/图/Callout → 合法导语
+            nxt = i + 1
+            while nxt < len(lines) and not lines[nxt].strip():
+                nxt += 1
+            if nxt < len(lines):
+                nxt_s = lines[nxt].strip()
+                if nxt_s.startswith(("-", "*", "+", "|", "```", ":::", "!", "<")) \
+                        or re.match(r"^\d+[.、)]", nxt_s):
+                    continue
+            warnings.append((path, i + 1, topic))
+            break
+    return warnings
+
+
+#===------------------------------------------------------------------------===#
+# 检查 5i：过简断裂信号（WARN，不判失败）
+#===------------------------------------------------------------------------===#
+
+# 回指词与承接词：句中出现任一即视为衔接成立，不记信号。
+REFER_WORDS = (
+    "这个", "这些", "其中", "它们", "该", "上述",
+    "上一", "前面", "前一步", "这一",
+)
+RELATION_WORDS = (
+    "因此", "所以", "然后", "接着", "最后", "随后", "之后",
+    "用来", "以便", "从而", "同时", "并且", "而", "再", "并",
+)
+
+
+def find_short_break_warnings(path):
+    """段内连续两句各自引入新的行内代码标识且无回指、无承接时记 WARN。
+
+    口径见标识 cpp-quarto-paragraph-craft-v1 的知识文件「过简断裂禁令」：逗号、
+    句号后的下一分句必须复用上一分句的对象或写出关系。启发式只看句级
+    行内代码标识流转，噪音大，人工按对照案例判改，不追清零。
+    """
+    warnings = []
+    for line_no, text in _prose_paragraphs(path):
+        sentences = [s for s in re.split(r"[。？！]", text) if s.strip()]
+        if len(sentences) < 2:
+            continue
+        seen: set = set()
+        run = 0
+        max_run = 0
+        for sentence in sentences:
+            identifiers = set(re.findall(r"`([^`]+)`", sentence))
+            new_ids = identifiers - seen
+            has_refer = any(word in sentence for word in REFER_WORDS)
+            has_relation = any(word in sentence for word in RELATION_WORDS)
+            if identifiers and new_ids and not has_refer and not has_relation:
+                run += 1
+                max_run = max(max_run, run)
+            else:
+                run = 0
+            seen |= identifiers
+        if max_run >= 2:
+            warnings.append((path, line_no + 1, max_run))
     return warnings
 
 
@@ -1263,7 +2119,7 @@ def main() -> int:
     header(3, "片段一致性")
     fragment_results = check_all_fragments(qmd_files)
     checked = sum(len(extract_fragments(path)) for path in qmd_files)
-    print(f"核对 {checked} 个片段（短 filename 经同节 GitHub 链接解析）")
+    print(f"核对 {checked} 个片段（短 filename 经本章 GitHub 链接解析）")
     for path, label, errors in fragment_results:
         print(f"{RED}  {path.relative_to(REPO_ROOT)} -> {label}{RESET}")
         for error in errors:
@@ -1271,21 +2127,61 @@ def main() -> int:
 
     header(4, "篇幅预算")
     size_errors = check_size_budget(qmd_files)
+    math_mode_errors = []
+    for path in qmd_files:
+        math_mode_errors.extend(find_math_mode_errors(path))
     print(f"核对 {len(qmd_files)} 个 qmd 文件")
     for error in size_errors:
         print(f"{RED}  {error}{RESET}")
+    for error in math_mode_errors:
+        print(f"{RED}  {error}{RESET}")
 
-    header(5, "围栏桥接、块后复述与正文分号（WARN）")
+    header(5, "标题命名与编写腔")
+    heading_errors = []
+    authoring_errors = []
+    for path in qmd_files:
+        heading_errors.extend(find_heading_errors(path))
+        authoring_errors.extend(find_authoring_voice_errors(path))
+    for error in heading_errors + authoring_errors:
+        print(f"{RED}  {error}{RESET}")
+    if not heading_errors and not authoring_errors:
+        print("未发现标题字数、填充词或编写腔失败")
+
+    header(6, "句子模块切分")
+    module_errors = []
+    module_totals = dict.fromkeys(MODULE_COUNT_NAMES, 0)
+    for path in qmd_files:
+        errors, counts = scan_sentence_modules(path)
+        module_errors.extend(errors)
+        for name, count in counts.items():
+            module_totals[name] += count
+    print(
+        "切分计数（本次扫描）："
+        + "、".join(f"{name} {module_totals[name]}" for name in MODULE_COUNT_NAMES)
+    )
+    for error in module_errors:
+        print(f"{RED}  {error}{RESET}")
+
+    header(7, "围栏桥接、块后复述、正文分号、自测链接、同义堆叠、伪标签冒号与过简断裂（WARN）")
     bridge_warnings = []
     echo_warnings = []
     progressive_warnings = []
     semicolon_warnings = []
-    heading_warnings = find_heading_length_warnings(qmd_files)
+    duplicate_link_errors = []
+    selftest_link_warnings = []
+    synonym_stack_warnings = []
+    pseudo_label_warnings = []
+    short_break_warnings = []
     for path in qmd_files:
         bridge_warnings.extend(find_bridge_warnings(path))
         echo_warnings.extend(find_comment_echo_warnings(path))
         progressive_warnings.extend(find_progressive_fence_warnings(path))
         semicolon_warnings.extend(find_prose_semicolon_warnings(path))
+        duplicate_link_errors.extend(find_duplicate_link_errors(path))
+        selftest_link_warnings.extend(find_selftest_link_warnings(path))
+        synonym_stack_warnings.extend(find_intra_paragraph_synonym_stack_warnings(path))
+        pseudo_label_warnings.extend(find_pseudo_label_colon_warnings(path))
+        short_break_warnings.extend(find_short_break_warnings(path))
     if bridge_warnings:
         print("以下位置两围栏之间只有空行，缺桥接正文（WARN，不判失败）：")
         for path, lineno in bridge_warnings:
@@ -1296,7 +2192,7 @@ def main() -> int:
         print(
             "以下小节同一 filename 的 cpp/cmake 围栏出现多次且中间无图打断，"
             "检查是否递进依赖应合并（WARN，不判失败；对照见"
-            " bg-chinese-style-cases-v1「递进片段合并」）："
+            " cpp-quarto-chinese-style-v1「递进片段合并」）："
         )
         for path, first, second, lang, filename in progressive_warnings:
             print(
@@ -1308,7 +2204,7 @@ def main() -> int:
     if echo_warnings:
         print(
             "以下代码块的注释与紧随正文段高度重叠，疑似块后复述注释"
-            "（WARN，不判失败；对照见 bg-chinese-style-cases-v1）："
+            "（WARN，不判失败；对照见 cpp-quarto-chinese-style-v1）："
         )
         for path, fence_line, para_line in echo_warnings:
             print(
@@ -1320,27 +2216,67 @@ def main() -> int:
     if semicolon_warnings:
         print(
             "以下正文行（排除围栏）含全角分号，疑似多中心句或分号堆叠"
-            "（WARN，不判失败；对照见 bg-chinese-style-cases-v1，"
-            "口诀见 writing-principles「多中心判定口诀」）："
+            "（WARN，不判失败；对照见 cpp-quarto-chinese-style-v1，"
+            "口诀见 writing-howto「多中心判定口诀」）："
         )
         for path, lineno in semicolon_warnings:
             print(f"  {path.relative_to(REPO_ROOT)}:{lineno}")
     else:
         print("未发现正文分号")
-    if heading_warnings:
+    if duplicate_link_errors:
         print(
-            "以下 `##` 标题超过 10 个汉字（WARN，不判失败；"
-            "标题命名规则见 bg-file-title-naming-v1）："
+            f"{RED}同一章内同一 GitHub 链接出现多次（每章每条仓库路径只在章引言挂"
+            f"一次链接，后文用行内代码，对照见 cpp-quarto-chinese-style-v1"
+            f"「摘录链接密度」）：{RESET}"
         )
-        for path, lineno, han in heading_warnings:
+        for path, first, second, url in duplicate_link_errors:
             print(
-                f"  {path.relative_to(REPO_ROOT)}:{lineno}"
-                f"（{han} 个汉字）"
+                f"{RED}  {path.relative_to(REPO_ROOT)}:{first}→{second}"
+                f"（{url}）{RESET}"
             )
     else:
-        print("未发现超长二级标题")
+        print("未发现同章重复文件链接")
+    if selftest_link_warnings:
+        print(
+            "以下自测问答行内挂了链接，文件与路径指称应统一行内代码"
+            "（WARN，不判失败；规则见 cpp-quarto-chapter-structure-v1「自测问题」）："
+        )
+        for path, lineno in selftest_link_warnings:
+            print(f"  {path.relative_to(REPO_ROOT)}:{lineno}")
+    else:
+        print("未发现自测问答链接")
+    if synonym_stack_warnings:
+        print(
+            "以下段落疑似段内同义堆叠：两句换说法复述同一机制或出现纯复述连接词"
+            "（WARN，不判失败；公式递进与简洁边界豁免，对照见"
+            " cpp-quarto-paragraph-craft-v1「段内同义堆叠禁令」）："
+        )
+        for path, lineno, hit in synonym_stack_warnings:
+            print(f"  {path.relative_to(REPO_ROOT)}:{lineno}（{hit}）")
+    else:
+        print("未发现段内同义堆叠信号")
+    if pseudo_label_warnings:
+        print(
+            "以下散文行疑似「话题标签：解释」词条腔冒号（WARN，不判失败；"
+            "列表项与块导语豁免，改写见 cpp-quarto-paragraph-craft-v1"
+            "「散文伪标签冒号禁令」与「拆核四步」）："
+        )
+        for path, lineno, topic in pseudo_label_warnings:
+            print(f"  {path.relative_to(REPO_ROOT)}:{lineno}（话题「{topic}」）")
+    else:
+        print("未发现散文伪标签冒号")
+    if short_break_warnings:
+        print(
+            "以下段落连续两句各自引入新行内代码标识且无回指、无承接词，"
+            "疑似过简断裂（WARN，不判失败；改写见 cpp-quarto-paragraph-craft-v1"
+            "「过简断裂禁令」与 cpp-quarto-chinese-style-v1「过简断裂段」）："
+        )
+        for path, lineno, run in short_break_warnings:
+            print(f"  {path.relative_to(REPO_ROOT)}:{lineno}（连续 {run} 句）")
+    else:
+        print("未发现过简断裂信号")
 
-    header(6, "渲染 HTML 抽查")
+    header(8, "渲染 HTML 抽查")
     if args.book:
         status, details = check_rendered_html()
         print("跳过：尚未渲染" if status == "skip" else "检查 _book/ 下的 HTML")
@@ -1350,7 +2286,7 @@ def main() -> int:
         status = "off"
         print("默认不扫描渲染产物；需要时加 --book（或 run.py check --profile book）")
 
-    header(7, "检查结果")
+    header(9, "检查结果")
     failed = bool(
         term_findings
         or planning_findings
@@ -1358,12 +2294,18 @@ def main() -> int:
         or date_findings
         or fragment_results
         or size_errors
+        or math_mode_errors
+        or heading_errors
+        or authoring_errors
+        or module_errors
+        or duplicate_link_errors
         or status == "fail"
     )
     if failed:
         print(
             f"{RED}未通过：存在禁用词、规划页行内路径、agents 日期戳、片段不一致、"
-            f"篇幅超限或渲染问题（详见上方）{RESET}"
+            f"篇幅超限、围栏外数学模式、标题命名、编写腔、句子模块信号、同章重复链接或渲染问题"
+            f"（详见上方）{RESET}"
         )
         logging.error("verify_content: 检查未通过，按上方定位修复后重跑")
         return 1

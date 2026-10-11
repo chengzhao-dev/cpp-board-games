@@ -410,8 +410,9 @@ def handle_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
         path.write_text(updated, encoding="utf-8", newline="\n")
         return tool_result({"path": args["path"], "sha256": sha256_text(updated), "changed": True})
     if name == "project_review":
-        check_res = run_agent("check", "--profile", "full")
-        verify_res = run_agent("verify", "--changed")
+        # review 跑的是 check --profile full，给与 project_check 相同的 300s 预算。
+        check_res = run_agent("check", "--profile", "full", timeout=300)
+        verify_res = run_agent("verify", "--changed", timeout=300)
         output = f"Review Summary:\n- Check Suite: exit {check_res['exitCode']}\n{check_res['output']}\n- C++ Verify: exit {verify_res['exitCode']}\n{verify_res['output']}"
         return tool_result(output)
     if name in {"project_check", "project_verify", "project_render", "project_build"}:

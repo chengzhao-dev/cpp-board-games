@@ -2,7 +2,7 @@
 """按文档类型检查仓库 Markdown 与 QMD 的基础结构。
 
 链接标签两侧空格（DOC-N10）与标签内反引号（DOC-E12）默认记为 NOTICE，
-`--strict` 下升级为失败。空文件、空目录与关键工具标记始终作为错误。
+`--strict` 下升级为失败。空文件、空目录始终作为错误，关键工具标记缺失也始终作为错误。
 """
 
 import argparse
@@ -13,7 +13,9 @@ import shlex
 import sys
 
 ROOT = Path(__file__).resolve().parents[4]
-SKIP = {".git", "_book", ".quarto", "build", "node_modules"}
+# 跳过清单与 check_encoding.py 共用一份，避免两处漂移。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from repo_scan import is_skipped  # noqa: E402
 FENCE = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 LINK = re.compile(r"(?<!!)\[[^]]+\]\(([^)]+)\)")
@@ -82,7 +84,7 @@ def documents():
         base = ROOT / folder
         if base.is_dir():
             paths.extend(base.rglob("*.qmd" if folder == "content" else "*.md"))
-    return sorted(p for p in set(paths) if p.is_file() and not any(x in p.parts for x in SKIP))
+    return sorted(p for p in set(paths) if p.is_file() and not is_skipped(p))
 
 
 def doc_kind(path):
@@ -468,13 +470,22 @@ def check(path):
         for number, line in enumerate(lines, 1):
             if re.match(r"^\s*(?:!\[|<img\b)", line):
                 notices.append(f"{rel}:{number}: DOC-N3 说明文档图片需确认信息价值")
-    for match in IMAGE.finditer(text):
+    # 围栏代码块不参与链接/图片扫描：C++ lambda `[&](…)` 等源码文本会被
+    # 误判成 Markdown 链接，而摘录必须与源码逐字一致，不能为此改写。
+    fenced = set()
+    for start, end, _info in blocks:
+        fenced.update(range(start, end + 1))
+    prose_text = "\n".join(
+        line if number not in fenced else ""
+        for number, line in enumerate(lines, 1)
+    )
+    for match in IMAGE.finditer(prose_text):
         if not match.group(1).strip():
             errors.append(f"{rel}: DOC-E8 图片缺少替代文字")
         target = local_path(path, match.group(2))
         if target and not target.is_file() and kind != "readme":
             errors.append(f"{rel}: DOC-E9 图片不存在：{match.group(2)}")
-    for match in LINK.finditer(text):
+    for match in LINK.finditer(prose_text):
         target = local_path(path, match.group(1))
         if target and not target.exists():
             errors.append(f"{rel}: DOC-E10 本地链接不存在：{match.group(1)}")
@@ -626,7 +637,7 @@ def main():
         )
         if base.is_dir() for p in base.rglob("*")
         if p.is_file() and (p.suffix.lower() in CODE_EXTENSIONS or p.name in CODE_NAMES)
-        and not any(part in SKIP for part in p.parts)
+        and not is_skipped(p)
     )
     for path in source_paths:
         found_errors, found_notices = check_source(path)
