@@ -2,7 +2,7 @@
 kb_id: "bg-cpp-chinese-terms-v1"
 title: "C++ 中文术语全表"
 domain: "cpp-teaching"
-subdomain: "style"
+subdomain: "glossary"
 tags: [terminology, chinese, cppreference, access-specifier, translation]
 level_range: [0, 5]
 dependencies: ["bg-comment-style-v1", "bg-terminology-v1"]

@@ -2,7 +2,7 @@
 kb_id: "bg-static-analysis-boundaries-v1"
 title: "C++ 静态检查的项目边界"
 domain: "cpp-teaching"
-subdomain: "toolchain"
+subdomain: "conventions"
 tags: [clang-tidy, clang-format, clangd, header-filter, system-headers, compile-commands, cmake, dependencies]
 level_range: [0, 5]
 dependencies: ["bg-cmake-conventions-v1", "bg-comment-style-v1"]

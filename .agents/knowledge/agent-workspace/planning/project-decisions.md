@@ -14,14 +14,11 @@ estimated_tokens: 800
 
 # 项目决策依据
 
-本文件供 Agent 理解项目边界和已确认取舍使用。面向读者的完整解释统一维护在 `content/**/*.qmd`，本文件不作为 Quarto 入口。
+本文件是项目决策的取舍记录：定案是什么、对照过哪些方案、为什么否决替代项。现行事实与现状以标识 `bg-project-overview-v1`、`bg-architecture-overview-v1` 的规范文件为准，编码条文权威在 `.agents/context/conventions/`，本文件不复述现行条文。
 
-## 文档重置决策
+## 文档面定案记录
 
-- 本轮采用完整重置方案：清理旧 `content/` 文件，保留 `content/` 目录本身，并只创建 `content/tictactoe/`。
-- 根 `index.qmd` 服务井字棋主线，允许「后续棋类」用 `.landing-card.coming-soon` 占位，但不提前创建其他棋类页面或实现；`_quarto.yml` 仍只注册井字棋章节，不引用已清理的开发、架构或 Python 章节。
-- 面向读者的完整设计、路线、验收和联网调研总结写入 Quarto；`.agents/knowledge/` 只保留 Agent 判断所需的简短决策和边界。
-- 根 `index.qmd` 是整个仓库的项目入口，只说明项目目标、当前游戏入口和未来游戏范围；`content/<game>/index.qmd` 负责单个游戏已发布章节的阅读顺序。根首页不得复制具体游戏章节卡片，也不得把井字棋的一种玩法写成整个项目；规则、源码、构建、测试和协议内容留在对应游戏落地页与正文中。
+- 文档面采用完整重置方案：清理旧 `content/` 文件，保留 `content/` 目录本身，只创建 `content/tictactoe/`；`_quarto.yml` 仍只注册井字棋章节，不引用已清理的开发、架构或 Python 章节。现行文档范围见标识 `bg-project-overview-v1` 的规范文件。
 
 ## 架构决策
 
@@ -48,7 +45,7 @@ estimated_tokens: 800
 
 ## 编码与注释约定
 
-命名、注释、初始化与布尔写法等日常编码口径集中在此，与上面的架构选择分开，便于按需检索。
+编码定案的理由、覆盖过程与被否决的替代写法集中在此；条文的现行权威在 `.agents/context/conventions/` 的对应规范文件（`bg-google-cpp-style-v1`、`bg-comment-style-v1` 等），便于按需检索。
 
 - **声明注释与契约注释统一用 Doxygen（用户定案）**：库头文件里的常量、枚举、结构体、类与函数声明注释一律 `///`（枚举值与字段行尾用 `///<` 列对齐），参数、返回值与异常用 `@param`/`@returns`/`@throws` 逐项说明，概述以动词开头且与函数名前缀对应；无额外约束的简单函数只留单行 `///` 概述；文件横幅、实现注释与 `.cpp` 内注释维持普通 `//`。调研依据（公开声明注释形态判例、`\param` 与 `@param` 取一、第三人称陈述主流）见标识 `bg-comment-style-v1` 的知识文件。
 - **零参默认构造头内 `= default`（用户定案）**：`Board() = default;`、`Game() = default;` 直接写在头文件类内，`.cpp` 不再重复定义（已从 Board 泛化到 Game）；其余特殊成员与有函数体的定义仍在 `.cpp`。覆盖原「`Type::Type() = default;` 一律写 `.cpp`」的条款，规则见标识 `bg-google-cpp-style-v1` 的知识文件「特殊成员」与标识 `bg-declaration-order-v1` 的知识文件 C 节。
@@ -92,18 +89,6 @@ estimated_tokens: 800
 - **先切模块再判句子定案（用户定案）**：写作判定先切分单位（章、节、自然段、句子、列表项、表格单元格、块；围栏、YAML、链接 URL 跳过），再按单位套对应工序规则，切分清单写在 `writing-quarto` 技能 `references/zh/writing-howto.md`「润色流程」开头；「一次对话」不是切分单位，是挂定段落与定句子的判定，全文见标识 `bg-paragraph-craft-v1` 的知识文件「一次对话」，读者正文默认不把结构体成员叫「字段」（03、07 章现用法保留）。`verify_content.py` 全量切分并只收三类高精度失败（类型接线句、「接着看／第 N 个枚举」改口、全称被下一句否定），段中心与对话件数留给工序与案例；九章按书序逐章走完九步、每章只跑 `verify --paths`，九章走完才跑一次 fast 与一次渲染。
 - **章引言形态与免责腔定案（用户定案）**：无标题引言首选单个自然段（承接 + 本章做什么 + 可选源文件位置嵌段末句，2–4 句），必要时「一段 + 列表」；禁止两个散文自然段并立、≥3 段、单句孤儿段、结尾导航段；「示例位置句开口子」废止，摘录免责句（「服务于讲解」「片段不保证与源文件逐字一致」「不等于文件内顺序」）永不进入读者正文，同源保证交给 `verify`。自动执行：`check_zh_lint.py` 免责腔硬拦（仅读者正文）、`verify_content.py` 对章引言 ≥2 散文段判失败；规则正文见标识 `bg-chapter-structure-v1`，正反例见标识 `bg-chinese-style-cases-v1`。
 - **标题短名重构定案（用户定案）**：标题只留对象名，三层字数硬限——title 2–6 字（对象名优先，本页交付就是一个动作才用动宾）、二级 2–6 字、三级 2–6 字（「常见错误」症状可到 8 字），同级同句式，指示（这一步、这次）、过程动词（记下、收进、用到）、方式、数量与把字句下放导语不进标题。01–07 章二级、三级与 title 都按章收成对象名（对局规则、工程目录、棋盘存储、一次落子、终端对局、电脑对手、局面快照），着陆页豁免，文件名不改，标题一变 Quarto 派生锚随之变化、旧深链失效是接受的代价。`verify_content.py` 对 title、二级、三级按新上限判失败并拦标题填充词，原 H2 10 字 WARN 分支删除。规则见标识 `bg-chapter-structure-v1` 的知识文件「字数硬限」「形式规则」。
-## 公开面与布局定案
-
-- **公开面复核定案**：上库内容 = `main` 未被 `.gitignore` 排除的源码 + `gh-pages` 上 Actions 推的 `_book/`；发布闸门顺序见 `shipping-github` 技能 `references/publish-gate.md`，划界、风格维持项与三阶段快照取舍见标识 `bg-publish-surface-v1` 的知识文件。脚手架模板 `cmake_minimum_required` 与三阶段同为 4.2；CI 步骤清单以 `.github/actions/ci-prepare` 复合动作为准；`_quarto.yml` 钉 `repo-actions: [source]`；技能形态维持 OpenAI 现状（单 `AGENTS.md`、技能目录名不改），互斥排除条件写进各技能 description。
-
-## 未来能力口径
-
-人机、逐行 JSON、Python 回放和本地 Web 适配已有代码与对应测试；HTTP 适配仍不属于正式部署阶段，WebSocket、GUI 和共享游戏引擎仍不验收。共享库仍要至少两个游戏真实复用后才提取。GoogleTest 已在阶段中经 FetchContent 引入。阶段目录只在出现新的真实行为时新建。
-
-## 其他棋类
-
-四子棋、五子棋、黑白棋等未来游戏遵循同一渐进式开发和验证原则。井字棋的架构定案是**方案 A（教学较优演进）**：数组 `Board` + 全深度 minimax + αβ，不上 bitboard/置换表；其他棋类与 B 族引擎技术的推荐路径以标识 `bg-future-board-games-v1` 的知识文件为准。读者 `content` 仍只维护井字棋，其他棋类的实现路径已登记但未开工——不提前创建其他棋类的 `games/`、`content/` 目录或阶段路由表。
-
 ## 外部依据
 
 - C++ Core Guidelines：具体类型、纯函数倾向、RAII、窄接口和避免过早抽象。

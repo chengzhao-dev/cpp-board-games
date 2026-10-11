@@ -2,7 +2,7 @@
 kb_id: "bg-staged-game-layout-v1"
 title: "编号阶段目录依据"
 domain: "agent-workspace"
-subdomain: "navigation"
+subdomain: "conventions"
 tags: [stages, directory-layout, configuration]
 level_range: [0, 5]
 dependencies: []

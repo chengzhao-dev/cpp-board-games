@@ -20,14 +20,14 @@ metadata:
 | 任务 | 读取 |
 | --- | --- |
 | 代码、CMake、阶段脚本与三份 Clang 配置的工序次序 | `references/cpp-spine.md`（唯一先读文件，每步按登记打开对应文件与 `##`） |
-| CMake 写法、构建目录与缓存、clangd 配套 | `.agents/knowledge/cpp-teaching/toolchain/cmake-conventions.md` |
-| clang-tidy 项目边界、header filter 与系统头诊断 | `.agents/knowledge/cpp-teaching/toolchain/static-analysis-boundaries.md` |
+| CMake 写法、构建目录与缓存、clangd 配套 | `.agents/context/conventions/cmake.md` |
+| clang-tidy 项目边界、header filter 与系统头诊断 | `.agents/context/conventions/static-analysis.md` |
 | 项目类型形式约定（enum class、struct 聚合、namespace） | `.agents/knowledge/agent-workspace/planning/project-decisions.md` |
 | 标识符命名、Google 风格自查与偏离白名单 | `references/google-cpp-style.md`；依据见知识 `bg-google-cpp-style-v1` |
 | 写中文注释与正文时的 C++ 术语 | 知识 `bg-cpp-chinese-terms-v1`；注释形态见知识 `bg-comment-style-v1` |
 | 类内与命名空间作用域声明顺序 | 知识 `bg-declaration-order-v1` |
-| 注释与终端输出规范 | `.agents/knowledge/cpp-teaching/style/` |
-| 阶段目录布局 | `.agents/knowledge/agent-workspace/navigation/staged-game-layout.md` |
+| 注释与终端输出规范 | `.agents/context/conventions/` |
+| 阶段目录布局 | `.agents/context/conventions/stages.md` |
 | 新游戏阶段表 | `.agents/skills/cpp-development/references/stages/<game>.md`（由 `scope` 解析）；表未建前读知识 `bg-future-board-games-v1` 的「开工检查单」，不得跳过路由表直接建目录 |
 | 后续棋类实现路径 / 是否上 B 族引擎 | 知识 `bg-future-board-games-v1` |
 | 游戏开篇/收官章的流程与 STAR 职责 | `.agents/knowledge/agent-workspace/planning/engineering-storyline.md` |

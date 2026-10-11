@@ -2,7 +2,7 @@
 kb_id: "bg-declaration-order-v1"
 title: "声明顺序标准"
 domain: "cpp-teaching"
-subdomain: "style"
+subdomain: "conventions"
 tags: [declaration-order, google-style, headers, code-review]
 level_range: [0, 5]
 dependencies: [bg-google-cpp-style-v1]

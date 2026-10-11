@@ -107,7 +107,7 @@ def main() -> int:
     assert "chengzhao-dev" in agents_text
     assert (ROOT / ".agents/skills/shipping-github/references/git-workflow.md").is_file()
     assert (ROOT / ".agents/skills/cpp-development/references/stages/tictactoe.md").is_file()
-    assert (ROOT / ".agents/knowledge/agent-workspace/navigation/staged-game-layout.md").is_file()
+    assert (ROOT / ".agents/context/conventions/stages.md").is_file()
 
     allowed_root = {
         ".agents", ".github", "content", "games", "shared", "_freeze",

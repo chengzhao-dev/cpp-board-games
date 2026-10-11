@@ -2,7 +2,7 @@
 kb_id: "bg-cmake-conventions-v1"
 title: "CMake 约定依据"
 domain: "cpp-teaching"
-subdomain: "toolchain"
+subdomain: "conventions"
 tags: [cmake, build, clangd, ninja]
 level_range: [0, 5]
 dependencies: []

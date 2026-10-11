@@ -29,7 +29,7 @@ body {
    任何 text-wrap 声明都会把它覆盖成继承值）：text-wrap:inherit 让 <p> 恢复继承
    div 的折行意图（单行 nowrap、多行 break-spaces），断行权限交还 mermaid 自身；
    配合每个 mermaid 块首的 %%{init}%% 字体指令（测量=渲染）使用，写法见仓库
-   .agents/knowledge/quarto-writing/rendering/mermaid-conventions.md。
+   .agents/context/conventions/rendering/mermaid-conventions.md。
    注意：不能写 text-wrap:initial —— initial 的 mode 是 wrap，等于强制可折行（已实测）。 */
 #quarto-document-content svg.mermaid-js p {
   overflow-wrap: normal !important;

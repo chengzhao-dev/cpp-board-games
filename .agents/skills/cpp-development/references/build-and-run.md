@@ -2,9 +2,9 @@
 
 阶段一键脚本的固定结构与验收步骤。机制取舍（RPATH 主路径、临时库加固、每次重新配置）见知识库：
 
-- 脚本次序与横幅：标识 `bg-comment-style-v1`（`.agents/knowledge/cpp-teaching/style/comment-style.md`）
-- 库路径封装与运行目录：标识 `bg-cmake-conventions-v1`（`.agents/knowledge/cpp-teaching/toolchain/cmake-conventions.md`）
-- 步骤输出格式：标识 `bg-terminal-output-style-v1`（`.agents/knowledge/cpp-teaching/style/terminal-output-style.md`）
+- 脚本次序与横幅：标识 `bg-comment-style-v1`（`.agents/context/conventions/comments.md`）
+- 库路径封装与运行目录：标识 `bg-cmake-conventions-v1`（`.agents/context/conventions/cmake.md`）
+- 步骤输出格式：标识 `bg-terminal-output-style-v1`（`.agents/context/conventions/terminal-output.md`）
 
 ## 结构清单
 

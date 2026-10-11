@@ -2,7 +2,7 @@
 kb_id: "bg-google-cpp-style-v1"
 title: "Google C++ 风格落地决策"
 domain: "cpp-teaching"
-subdomain: "style"
+subdomain: "conventions"
 tags: [google-style, naming, identifiers, headers, style-guide, clang-tidy]
 level_range: [0, 5]
 dependencies: [bg-comment-style-v1]

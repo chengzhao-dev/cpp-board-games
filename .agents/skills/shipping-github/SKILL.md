@@ -21,7 +21,7 @@ metadata:
 | --- | --- |
 | workflows 清单与 CI 范围 | `.github/README.md` |
 | 发布前闸门验收与上库内容清单 | `references/publish-gate.md` |
-| GitHub 链接约定 | `.agents/knowledge/quarto-writing/rendering/quarto-conventions.md` |
+| GitHub 链接约定 | `.agents/context/conventions/rendering/quarto-conventions.md` |
 
 ## P0 硬约束
 

@@ -2,7 +2,7 @@
 kb_id: "bg-terminology-v1"
 title: "全书统一术语与替换规则"
 domain: "quarto-writing"
-subdomain: "writing"
+subdomain: "glossary"
 tags: [terminology, vocabulary, consistency]
 level_range: [0, 5]
 dependencies: ["bg-chapter-structure-v1"]

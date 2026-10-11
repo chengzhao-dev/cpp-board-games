@@ -2,7 +2,7 @@
 kb_id: "bg-terminal-output-style-v1"
 title: "统一终端输出与日志规范"
 domain: "cpp-teaching"
-subdomain: "style"
+subdomain: "conventions"
 tags: [terminal, stdout, stderr, logging, color]
 level_range: [0, 5]
 dependencies: []

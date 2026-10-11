@@ -2,7 +2,7 @@
 kb_id: "bg-exception-message-format-v1"
 title: "异常与错误文案规范"
 domain: "cpp-teaching"
-subdomain: "style"
+subdomain: "conventions"
 tags: [exceptions, error-messages, out-of-range, logging]
 level_range: [0, 5]
 dependencies: [bg-google-cpp-style-v1, bg-terminal-output-style-v1]

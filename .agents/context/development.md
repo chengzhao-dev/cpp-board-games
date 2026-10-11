@@ -2,7 +2,7 @@
 kb_id: "bg-development-environment-v1"
 title: "开发环境依据"
 domain: "cpp-teaching"
-subdomain: "toolchain"
+subdomain: "development"
 tags: [wsl, vscode, clangd, environment]
 level_range: [0, 5]
 dependencies: [bg-cmake-conventions-v1]
