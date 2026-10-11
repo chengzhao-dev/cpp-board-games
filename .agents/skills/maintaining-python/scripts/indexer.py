@@ -62,7 +62,7 @@ SCHEMA = (
         content_hash TEXT NOT NULL,
         token_count INTEGER NOT NULL,
         domain     TEXT, subdomain TEXT, updated TEXT,
-        tags       TEXT, levels TEXT, status TEXT NOT NULL DEFAULT 'live'
+        zone       TEXT, tags       TEXT, levels TEXT, status TEXT NOT NULL DEFAULT 'live'
     );
     CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE IF NOT EXISTS concept (
@@ -180,27 +180,33 @@ def connect(con: sqlite3.Connection) -> None:
 
 
 def upsert(con: sqlite3.Connection, chunk: dict, doc: dict, previous: dict) -> str:
-    """写入一个 Chunk，返回动作：insert / update / unchanged。"""
+    """写入一个 Chunk，返回动作：insert / update / unchanged。
+
+    zone 参与更新：文件在 context 与 knowledge 之间搬家时 doc_id 与 chunk_id
+    不变，只有 zone 变，ON CONFLICT 不更新它会让检索按旧分区加权。
+    """
     existing = previous.get(chunk["chunk_id"])
     if (existing and existing["content_hash"] == chunk["content_hash"]
-            and existing.get("status", "live") == "live"):
+            and existing.get("status", "live") == "live"
+            and existing.get("zone") == chunk.get("zone")):
         return "unchanged"
     action = "update" if existing else "insert"
     payload = (
         chunk["chunk_id"], chunk.get("parent_id"), chunk["doc_id"], chunk["kind"],
         chunk["heading_path"], chunk["content"], chunk["content_hash"],
         chunk["token_count"], doc["domain"], doc["subdomain"], doc["updated"],
-        ",".join(doc["tags"]), ",".join(map(str, doc["levels"])), "live",
+        chunk.get("zone", "knowledge"), ",".join(doc["tags"]),
+        ",".join(map(str, doc["levels"])), "live",
     )
     columns = ("chunk_id, parent_id, doc_id, kind, heading_path, content, content_hash,"
-               " token_count, domain, subdomain, updated, tags, levels, status")
-    marks = ", ".join(["?"] * 14)
+               " token_count, domain, subdomain, updated, zone, tags, levels, status")
+    marks = ", ".join(["?"] * 15)
     con.execute(
         "INSERT INTO chunks (" + columns + ") VALUES (" + marks + ") "
         "ON CONFLICT(chunk_id) DO UPDATE SET content=excluded.content,"
         "content_hash=excluded.content_hash,token_count=excluded.token_count,"
         "heading_path=excluded.heading_path,updated=excluded.updated,"
-        "status=excluded.status",
+        "zone=excluded.zone,status=excluded.status",
         payload,
     )
     rowid = con.execute("SELECT rowid FROM chunks WHERE chunk_id=?",
@@ -447,8 +453,8 @@ def main() -> int:
     connect(con)
     if not args.rebuild:
         previous = {
-            row[0]: {"content_hash": row[1], "status": row[2]}
-            for row in con.execute("SELECT chunk_id, content_hash, status FROM chunks")
+            row[0]: {"content_hash": row[1], "status": row[2], "zone": row[3]}
+            for row in con.execute("SELECT chunk_id, content_hash, status, zone FROM chunks")
         }
 
     counts = defaultdict(int)
@@ -464,11 +470,16 @@ def main() -> int:
     con.commit()
 
     live = con.execute("SELECT count(*) FROM chunks WHERE status='live'").fetchone()[0]
+    zones = dict(con.execute(
+        "SELECT zone, count(*) FROM chunks WHERE status='live' GROUP BY zone"))
     if concepts == 0 or live == 0:
-        print("FAIL  indexer  索引为空，检查 .agents/knowledge/ 是否有合规文件")
+        print("FAIL  indexer  索引为空，检查 .agents/context/ 与 .agents/knowledge/ 是否有合规文件")
         con.close()
         return 1
-    print("PASS  indexer  Chunk=" + str(live) + "  新增=" + str(counts["insert"])
+    print("PASS  indexer  Chunk=" + str(live)
+          + "（context=" + str(zones.get("context", 0))
+          + " knowledge=" + str(zones.get("knowledge", 0)) + "）"
+          + "  新增=" + str(counts["insert"])
           + "  更新=" + str(counts["update"]) + "  跳过=" + str(counts["unchanged"])
           + "  降权=" + str(deprecated) + "  概念=" + str(concepts) + "  边=" + str(edges)
           + "  摘要L1=" + str(l1) + " L2=" + str(l2) + " 冲突候选=" + str(conflicts))

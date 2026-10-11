@@ -24,6 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 KB_ROOT = ROOT / ".agents" / "knowledge"
+CONTEXT_ROOT = ROOT / ".agents" / "context"
 INDEX_DIR = ROOT / "temp" / "knowledge-index"
 REGISTRY_PATH = INDEX_DIR / "chunk_registry.json"
 DB_PATH = INDEX_DIR / "kb_index.sqlite"
@@ -209,20 +210,33 @@ def content_hash(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def list_knowledge_files() -> list[Path]:
-    """递归列出 .agents/knowledge/ 下的有效知识文件。
+def zone_for(path: Path) -> str:
+    """按路径归 zone：context/ 是现行条文，knowledge/ 是取舍与案例。"""
+    try:
+        parts = path.resolve().relative_to(ROOT).parts
+    except ValueError:
+        return "knowledge"
+    return "context" if parts[:2] == (".agents", "context") else "knowledge"
 
-    cases/appendix/ 是低频人审附录：不进分块、索引、检索与评测，
-    因此在这里一步排除，下游（chunker / kb-search / kb-eval）无需各自处理。
+
+def list_knowledge_files() -> list[Path]:
+    """递归列出 .agents/context/ 与 .agents/knowledge/ 下的有效库文件。
+
+    两区同库检索：context 是现行条文，knowledge 是取舍与正反例。入口索引
+    （README.md、KNOWLEDGE.md）与 cases/appendix/（低频人审附录）不进分块、
+    索引、检索与评测，在这里一步排除，下游无需各自处理。
     """
-    if not KB_ROOT.is_dir():
-        return []
-    return [
-        path for path in sorted(KB_ROOT.rglob("*.md"))
-        if not path.name.startswith("_")
-        and path.name.lower() not in {"readme.md", "knowledge.md"}
-        and "appendix" not in path.relative_to(KB_ROOT).parts
-    ]
+    out: list[Path] = []
+    for root in (CONTEXT_ROOT, KB_ROOT):
+        if not root.is_dir():
+            continue
+        out.extend(
+            path for path in sorted(root.rglob("*.md"))
+            if not path.name.startswith("_")
+            and path.name.lower() not in {"readme.md", "knowledge.md"}
+            and "appendix" not in path.relative_to(root).parts
+        )
+    return out
 
 
 def write_json(path: Path, payload: object) -> None:

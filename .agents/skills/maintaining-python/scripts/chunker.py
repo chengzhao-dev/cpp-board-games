@@ -143,6 +143,7 @@ def split_doc(path: Path) -> tuple[dict, list[dict]]:
         chunks.append(parent)
 
     for chunk in chunks:
+        chunk["zone"] = kb.zone_for(path)
         chunk["content_hash"] = kb.content_hash(chunk["content"])
         chunk["token_count"] = kb.estimate_tokens(chunk["content"])
     # order 记录块在文档里的先后，检索的滑动窗口靠它取「下一节」
@@ -152,6 +153,7 @@ def split_doc(path: Path) -> tuple[dict, list[dict]]:
     document = {
         "doc_id": doc_id,
         "path": kb.rel(path),
+        "zone": kb.zone_for(path),
         "title": title,
         "domain": str(meta["domain"]),
         "subdomain": str(meta.get("subdomain") or ""),

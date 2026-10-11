@@ -77,6 +77,8 @@ RERANK_QUERY_NOISE = frozenset({"什么"})
 SPLIT_RE = re.compile('[，、；;]')
 SUPERSEDED_FACTOR = 0.35
 CACHE_TTL = 24 * 3600
+# 分区加权：context 是现行条文，默认排序略先于 knowledge 的取舍与正反例。
+ZONE_WEIGHTS = {"context": 1.2, "knowledge": 1.0}
 NEXT_RE = re.compile('|'.join(["接下来", "下一节", "下一章", "下一段", "随后", "继续看", "see next"]))
 
 
@@ -176,12 +178,12 @@ def child_ids_by_doc(registry: dict) -> dict:
 
 
 
-def cache_key(query, domain, subdomain, level, tags, budget, rounds):
+def cache_key(query, domain, subdomain, level, tags, budget, rounds, zone="all"):
     """缓存键含全部影响结果的参数：少带一个就会命中「看着对但其实是别的过滤条件」的旧结果。"""
     shape = chr(124).join([
         "q=" + query, "d=" + domain, "s=" + subdomain, "l=" + str(level),
         "t=" + ",".join(sorted(tags or [])),
-        "$" + str(budget), "r=" + str(rounds),
+        "$" + str(budget), "r=" + str(rounds), "z=" + str(zone),
     ])
     return kb.content_hash(shape)
 
@@ -303,13 +305,16 @@ def rank_parents(query: str, rows: list[dict], candidates: list[dict]) -> list[d
     return rows
 
 def prefilter(con: sqlite3.Connection, registry: dict, domain: str, subdomain: str,
-              level, tags: list[str]):
+              level, tags: list[str], zone: str = "all"):
     """Stage 2：元数据预过滤，把候选缩到「可能被读到」的最小集合。
     返回 None 表示不设限。返回空集合由调用方按过滤过窄处理。
     """
     sql = ["SELECT chunk_id FROM chunks WHERE kind=" + chr(39) + "child" + chr(39)
            + " AND status=" + chr(39) + "live" + chr(39)]
     args: list[object] = []
+    if zone and zone != "all":
+        sql.append("AND zone=?")
+        args.append(zone)
     if domain:
         sql.append("AND domain=?")
         args.append(domain)
@@ -404,7 +409,7 @@ def index_of(listing: list[str], chunk_id: str):
 
 def retrieve(query: str, domain: str = "", subdomain: str = "", level=None,
              tags: list[str] | None = None, budget: int | None = None, rounds: int = 1,
-             explain: bool = False, toc: bool = False):
+             explain: bool = False, toc: bool = False, zone: str = "all"):
     """五阶段检索 + 版本降权 + 滑动窗口 + 24h 查询缓存。toc=True 时只回摘要地图。"""
     started = time.time()
     if not kb.DB_PATH.is_file():
@@ -415,7 +420,7 @@ def retrieve(query: str, domain: str = "", subdomain: str = "", level=None,
     con = sqlite3.connect(kb.DB_PATH)
     tags = tags or []
 
-    key = cache_key(query, domain, subdomain, level, tags, budget, rounds)
+    key = cache_key(query, domain, subdomain, level, tags, budget, rounds, zone)
     if not explain and not toc:
         hit = cache_get(con, key)
         if hit:
@@ -426,7 +431,7 @@ def retrieve(query: str, domain: str = "", subdomain: str = "", level=None,
 
     intent = classify(query)
     subqueries = rewrite(query)
-    allow = prefilter(con, registry, domain, subdomain, level, tags)
+    allow = prefilter(con, registry, domain, subdomain, level, tags, zone)
     if allow is not None and not allow:
         allow = None  # 过滤后为空时放宽而不是直接失败，体检会报告过窄的过滤
 
@@ -456,9 +461,11 @@ def retrieve(query: str, domain: str = "", subdomain: str = "", level=None,
             "bm25_rank": index_of(bm25, chunk_id),
             "graph_hit": chunk_id in graph,
         })
-    # 精排主导、RRF 次之，再乘版本惩罚。同分时优先更短的 Parent 以省预算
+    # 精排主导、RRF 次之，再乘版本惩罚与分区加权（context 现行条文略先）。
+    # 同分时优先更短的 Parent 以省预算
     for row in candidates:
-        row["score"] = (row["rerank"] + RRF_SCORE_WEIGHT * row["rrf"]) * row["penalty"]
+        zone_weight = ZONE_WEIGHTS.get(row["child"].get("zone", "knowledge"), 1.0)
+        row["score"] = (row["rerank"] + RRF_SCORE_WEIGHT * row["rrf"]) * row["penalty"] * zone_weight
     candidates.sort(key=lambda c: (-c["score"],
                                    c["parent"]["token_count"] if c["parent"] else c["child"]["token_count"]))
 
@@ -509,7 +516,7 @@ def retrieve(query: str, domain: str = "", subdomain: str = "", level=None,
         "subqueries": subqueries,
         "intent": {"kind": intent["kind"], "weights": intent["weights"]},
         "prefilter": {"domain": domain, "subdomain": subdomain, "level": level,
-                      "tags": tags,
+                      "tags": tags, "zone": zone,
                       "candidates": len(allow) if allow is not None else "all"},
         "penalties": penalties,
         "window": window,
@@ -528,6 +535,7 @@ def retrieve(query: str, domain: str = "", subdomain: str = "", level=None,
              "heading_path": row["child"]["heading_path"],
              "rrf": round(row["rrf"], 5), "rerank": round(row["rerank"], 3),
              "penalty": row["penalty"], "score": round(row["score"], 4),
+             "zone": row["child"].get("zone", "knowledge"),
              "bm25_rank": row["bm25_rank"], "graph_hit": row["graph_hit"],
              "parent_tokens": row["parent"]["token_count"] if row["parent"] else None}
             for row in candidates[:8]
@@ -571,6 +579,8 @@ def main() -> int:
     parser.add_argument("--subdomain", default="", help="按子领域预过滤，如 memory")
     parser.add_argument("--level", type=int, default=None, help="按 level_range 预过滤")
     parser.add_argument("--tag", action="append", default=[], help="按标签过滤，可重复")
+    parser.add_argument("--zone", default="all", choices=("all", "context", "knowledge"),
+                        help="按分区过滤：context=现行条文，knowledge=取舍与正反例，默认 all")
     parser.add_argument("--budget", type=int, default=None, help="注入令牌上限，默认 4000")
     parser.add_argument("--rounds", type=int, default=1, help="渐进式披露轮数（1-3）")
     parser.add_argument("--toc", action="store_true",
@@ -593,7 +603,8 @@ def main() -> int:
         parser.error("需要查询词，或者改用 --parent <id> / --toc")
 
     result = retrieve(args.query, args.domain, args.subdomain, args.level, args.tag,
-                      args.budget, min(max(args.rounds, 1), 3), args.explain, args.toc)
+                      args.budget, min(max(args.rounds, 1), 3), args.explain, args.toc,
+                      args.zone)
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=1))
         if result.get("mode") == "toc":

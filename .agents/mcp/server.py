@@ -271,7 +271,7 @@ TOOLS = [
     {
         "name": "knowledge_search",
         "description": "Read-only hybrid knowledge retrieval with source, status, rank, and token budget metadata.",
-        "inputSchema": {"type": "object", "required": ["query"], "properties": {"query": {"type": "string"}, "domain": {"type": "string"}, "topK": {"type": "integer", "minimum": 1, "maximum": 20}, "tokenBudget": {"type": "integer", "minimum": 1, "maximum": 6000}, "explain": {"type": "boolean"}}},
+        "inputSchema": {"type": "object", "required": ["query"], "properties": {"query": {"type": "string"}, "domain": {"type": "string"}, "zone": {"type": "string", "enum": ["all", "context", "knowledge"], "default": "all"}, "topK": {"type": "integer", "minimum": 1, "maximum": 20}, "tokenBudget": {"type": "integer", "minimum": 1, "maximum": 6000}, "explain": {"type": "boolean"}}},
         "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
     },
     {
@@ -385,6 +385,11 @@ def handle_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
                    query, "--top-k", str(top_k), "--budget", str(budget)]
         if args.get("domain"):
             command.extend(["--domain", str(args["domain"])])
+        zone = str(args.get("zone", "all"))
+        if zone not in {"all", "context", "knowledge"}:
+            raise MCPError("zone must be one of: all, context, knowledge")
+        if zone != "all":
+            command.extend(["--zone", zone])
         if args.get("explain"):
             command.append("--explain")
         result = run_command(command)

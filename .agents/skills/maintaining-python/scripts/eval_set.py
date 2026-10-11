@@ -60,6 +60,12 @@ TOOLING = [
     ("五子棋什么时候该上 bitboard 和置换表", "棋类对照表", "concept"),
     ("井字棋要不要上置换表或 bitboard", "为什么井字棋不上 B", "concept"),
     ("开新棋类游戏前先改哪个文件", "开工检查单", "procedure"),
+    # context：现行事实与规范（project.md / architecture.md）
+    ("这个仓库现在做的是什么项目", "项目定位", "concept"),
+    ("Book 已经写到哪些内容", "当前文档范围", "concept"),
+    ("公开的仓库页面长什么样、布局怎么定", "公开面与布局定案", "concept"),
+    ("Board 和 Game 的职责怎么分", "规则核心形态", "concept"),
+    ("棋盘、棋子和回合逻辑放在哪一层", "组件式布局", "concept"),
     # agent-workspace/retrieval：检索治理
     ("改知识库正文后要按什么顺序验收", "评测闭环", "procedure"),
     ("单次知识检索最多注入多少 Token", "统一检索协议", "concept"),

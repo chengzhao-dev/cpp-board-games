@@ -16,8 +16,8 @@ from retriever import retrieve  # noqa: E402
 def adapt(query: str, *, repository: str = "cpp-board-games", kind: str = "knowledge",
           domain: str = "", scope: str = "", status: str = "active",
           top_k: int = 5, token_budget: int | None = None,
-          explain: bool = False) -> dict:
-    result = retrieve(query, domain=domain, budget=token_budget, explain=explain)
+          explain: bool = False, zone: str = "all") -> dict:
+    result = retrieve(query, domain=domain, budget=token_budget, explain=explain, zone=zone)
     rows = result.get("ranked", [])[:max(1, top_k)]
     registry = kb.read_json(kb.REGISTRY_PATH, {"chunks": {}, "documents": {}})
     chunks = registry.get("chunks", {})
@@ -55,9 +55,11 @@ def main() -> int:
     parser.add_argument("--top-k", type=int, default=5)
     parser.add_argument("--budget", type=int, default=None)
     parser.add_argument("--explain", action="store_true")
+    parser.add_argument("--zone", default="all", choices=("all", "context", "knowledge"),
+                        help="按分区过滤：context=现行条文，knowledge=取舍与正反例，默认 all")
     args = parser.parse_args()
     print(json.dumps(adapt(args.query, domain=args.domain, top_k=args.top_k,
-                           token_budget=args.budget, explain=args.explain),
+                           token_budget=args.budget, explain=args.explain, zone=args.zone),
                      ensure_ascii=False, indent=2))
     return 0
 
