@@ -1,0 +1,420 @@
+<!-- 色板与时辰选择：Flexoki 是编译默认；Solarized 与 Hill Light（hill-light）只切
+     html[data-palette]，Hill Light 另有 html[data-mode] 的四种时辰（晓雾/午荫/暮烟/夜月）。
+     首屏在 head 内恢复选择，避免先画 Flexoki 再跳色；控件在导航栏工具区末尾。
+     favicon 是外部 SVG，读不到 CSS 变量和 data-palette，所以按色板与明暗改 href。 -->
+<script>
+(function () {
+  var PALETTE_KEY = 'book-palette';
+  var MODE_KEY = 'book-hill-mode';
+  var PALETTES = ['flexoki', 'solarized', 'hill-light'];
+  var MODES = ['dawn', 'noon', 'dusk', 'night'];
+  var MODE_LABELS = {
+    dawn: ['晓雾', '溪山晓雾 · 清晨'],
+    noon: ['午荫', '溪山午荫 · 正午'],
+    dusk: ['暮烟', '溪山暮烟 · 黄昏'],
+    night: ['夜月', '溪山夜月 · 夜晚']
+  };
+  var PALETTE_LABELS = { flexoki: 'Flexoki', solarized: 'Solarized', 'hill-light': 'Hill Light' };
+  var root = document.documentElement;
+
+  function read(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
+  function write(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (e) {}
+  }
+  function isPalette(value) {
+    return PALETTES.indexOf(value) !== -1;
+  }
+  function isMode(value) {
+    return MODES.indexOf(value) !== -1;
+  }
+  // 山光的默认时辰按本地时间落点（与 hill-light 官方 head 脚本一致）：
+  // 06–11 晓雾、11–17 午荫、17–20 暮烟，其余夜月。
+  function byHour() {
+    var hour = new Date().getHours();
+    if (hour >= 6 && hour < 11) return 'dawn';
+    if (hour >= 11 && hour < 17) return 'noon';
+    if (hour >= 17 && hour < 20) return 'dusk';
+    return 'night';
+  }
+
+  var initialPalette = isPalette(read(PALETTE_KEY)) ? read(PALETTE_KEY) : 'flexoki';
+  var initialMode = isMode(read(MODE_KEY)) ? read(MODE_KEY) : byHour();
+  if (initialPalette !== 'flexoki') root.setAttribute('data-palette', initialPalette);
+  if (initialPalette === 'hill-light') root.setAttribute('data-mode', initialMode);
+
+  // 基座镜像：Quarto 只编译两套 Bootstrap（light/dark），靠 localStorage 的
+  // quarto-color-scheme 决定首帧用哪套。山光的明暗由时辰决定，所以 head 里先把
+  // 时辰翻成 sentinel（夜月 alternate，其余 default），Quarto 的 before-body 脚本
+  // 读到的就是山光要的基座；只镜像山光，Flexoki/Solarized 的明暗仍由读者与圆钮决定。
+  // file:// 下 Quarto 不写 localStorage，镜像也会被浏览器拒绝（write 已 try/catch），
+  // 此时由 mount 后的 syncBase 对账兜底，可能闪一帧。
+  function mirrorQuartoScheme() {
+    if (initialPalette !== 'hill-light') return;
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+    write('quarto-color-scheme', initialMode === 'night' ? 'alternate' : 'default');
+  }
+  mirrorQuartoScheme();
+
+  function palette() {
+    var value = root.getAttribute('data-palette');
+    return isPalette(value) ? value : 'flexoki';
+  }
+  function mode() {
+    var value = root.getAttribute('data-mode');
+    return isMode(value) ? value : initialMode;
+  }
+
+  // 明暗先看 Quarto 已写好的 body class，再看它存的偏好；都没有时退回系统偏好。
+  // file:// 下 Quarto 不写 localStorage，页脚观察器会在 body class 变化后再同步一次。
+  function quartoIsDark() {
+    if (document.body) {
+      if (document.body.classList.contains('quarto-dark')) return true;
+      if (document.body.classList.contains('quarto-light')) return false;
+    }
+    var scheme = read('quarto-color-scheme');
+    if (scheme === 'alternate' || scheme === 'dark') return true;
+    if (scheme === 'default' || scheme === 'light') return false;
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  // 山光的明暗由时辰决定：夜月是唯一的暗色时辰。
+  function isDark() {
+    return palette() === 'hill-light' ? mode() === 'night' : quartoIsDark();
+  }
+
+  // 只替换 Quarto 写好的相对路径里的色板与明暗两段，保留 ./ 或 ../../ 前缀。
+  function syncFavicon() {
+    var link = document.querySelector('link[rel~="icon"]');
+    if (!link) return;
+    var href = link.getAttribute('href') || '';
+    var next = href.replace(
+      /(palettes\/)(flexoki|solarized|hill-light)(\/favicon-)(light|dark)(\.svg)/,
+      '$1' + palette() + '$3' + (isDark() ? 'dark' : 'light') + '$5'
+    );
+    if (next !== href) link.setAttribute('href', next);
+  }
+  window.__bookSyncFavicon = syncFavicon;
+  syncFavicon();
+
+  // 基座对账：山光夜月必须落在 Quarto 的 dark 基座上（body.quarto-dark 的规则
+  // 才生效），其余时辰落在 light 基座。只在状态不一致时调用 QuartoToggleColorScheme，
+  // 避免把读者在其他色板的明暗偏好翻掉；切走山光时不动基座（保持读者当前的明暗）。
+  function syncBase() {
+    if (palette() !== 'hill-light') return;
+    if (typeof window.quartoToggleColorScheme !== 'function') return;
+    if (!document.body) return;
+    var cls = document.body.classList;
+    if (!cls.contains('quarto-dark') && !cls.contains('quarto-light')) return;
+    if ((mode() === 'night') !== cls.contains('quarto-dark')) {
+      window.quartoToggleColorScheme();
+    }
+  }
+  window.__bookSyncBase = syncBase;
+
+  function applyPalette(value) {
+    if (value === 'flexoki') root.removeAttribute('data-palette');
+    else root.setAttribute('data-palette', value);
+    // 山光需要 data-mode；切走时清掉，避免其他色板误吃四时令牌。
+    if (value === 'hill-light') root.setAttribute('data-mode', mode());
+    else root.removeAttribute('data-mode');
+    write(PALETTE_KEY, value);
+    syncFavicon();
+    syncBase();
+    document.dispatchEvent(new CustomEvent('book-palette-change', { detail: value }));
+  }
+  function applyMode(value) {
+    root.setAttribute('data-mode', value);
+    write(MODE_KEY, value);
+    syncFavicon();
+    syncBase();
+    document.dispatchEvent(new CustomEvent('book-palette-change', { detail: 'hill-light' }));
+  }
+
+  // 单选组键盘语义：方向键在段间移动并即时选中，Home/End 到两端；
+  // 只有选中段进 Tab 序列（roving tabindex），与原生 radio 一致。
+  function bindKeys(wrap, buttons, current, activate) {
+    wrap.addEventListener('keydown', function (event) {
+      var index = buttons.findIndex(function (button) {
+        return button.dataset.key === current();
+      });
+      if (index === -1) index = 0;
+      var next = null;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        next = (index + 1) % buttons.length;
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        next = (index - 1 + buttons.length) % buttons.length;
+      } else if (event.key === 'Home') {
+        next = 0;
+      } else if (event.key === 'End') {
+        next = buttons.length - 1;
+      }
+      if (next === null) return;
+      event.preventDefault();
+      activate(buttons[next].dataset.key);
+      buttons[next].focus();
+    });
+  }
+
+  function makeSegment(label) {
+    var wrap = document.createElement('div');
+    wrap.className = 'palette-picker';
+    wrap.setAttribute('role', 'radiogroup');
+    wrap.setAttribute('aria-label', label);
+    var segment = document.createElement('div');
+    segment.className = 'palette-segment';
+    wrap.appendChild(segment);
+    return { wrap: wrap, segment: segment };
+  }
+
+  // 色板下拉：三段文字胶囊在 Hill Light 出现后还要并排多一段四时辰，顶栏右端被挤到
+  // 近 190px，窄屏只能把名字全裁掉。改成「当前色板」按钮 + 列表：闭合态只占色点与名字，
+  // 展开后三套色板一次看全。
+  // 语义取 select-only combobox：按钮带着当前值（这是菜单按钮做不到的），面板是 listbox，
+  // 焦点留在按钮上、用 aria-activedescendant 指当前项——APG 的原生键位（方向键、Home/End、
+  // 首字母、Enter 提交、Esc 无提交关闭）就是照这个模型写的。
+  function makeMenu(label) {
+    var wrap = document.createElement('div');
+    wrap.className = 'palette-picker palette-menu';
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'palette-trigger';
+    trigger.setAttribute('role', 'combobox');
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-controls', 'book-palette-list');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-autocomplete', 'none');
+    trigger.title = label;
+    trigger.innerHTML =
+      '<span class="palette-swatch" aria-hidden="true"></span>' +
+      '<span class="palette-trigger-label"></span>' +
+      '<svg class="palette-caret" viewBox="0 0 10 10" aria-hidden="true">' +
+      '<path d="M2 3.6 5 6.6 8 3.6" fill="none" stroke="currentColor" stroke-width="1.4" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var list = document.createElement('div');
+    list.className = 'palette-menu-list';
+    list.id = 'book-palette-list';
+    list.setAttribute('role', 'listbox');
+    list.setAttribute('aria-label', label);
+    list.hidden = true;
+    wrap.appendChild(trigger);
+    wrap.appendChild(list);
+    return { wrap: wrap, trigger: trigger, list: list };
+  }
+
+  // 四时辰图标：12px 格内的极简线性图。晓雾/午荫/暮烟/夜月是气氛词，圆点或首字都
+  // 传达不了差别，所以缺口用图形补：破晓的日头、正午的烈日、擦山的低日、夜月的弯月。
+  // 颜色一律 currentColor，跟分段控件的选中态一起变。
+  var MODE_ICONS = {
+    dawn:
+      '<svg viewBox="0 0 12 12" aria-hidden="true">' +
+      '<path d="M1.6 8.6h8.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>' +
+      '<path d="M3.3 8.6a2.7 2.7 0 0 1 5.4 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
+      '<path d="M6 2.3v1.2M3.5 4.1l.85.85M8.5 4.1l-.85.85" stroke="currentColor" ' +
+      'stroke-width="1.2" stroke-linecap="round"/></svg>',
+    noon:
+      '<svg viewBox="0 0 12 12" aria-hidden="true">' +
+      '<circle cx="6" cy="6" r="2.1" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
+      '<path d="M6 1.4v1.1M6 9.5v1.1M1.4 6h1.1M9.5 6h1.1M2.75 2.75l.8.8M8.45 8.45l.8.8' +
+      'M9.25 2.75l-.8.8M3.55 8.45l-.8.8" stroke="currentColor" stroke-width="1.2" ' +
+      'stroke-linecap="round"/></svg>',
+    dusk:
+      '<svg viewBox="0 0 12 12" aria-hidden="true">' +
+      '<path d="M1.6 8.6h8.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>' +
+      '<path d="M3.3 8.6a2.7 2.7 0 0 1 5.4 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
+      '<path d="M2.4 4.9h1.7M7.9 4.9h1.7" stroke="currentColor" stroke-width="1.2" ' +
+      'stroke-linecap="round"/></svg>',
+    night:
+      '<svg viewBox="0 0 12 12" aria-hidden="true">' +
+      '<path d="M8.4 2.5a3.9 3.9 0 1 0 1.2 5.6 4.8 4.8 0 0 1-1.2-5.6Z" fill="currentColor"/></svg>'
+  };
+
+  function mount() {
+    var tools = document.querySelector('.quarto-navbar-tools.tools-end');
+    if (!tools || tools.querySelector('.palette-picker')) return;
+
+    var paletteGroup = makeMenu('选择色板');
+    var paletteButtons = PALETTES.map(function (key) {
+      var button = document.createElement('div');
+      button.className = 'palette-menu-item';
+      button.id = 'book-palette-opt-' + key;
+      button.setAttribute('role', 'option');
+      button.setAttribute('aria-selected', 'false');
+      button.dataset.key = key;
+      button.innerHTML =
+        '<span class="palette-swatch" aria-hidden="true"></span>' +
+        '<span class="palette-menu-label">' + PALETTE_LABELS[key] + '</span>' +
+        '<svg class="palette-check" viewBox="0 0 12 12" aria-hidden="true">' +
+        '<path d="M2.4 6.3 4.7 8.6 9.6 3.7" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+        'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      button.addEventListener('click', function () {
+        applyPalette(key);
+        setMenu(false, true);
+      });
+      paletteGroup.list.appendChild(button);
+      return button;
+    });
+
+    // 时辰仍用分段控件：四项是同一维度上的并列值，一眼看全比再开一层菜单快。
+    var modeGroup = makeSegment('选择时辰');
+    modeGroup.wrap.classList.add('mode-picker');
+    modeGroup.wrap.title = '选择时辰';
+    var modeButtons = MODES.map(function (key) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'palette-segment-option';
+      button.setAttribute('role', 'radio');
+      button.dataset.key = key;
+      button.innerHTML = MODE_ICONS[key] + '<span class="palette-mode-label">' + MODE_LABELS[key][0] + '</span>';
+      button.setAttribute('aria-label', MODE_LABELS[key][1]);
+      button.title = MODE_LABELS[key][1];
+      button.addEventListener('click', function () {
+        applyMode(key);
+      });
+      modeGroup.segment.appendChild(button);
+      return button;
+    });
+
+    var activeIndex = -1;
+
+    function menuOpen() {
+      return !paletteGroup.list.hidden;
+    }
+    function currentIndex() {
+      var value = palette();
+      for (var i = 0; i < paletteButtons.length; i++) {
+        if (paletteButtons[i].dataset.key === value) return i;
+      }
+      return 0;
+    }
+    function setActive(index) {
+      activeIndex = (index + paletteButtons.length) % paletteButtons.length;
+      paletteButtons.forEach(function (button, i) {
+        button.classList.toggle('is-active', i === activeIndex);
+      });
+      paletteGroup.trigger.setAttribute('aria-activedescendant', paletteButtons[activeIndex].id);
+    }
+    function clearActive() {
+      activeIndex = -1;
+      paletteButtons.forEach(function (button) {
+        button.classList.remove('is-active');
+      });
+      paletteGroup.trigger.removeAttribute('aria-activedescendant');
+    }
+    function setMenu(open, refocus) {
+      paletteGroup.list.hidden = !open;
+      paletteGroup.trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) {
+        setActive(currentIndex());
+      } else {
+        clearActive();
+        if (refocus) paletteGroup.trigger.focus();
+      }
+    }
+
+    paletteGroup.trigger.addEventListener('click', function () {
+      setMenu(!menuOpen(), false);
+    });
+    paletteGroup.trigger.addEventListener('keydown', function (event) {
+      var key = event.key;
+      if (!menuOpen()) {
+        if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') {
+          event.preventDefault();
+          setMenu(true, false);
+        }
+        return;
+      }
+      if (key === 'ArrowDown') {
+        event.preventDefault();
+        setActive(activeIndex + 1);
+      } else if (key === 'ArrowUp') {
+        event.preventDefault();
+        setActive(activeIndex - 1);
+      } else if (key === 'Home') {
+        event.preventDefault();
+        setActive(0);
+      } else if (key === 'End') {
+        event.preventDefault();
+        setActive(paletteButtons.length - 1);
+      } else if (key === 'Enter' || key === ' ') {
+        event.preventDefault();
+        if (activeIndex >= 0) applyPalette(paletteButtons[activeIndex].dataset.key);
+        setMenu(false, true);
+      } else if (key === 'Escape') {
+        event.preventDefault();
+        setMenu(false, true);
+      } else if (key === 'Tab') {
+        setMenu(false, false);
+      } else if (key.length === 1) {
+        // 首字母跳转：三套色板的首字母正好是 f / s / h。
+        var letter = key.toLowerCase();
+        var hit = paletteButtons.filter(function (button) {
+          return PALETTE_LABELS[button.dataset.key].toLowerCase().charAt(0) === letter;
+        })[0];
+        if (hit) {
+          event.preventDefault();
+          setActive(paletteButtons.indexOf(hit));
+        }
+      }
+    });
+    document.addEventListener('click', function (event) {
+      if (menuOpen() && !paletteGroup.wrap.contains(event.target)) setMenu(false, false);
+    });
+
+    function syncPalette() {
+      var value = palette();
+      var name = PALETTE_LABELS[value];
+      paletteGroup.trigger.dataset.key = value;
+      paletteGroup.trigger.querySelector('.palette-trigger-label').textContent = name;
+      // 无障碍名带上可见的当前色板名，满足 2.5.3（Label in Name）。
+      paletteGroup.trigger.setAttribute('aria-label', '选择色板，当前 ' + name);
+      paletteButtons.forEach(function (button) {
+        button.setAttribute('aria-selected', button.dataset.key === value ? 'true' : 'false');
+      });
+      modeGroup.wrap.hidden = value !== 'hill-light';
+    }
+    function syncMode() {
+      var value = mode();
+      modeButtons.forEach(function (button) {
+        var checked = button.dataset.key === value;
+        button.setAttribute('aria-checked', checked ? 'true' : 'false');
+        button.tabIndex = checked ? 0 : -1;
+      });
+    }
+
+    bindKeys(modeGroup.wrap, modeButtons, mode, applyMode);
+
+    syncPalette();
+    syncMode();
+    tools.appendChild(paletteGroup.wrap);
+    tools.appendChild(modeGroup.wrap);
+
+    document.addEventListener('book-palette-change', function () {
+      syncPalette();
+      syncMode();
+      syncBase();
+    });
+    // 返回页（bfcache）时 body class 可能被 Quarto 复原，再对账一次。
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) syncBase();
+    });
+    syncBase();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      syncFavicon();
+      mount();
+    });
+  } else {
+    syncFavicon();
+    mount();
+  }
+})();
+</script>

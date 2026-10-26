@@ -14,7 +14,7 @@ book:
   repo-url: "https://github.com/chengzhao-dev/cpp-board-games"
   # 读者侧只留「查看源码」入口：不提供编辑此页与议题按钮（定案见 bg-publish-surface-v1）。
   repo-actions: [source]
-  favicon: ".agents/skills/designing-theme/assets/theme/assets/favicon.svg"
+  favicon: "theme/palettes/flexoki/favicon-light.svg"
   page-navigation: true
   sidebar:
     collapse-level: 1
@@ -23,24 +23,31 @@ book:
     search: true
   chapters:
     - index.qmd
-    - part: content/tictactoe/index.qmd
+    -
+      part: content/tictactoe/index.qmd
       chapters:
         - content/tictactoe/01-rules.qmd
-        - content/tictactoe/02-project-layout.qmd
+        - content/tictactoe/02-mapping-layout.qmd
+        - content/tictactoe/viewing-program.qmd
         - content/tictactoe/03-board.qmd
         - content/tictactoe/04-game.qmd
-        - content/tictactoe/05-terminal-play.qmd
-        - content/tictactoe/06-opponent.qmd
-        - content/tictactoe/07-line-protocol.qmd
+        - content/tictactoe/05-ai.qmd
+        - content/tictactoe/06-writing-terminal.qmd
+        - content/tictactoe/07-main.qmd
+        - content/tictactoe/08-tests.qmd
+        - content/tictactoe/09-running-build.qmd
+        - content/tictactoe/10-defining-snapshot.qmd
+  appendices:
+    - content/appendix/references.qmd
 
 filters:
-  - .agents/skills/writing-quarto/scripts/answer-disclosure.lua
+  - filters/answering-disclosure.lua
 
 format:
   html:
     theme:
-      light: [cosmo, .agents/skills/designing-theme/assets/theme/palettes/github/theme-light.scss]
-      dark: [darkly, .agents/skills/designing-theme/assets/theme/palettes/github/theme-dark.scss]
+      light: [cosmo, theme/palettes/flexoki/theme-light.scss]
+      dark: [darkly, theme/palettes/flexoki/theme-dark.scss]
     grid:
       sidebar-width: 300px
       # 对齐主流文档站口径：Quarto 默认 body 800px；Quarto 会从 body-width 中再减去
@@ -61,37 +68,53 @@ format:
     # wrap 会让 Quarto 注入 pre-wrap 盖掉这条规则；打印时由 code.css 恢复折行。
     code-overflow: scroll
     highlight-style:
-      # 与 palettes/github/meta.md 同步；语法色来自色板目录里的两份 .theme
-      # （Primer Light / Dark Dimmed），CSS 不覆盖 token。
-      light: .agents/skills/designing-theme/assets/theme/palettes/github/highlight-light.theme
-      dark: .agents/skills/designing-theme/assets/theme/palettes/github/highlight-dark.theme
+      # 与 palettes/flexoki/meta.md 同步；语法色来自色板目录里的两份 .theme
+      # （Flexoki Light / Dark），Solarized 由 palettes/solarized/syntax.css 覆盖。
+      light: theme/palettes/flexoki/highlight-light.theme
+      dark: theme/palettes/flexoki/highlight-dark.theme
     css:
-      - .agents/skills/designing-theme/assets/theme/css/fonts.css
-      - .agents/skills/designing-theme/assets/theme/css/tokens.css
-      - .agents/skills/designing-theme/assets/theme/palettes/github/tokens.css
-      - .agents/skills/designing-theme/assets/theme/css/base.css
-      - .agents/skills/designing-theme/assets/theme/css/code.css
-      - .agents/skills/designing-theme/assets/theme/css/content.css
-      - .agents/skills/designing-theme/assets/theme/css/mermaid.css
-      - .agents/skills/designing-theme/assets/theme/css/nav.css
-      - .agents/skills/designing-theme/assets/theme/css/sidebar.css
-      - .agents/skills/designing-theme/assets/theme/css/callouts.css
-      - .agents/skills/designing-theme/assets/theme/css/landing.css
+      - theme/css/fonts.css
+      - theme/css/tokens.css
+      - theme/palettes/flexoki/tokens.css
+      - theme/palettes/solarized/tokens.css
+      - theme/palettes/solarized/syntax.css
+      - theme/palettes/hill-light/tokens.css
+      - theme/palettes/hill-light/syntax.css
+      - theme/css/base.css
+      - theme/css/code.css
+      - theme/css/content.css
+      - theme/css/mermaid.css
+      - theme/css/nav.css
+      - theme/css/sidebar.css
+      - theme/css/callouts.css
+      - theme/css/landing.css
+      - theme/css/terminal.css
     include-in-header:
-      - .agents/skills/designing-theme/assets/theme/includes/fonts.html
+      - theme/includes/fonts.html
+      - theme/includes/palette.html
     include-after-body:
-      - .agents/skills/designing-theme/assets/theme/includes/footer.html
+      - theme/includes/footer.html
+      - theme/includes/terminal-lab.html
     open-graph: true
     twitter-card: true
     number-sections: false
     lang: zh
 
 resources:
-  - .agents/skills/designing-theme/assets/theme/assets
+  - theme/assets
+  - theme/palettes/flexoki/favicon-dark.svg
+  - theme/palettes/solarized/favicon-light.svg
+  - theme/palettes/solarized/favicon-dark.svg
+  - theme/palettes/hill-light/favicon-light.svg
+  - theme/palettes/hill-light/favicon-dark.svg
 
 language:
+  section-title-appendices: "附录"
   callout-note-title: "注意"
   callout-tip-title: "提示"
   callout-important-title: "重要"
   callout-warning-title: "警告"
   callout-caution-title: "危险"
+
+crossref:
+  appendix-title: "附录"

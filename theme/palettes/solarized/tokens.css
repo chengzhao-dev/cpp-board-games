@@ -1,0 +1,154 @@
+/* ============================================================
+   Palette: solarized · Solarized Light / Dark 运行时覆盖层
+   只在 html[data-palette="solarized"] 下生效；默认 Flexoki 不受影响。
+   官方页面色：亮底 base3 #FDF6E3、暗底 base03 #002B36。
+   链接按官方 rebase：亮 base01 #586E75、暗 base1 #93A1A1；
+   蓝色只作 focus / 下划线 hover 的 accent，不涂正文链接。
+   阅读文字保持 4.5:1；页面底色与强调色保持官方值。
+   ============================================================ */
+
+html[data-palette="solarized"] body {
+  /* Solarized Light 页面令牌 */
+  --body-color: #526C74;
+  /* 正文强调（strong）：base01，比正文深一档 */
+  --emphasis-color: #586E75;
+  --code-bg: #EEE8D5;
+  --code-border: #93A1A1;
+  --code-fg: #526C74;
+  --code-title-bg: #E7E0CB;
+  --code-title-fg: #4C6166;
+  --line-num-color: #556C73;
+  --inline-code-bg: rgba(82, 108, 116, 0.10);
+  --inline-code-fg: #526C74;
+  --text-secondary: #586E75;
+  /* 官方 rebase：链接取 base01，不取蓝色；hover 才加深并用蓝下划线。 */
+  --link-color: #586E75;
+  --link-hover-color: var(--action-color);
+  --link-underline: rgba(88, 110, 117, 0.45);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #268BD2;
+  --table-border: #93A1A1;
+  /* callout：编辑注，无填充；note 取 base01，warning 取官方 orange。 */
+  --callout-note-border: #586E75;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #859900;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #CB4B16;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #6C71C4;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #DC322F;
+  --callout-caution-bg: transparent;
+  --copy-btn-bg: #FDF6E3;
+  --copy-btn-border: #93A1A1;
+  --scrollbar-thumb: #93A1A1;
+  --selection-bg: rgba(38, 139, 210, 0.20);
+  --mark-bg: rgba(181, 137, 0, 0.35);
+  --sidebar-hover-bg: rgba(101, 123, 131, 0.08);
+  --sidebar-active-bg: rgba(38, 139, 210, 0.10);
+  --sidebar-fg: #586E75;
+  --accent: var(--action-color);
+  --navbar-bg: #FDF6E3;
+  --navbar-fg: #526C74;
+  --navbar-muted: #586E75;
+  --navbar-border: #93A1A1;
+  --navbar-input-bg: #EEE8D5;
+  --navbar-hover-bg: rgba(101, 123, 131, 0.08);
+  --navbar-secondary-bg: rgba(253, 246, 227, 0.88);
+  --dot-accent: #268BD2;
+  --card-bg: transparent;
+  --card-border: #93A1A1;
+  --overlay-scrim: rgba(0, 38, 54, 0.44);
+  --toc-active: var(--body-color);
+  --page-bg: #FDF6E3;
+  --surface-raised: #EEE8D5;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(88, 110, 117, 0.06);
+  --line-hover-bg: rgba(38, 139, 210, 0.07);
+}
+
+html[data-palette="solarized"] body.quarto-dark {
+  /* Solarized Dark 页面令牌 */
+  --body-color: #839496;
+  --emphasis-color: #93A1A1;
+  --code-bg: #073642;
+  --code-border: #586E75;
+  --code-fg: #93A1A1;
+  --code-title-bg: #0A3F4C;
+  --code-title-fg: #A9B7B7;
+  --line-num-color: #93A1A1;
+  --inline-code-bg: rgba(147, 161, 161, 0.10);
+  --inline-code-fg: #93A1A1;
+  --text-secondary: #93A1A1;
+  /* 官方 rebase：暗色链接取 base1。 */
+  --link-color: #93A1A1;
+  --link-hover-color: var(--action-color);
+  --link-underline: rgba(147, 161, 161, 0.45);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #51A0D5;
+  --table-border: #586E75;
+  --callout-note-border: #93A1A1;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #859900;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #CB4B16;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #6C71C4;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #DC322F;
+  --callout-caution-bg: transparent;
+  --copy-btn-bg: #073642;
+  --copy-btn-border: rgba(147, 161, 161, 0.45);
+  --scrollbar-thumb: #586E75;
+  --selection-bg: rgba(38, 139, 210, 0.30);
+  --mark-bg: rgba(181, 137, 0, 0.30);
+  --sidebar-hover-bg: rgba(147, 161, 161, 0.07);
+  --sidebar-active-bg: rgba(38, 139, 210, 0.16);
+  --sidebar-fg: #93A1A1;
+  --accent: var(--action-color);
+  --navbar-bg: #002B36;
+  --navbar-fg: #839496;
+  --navbar-muted: #93A1A1;
+  --navbar-border: #073642;
+  --navbar-input-bg: #073642;
+  --navbar-hover-bg: rgba(147, 161, 161, 0.07);
+  --navbar-secondary-bg: rgba(0, 43, 54, 0.90);
+  --dot-accent: #51A0D5;
+  --card-bg: transparent;
+  --card-border: #586E75;
+  --overlay-scrim: rgba(0, 0, 0, 0.62);
+  --toc-active: var(--body-color);
+  --page-bg: #002B36;
+  --surface-raised: #073642;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(147, 161, 161, 0.06);
+  --line-hover-bg: rgba(38, 139, 210, 0.12);
+  color-scheme: dark;
+}
+
+@media (prefers-contrast: more) {
+  html[data-palette="solarized"] body {
+    --body-color: #405B63;
+    --code-fg: #405B63;
+    --inline-code-fg: #405B63;
+    --navbar-fg: #405B63;
+    --link-color: #405B63;
+    --emphasis-color: #073642;
+    --code-border: #586E75;
+    --card-border: #586E75;
+    --navbar-border: #586E75;
+  }
+
+  html[data-palette="solarized"] body.quarto-dark {
+    --body-color: #93A1A1;
+    --code-fg: #93A1A1;
+    --inline-code-fg: #93A1A1;
+    --link-color: #93A1A1;
+    --emphasis-color: #EEE8D5;
+    --code-border: #93A1A1;
+    --card-border: #93A1A1;
+    --navbar-border: #93A1A1;
+  }
+}

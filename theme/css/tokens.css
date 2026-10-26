@@ -1,0 +1,58 @@
+/* ============================================================
+   dsh-quarto-book Quarto 主题 · 非色板结构令牌
+   颜色由 palettes/<name>/tokens.css 提供；
+   body.quarto-light / body.quarto-dark 由 Quarto 自动切换。
+   ============================================================ */
+
+body {
+  /* 代码块几何与排版（明暗共用）；宽度贴满 840px 正文内容列 */
+  --code-padding: 0.85rem 1.05rem;
+  --code-font-size: 0.9375rem;
+  --code-line-height: 1.7;
+  --code-title-font-size: 0.75rem;
+  --code-title-padding: 0.45rem 0.85rem;
+  --code-followup-gap: 0.9rem;
+  --toc-indent: 0.75rem;
+  --transition: 0.12s ease-in-out;
+  /* 书页半径：编辑注、代码块和图片都收窄；大圆角只留给触控目标 */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --code-radius: 4px;
+  /* 浮层遮罩：搜索浮层等压在内容之上的一层，深色下加重。 */
+  --overlay-scrim: rgba(0, 0, 0, 0.42);
+  /* 正文单字面：LXGW Bright Medium（登记 weight 400，层级靠字号）；
+     栈尾 CJK 系统字体兜底：自托管子集缺字时不落浏览器默认宋体 */
+  --ui-font: "LXGW Bright Medium", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  /* 标题与顶栏/侧栏标题：系统黑体栈。标题短、不需要楷体的长文耐读性，
+     黑体自带真 600/700 字重，能把「标题—正文」的字面差与字重差同时拉开；
+     不新增字体文件，只调用系统已装字体（Noto Sans SC / PingFang SC / 微软雅黑）。 */
+  --heading-font: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* 栈尾 CJK 系统字体兜底：自托管子集缺字时不落浏览器默认宋体 */
+  --mono-font: "LXGW Bright Code", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", monospace;
+  /* 正文内容列宽 = body-width(872px) 减去 Quarto 栅格两侧各 1rem 内边距后的 840px；
+     840px 让 100 列代码（834px 内容宽）完整显示并留 6px 余量 */
+  --content-width: 840px;
+  color: var(--body-color);
+  background-color: var(--page-bg);
+  line-height: 1.85;
+  font-size: 1.0625rem;
+  font-synthesis: none;
+  text-wrap: pretty;
+  /* 显式声明浅色，使内嵌 SVG（顶栏品牌徽标）与原生控件跟随页面明暗，
+     而不是跟随系统偏好；深色由 palette 的 body.quarto-dark 覆盖。 */
+  color-scheme: light;
+}
+
+/* 系统开了「减少动态效果」时，色板切换、箭头翻转、浮层淡入都收敛到瞬时：
+   保留状态变化，去掉过程。 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

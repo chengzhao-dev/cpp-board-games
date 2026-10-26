@@ -1,0 +1,101 @@
+---
+title: "程序入口"
+---
+
+[电脑落子](05-ai.qmd) 之后，棋盘、对局与电脑落子的规则都编进了 `tictactoe` 动态库。当前构建里的 `main` 不驱动整局终端循环，只创建一局、落一子、检查返回值，确认主程序确实链接并调用了动态库。`main` 在 [main.cpp][07-main-cpp] 里。
+
+## 调用动态库
+
+`main.cpp` 的代码如下：
+
+```{.cpp filename="main.cpp"}
+int main() {
+  try {
+    tictactoe::Game game;
+    const tictactoe::Move opening_move{
+        .position = {.row = 0, .col = 0},
+        .player = game.GetCurrentPlayer(),
+    };
+
+    if (game.TryPlace(opening_move) != tictactoe::PlaceResult::kPlaced) {
+      std::cerr << "井字棋动态库调用失败\n";
+      return 1;
+    }
+
+    std::cout << "井字棋动态库调用成功：已落子 " << game.GetHistory().size() << " 手\n";
+    return 0;
+  } catch (const std::exception& error) {
+    std::cerr << "井字棋动态库调用失败：" << error.what() << '\n';
+    return 1;
+  }
+}
+```
+
+`try` 包住整个入口，`std::exception` 的 `what()` 写到标准错误。动态库抛出的 `std::out_of_range` 或 `std::logic_error` 不会穿过 `main` 直接终止进程，调用方拿到的仍是非零退出码。
+
+动态库只写消息本身，`main` 在前缀里补面向用户的说明，不翻译库的消息。
+
+`Game game;` 创建一局空棋盘，当前玩家是 X。`opening_move` 写出坐标与玩家两个成员：坐标取左上角 `(0, 0)`，玩家取 `game.GetCurrentPlayer()`。这样入口不必写死 `Player::kCross`，当前玩家由 `Game` 给出。
+
+`TryPlace` 用 `PlaceResult` 表示结果，成功时是 `kPlaced`。返回值带 `[[nodiscard]]`，编译器要求调用方接住它；只看落子后的棋盘会漏掉被拒绝的情况。
+
+`main` 只做装配和结果检查。棋盘、轮次、胜负判定都在动态库里，入口不重复写这些规则。`std::cout` 打成功行，`std::cerr` 打失败行；动态库不包含 `<iostream>`，接口也不接收标准流。
+
+主程序通过 `target_link_libraries(app PRIVATE tictactoe)` 链接动态库。CMake 把 `app` 的构建期 RPATH 设为 `$ORIGIN/../lib`。运行 `build/bin/app` 时，加载器据此找到同一次构建产出的 `libtictactoe.so`。
+
+## 退出码
+
+成功落子时 `main` 返回 `0`，落子被拒或动态库抛出异常时返回 `1`。`main` 的返回值就是进程退出码，构建脚本用它判断这次动态库调用是否完成。
+
+后续把终端循环接回入口时，退出码仍由 `RunMatch` 返回：正常下完一局是 `0`，输入提前结束是 `1`。入口只把结果原样交回操作系统，不自行解释对局状态。
+
+## 常见错误
+
+### 入口里写对局规则
+
+把胜负判断或棋盘打印直接写进 `main` 时，其他调用方无法复用这段代码。
+
+- **出错的原因**：规则一旦离开动态库，就会在入口、测试和终端程序各出现一份。
+- **正确的做法**：入口只创建对局、调用 `Game` 的成员并检查返回值。
+
+### 丢掉落子结果
+
+`TryPlace` 标了 `[[nodiscard]]`，调用后不接返回值会触发编译告警，`-Werror` 下直接失败。
+
+- **出错的原因**：落子可能因为坐标越界、棋盘格子已被占用或没轮到这名玩家被拒绝；不检查返回值就无法区分成功与失败。
+- **正确的做法**：接住 `TryPlace` 的返回值并比较，失败分支写诊断并返回非零退出码。
+
+### 诊断混进标准输出
+
+把失败提示写进 `std::cout` 时，成功行与诊断混在同一份输出里，按行解析的脚本会读到多余内容。
+
+- **出错的原因**：标准输出是程序结果，标准错误才是诊断。
+- **正确的做法**：成功行走 `std::cout`，失败行走 `std::cerr`。
+
+## 自测问题
+
+不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
+
+1. `main` 创建对局后调用的是哪个库接口？
+
+   ::: {.answer}
+   `Game::TryPlace`。它接收一个 `Move`，成功返回 `PlaceResult::kPlaced`，失败返回 `PlaceResult::kRejected`。
+   :::
+
+2. 为什么入口不直接打印棋盘？
+
+   ::: {.answer}
+   当前构建只验证动态库能被链接和调用。
+   :::
+
+3. 落子失败时进程退出码是多少？
+
+   ::: {.answer}
+   `1`。`main` 在失败分支写 `std::cerr` 并返回 `1`；成功落子返回 `0`。
+   :::
+
+## 本章回顾
+
+你已经能让 `main` 链接动态库、落下一子并检查结果。下一章看测试代码怎样核对同一批库行为。
+
+[07-main-cpp]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/apps/src/main.cpp

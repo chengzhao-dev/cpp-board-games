@@ -1,0 +1,147 @@
+---
+title: "测试"
+---
+
+[程序入口](07-main.qmd) 之后，棋盘已经写出。测试代码在 [tests 目录][08-tests-dir]，用来核对 `Board` 的公开行为。
+
+::: {.callout-note title="当前构建范围"}
+`tests/` 已接入构建。CMake 用 `FetchContent` 取 GoogleTest，`tictactoe_test` 链接动态库 `tictactoe`。CTest 注册 14 条 `BoardTest` 用例；本章只讲棋盘测试。
+:::
+
+## 测试用例结构
+
+`tests/` 只有一个测试文件 [testing-board.cpp][08-testing-board]，共 14 条用例，覆盖初始状态、坐标范围、成功写入、拒绝、清空与终局判定。本章给出其中四条完整用例，其余只列用例名。
+
+### 初始状态
+
+[testing-board.cpp][08-testing-board] 的第一个测试核对新建棋盘的初始状态。
+
+```{.cpp filename="testing-board.cpp"}
+// 新建棋盘的每个棋盘格子均为空。
+TEST(BoardTest, InitialBoardIsEmpty) {
+  const Board board;
+  for (int row = 0; row < tictactoe::kBoardRows; ++row) {
+    for (int col = 0; col < tictactoe::kBoardCols; ++col) {
+      EXPECT_EQ(board.GetCellType({.row = row, .col = col}), CellType::kEmpty);
+    }
+  }
+}
+```
+
+`TEST` 宏把测试套件名和用例名组成一个测试。`EXPECT_EQ` 逐个棋盘格子比较实际取值与期望的 `kEmpty`。任何一个棋盘格子不等，这个测试就失败，失败信息会指出是哪一个棋盘格子。测试直接包含头文件调用真正的 `Board`，不经过终端程序。
+
+测试函数上方那一行注释说明这个用例验证什么。一条测试只核对一件事时，一句话就够；读者扫过 `TEST` 行与注释，就知道这条测试检查的是哪条行为。
+
+### 成功与拒绝
+
+测试新建棋盘还不够。`Board` 的放置入口有成功和拒绝两条路径，两条都要有测试。占用与非法坐标各用一条完整用例：
+
+```{.cpp filename="testing-board.cpp"}
+// 已占用的棋盘格子不能被第二次写入。
+TEST(BoardTest, PlaceCellRejectsOccupiedCell) {
+  Board board;
+  const CellPosition origin{.row = 0, .col = 0};
+  ASSERT_TRUE(board.PlaceCell(origin, CellType::kX));
+  EXPECT_FALSE(board.PlaceCell(origin, CellType::kO));
+  EXPECT_EQ(board.GetCellType(origin), CellType::kX);
+}
+
+// 负坐标和上界坐标都不能写入。
+TEST(BoardTest, PlaceCellRejectsInvalidPosition) {
+  Board board;
+  EXPECT_FALSE(board.PlaceCell({.row = -1, .col = 0}, CellType::kX));
+  EXPECT_FALSE(board.PlaceCell({.row = 0, .col = -1}, CellType::kO));
+  EXPECT_FALSE(board.PlaceCell({.row = tictactoe::kBoardRows, .col = 0}, CellType::kX));
+  EXPECT_FALSE(board.PlaceCell({.row = 0, .col = tictactoe::kBoardCols}, CellType::kO));
+  EXPECT_EQ(board.GetCellType({.row = 0, .col = 0}), CellType::kEmpty);
+}
+```
+
+第一条用例先用 `ASSERT_TRUE` 铺好前提：写入 X 必须成功，否则后面的断言没有意义。`ASSERT_*` 失败会立即结束当前用例。随后两次 `EXPECT_FALSE` 与 `EXPECT_EQ` 核对写不进去、原值也没被改掉。
+
+第二条用例覆盖四个方向：行坐标取 −1 与上界，列坐标取 −1 与上界。四条 `EXPECT_FALSE` 核对拒绝结果，末尾一条 `EXPECT_EQ` 确认棋盘没有被这些写入改动。
+
+### 异常路径
+
+`PlaceCell` 用返回值报告拒绝。查询没有可返回的“失败”取值，改用异常：
+
+```{.cpp filename="testing-board.cpp"}
+// 非法坐标不能用于读取棋盘格子类型。
+TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
+  const Board board;
+  EXPECT_THROW((void)board.GetCellType({.row = -1, .col = 0}), std::out_of_range);
+  EXPECT_THROW((void)board.GetCellType({.row = 0, .col = -1}), std::out_of_range);
+  EXPECT_THROW((void)board.GetCellType({.row = tictactoe::kBoardRows, .col = 0}),
+               std::out_of_range);
+  EXPECT_THROW((void)board.GetCellType({.row = 0, .col = tictactoe::kBoardCols}),
+               std::out_of_range);
+}
+```
+
+`GetCellType` 在 `(3, 0)` 这类坐标上没有对应的棋盘格子。它的边界判断与 [`std::array::at`][08-array-at] 相同，越界时抛标准库的 `std::out_of_range`。消息先写来源，再写失败条件与实际值；测试核对 `Board::GetCellType:`、`row=-1` 与 `col=0` 这些稳定片段，测试文件直接包含 `<stdexcept>`。
+
+`GetCellType` 带 `[[nodiscard]]`。测试不关心返回值，只关心异常，所以显式写成 `(void)`，让编译器知道这次丢弃是有意的。
+
+`EXPECT_THROW` 核对异常类型，异常不抛或类型不同都算失败。`EXPECT_*` 失败后继续执行后面的断言，`ASSERT_*` 失败则立即返回当前用例。完整断言列表见 [Primer][08-primer]。
+
+### 其余用例
+
+其余十条用例各核对一条行为：
+
+- `ValidPositionIncludesBothCorners` 核对左上角与右下角都在坐标范围内。
+- `PlaceCellWritesEmptyCell` 核对成功写入后能读回同一个棋子。
+- `PlaceCellRejectsEmptyType` 核对 `kEmpty` 不是一次有效写入。
+- `GetCellTypeWhatTextForInvalidPosition` 核对越界异常的消息带函数名与行列值。
+- `IsFullOnlyAfterEveryCellPlaced` 核对九格放满才返回 `true`。
+- `GetWinnerHasNoValueOnNewBoard` 与 `GetWinnerReturnsXForTopRow` 核对空盘无赢家、顶行成三连判 X 胜。
+- `IsDrawWhenFullWithoutWinner` 核对满盘且无三连时判平局。
+- `IsLineCompleteProbesWithoutPlacing` 核对只读推演，不改原棋盘。
+- `ClearRestoresEmptyBoard` 核对清空后九格皆空、终局查询回到开局，同一格可以再次写入。
+
+## 测试运行
+
+构建脚本在编译之后运行 CTest：
+
+```{.bash filename="终端"}
+ctest --test-dir build --output-on-failure
+```
+
+CMake 用 `gtest_discover_tests` 把 14 条用例注册给 CTest。每条用例独立运行，失败一条就停住。测试是启动程序前的最后一道检查。
+
+::: {.callout-note title="术语：CTest"}
+CTest 是 CMake 自带的测试运行工具。它统一运行 `add_test` 注册的用例。
+:::
+
+## 常见错误
+
+### 顺利路径之外
+
+测试只覆盖落子成功，没有覆盖越界坐标、已占格、满盘与三连。
+
+- **出错的原因**：只走顺利路径，拒绝分支的返回值与状态不变都没有被核对。
+- **正确的做法**：每个公开入口至少覆盖成功与拒绝各一条。
+
+## 自测问题
+
+不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
+
+1. `InitialBoardIsEmpty` 在什么情况下会失败？
+
+   ::: {.answer}
+   九个棋盘格子中任何一个的取值不是 `kEmpty`。`EXPECT_EQ` 比较失败时会报告是哪个棋盘格子和两个值。
+   :::
+
+2. 测试为什么不通过终端程序核对棋盘？
+
+   ::: {.answer}
+   测试直接包含 `board.h` 并调用 `Board`，不依赖终端交互。这样失败能定位到具体函数，而不是一段画面。
+   :::
+
+## 本章回顾
+
+你已经能读出一条测试的结构，并说出 14 条棋盘用例覆盖什么。下一章构建与运行，配置、编译、跑 CTest 并启动程序。
+
+[08-tests-dir]: https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tictactoe/tests
+[08-testing-board]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tests/testing-board.cpp
+[08-array-at]: https://en.cppreference.com/w/cpp/container/array/at
+[08-primer]: https://google.github.io/googletest/primer.html

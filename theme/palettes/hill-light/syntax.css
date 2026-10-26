@@ -1,0 +1,150 @@
+/* ============================================================
+   Palette: hill-light · 语法高亮覆盖层
+   Quarto 只编译一对 highlight-style（Flexoki）；山光四时的语法色
+   在这里按 html[data-palette="hill-light"][data-mode] 覆盖。
+   只写颜色，不改字号、字重与布局。
+   ============================================================ */
+
+/* 溪山晓雾 · 06:00–10:59 */
+html[data-palette="hill-light"][data-mode="dawn"] code span:not([class]),
+html[data-palette="hill-light"][data-mode="dawn"] div.sourceCode,
+html[data-palette="hill-light"][data-mode="dawn"] div.sourceCode pre.sourceCode { color: #2B3538; }
+
+html[data-palette="hill-light"][data-mode="dawn"] code span.al { color: #8C352C; font-weight: 600; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.an { color: #5F6E6F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.at { color: #8A5A12; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.bn { color: #8A5A12; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.bu { color: #596A97; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.cf { color: #2D6A66; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.ch { color: #2F6B4F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.cn { color: #8A5A12; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.co { color: #5F6E6F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.cv { color: #5F6E6F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.do { color: #5F6E6F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.dt { color: #40548A; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.dv { color: #8A5A12; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.er { color: #8C352C; text-decoration: underline; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.ex { color: #8C352C; font-weight: 600; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.fl { color: #8A5A12; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.fu { color: #596A97; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.im { color: #8A5A12; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.in { color: #5F6E6F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.kw { color: #2D6A66; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.op { color: #2D6A66; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.ot { color: #40548A; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.pp { color: #8A5A12; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.re { color: #5F6E6F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.sc { color: #8C352C; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.ss { color: #2F6B4F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.st { color: #2F6B4F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.va { color: #596A97; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.vs { color: #2F6B4F; }
+html[data-palette="hill-light"][data-mode="dawn"] code span.wa { color: #8A5A12; }
+
+/* 溪山午荫 · 11:00–16:59 */
+html[data-palette="hill-light"][data-mode="noon"] code span:not([class]),
+html[data-palette="hill-light"][data-mode="noon"] div.sourceCode,
+html[data-palette="hill-light"][data-mode="noon"] div.sourceCode pre.sourceCode { color: #263230; }
+
+html[data-palette="hill-light"][data-mode="noon"] code span.al { color: #853027; font-weight: 600; }
+html[data-palette="hill-light"][data-mode="noon"] code span.an { color: #5A6B62; }
+html[data-palette="hill-light"][data-mode="noon"] code span.at { color: #7E510F; }
+html[data-palette="hill-light"][data-mode="noon"] code span.bn { color: #7E510F; }
+html[data-palette="hill-light"][data-mode="noon"] code span.bu { color: #566694; }
+html[data-palette="hill-light"][data-mode="noon"] code span.cf { color: #1D6A55; }
+html[data-palette="hill-light"][data-mode="noon"] code span.ch { color: #276847; }
+html[data-palette="hill-light"][data-mode="noon"] code span.cn { color: #7E510F; }
+html[data-palette="hill-light"][data-mode="noon"] code span.co { color: #5A6B62; }
+html[data-palette="hill-light"][data-mode="noon"] code span.cv { color: #5A6B62; }
+html[data-palette="hill-light"][data-mode="noon"] code span.do { color: #5A6B62; }
+html[data-palette="hill-light"][data-mode="noon"] code span.dt { color: #3B4F86; }
+html[data-palette="hill-light"][data-mode="noon"] code span.dv { color: #7E510F; }
+html[data-palette="hill-light"][data-mode="noon"] code span.er { color: #853027; text-decoration: underline; }
+html[data-palette="hill-light"][data-mode="noon"] code span.ex { color: #853027; font-weight: 600; }
+html[data-palette="hill-light"][data-mode="noon"] code span.fl { color: #7E510F; }
+html[data-palette="hill-light"][data-mode="noon"] code span.fu { color: #566694; }
+html[data-palette="hill-light"][data-mode="noon"] code span.im { color: #7E510F; }
+html[data-palette="hill-light"][data-mode="noon"] code span.in { color: #5A6B62; }
+html[data-palette="hill-light"][data-mode="noon"] code span.kw { color: #1D6A55; }
+html[data-palette="hill-light"][data-mode="noon"] code span.op { color: #1D6A55; }
+html[data-palette="hill-light"][data-mode="noon"] code span.ot { color: #3B4F86; }
+html[data-palette="hill-light"][data-mode="noon"] code span.pp { color: #7E510F; }
+html[data-palette="hill-light"][data-mode="noon"] code span.re { color: #5A6B62; }
+html[data-palette="hill-light"][data-mode="noon"] code span.sc { color: #853027; }
+html[data-palette="hill-light"][data-mode="noon"] code span.ss { color: #276847; }
+html[data-palette="hill-light"][data-mode="noon"] code span.st { color: #276847; }
+html[data-palette="hill-light"][data-mode="noon"] code span.va { color: #566694; }
+html[data-palette="hill-light"][data-mode="noon"] code span.vs { color: #276847; }
+html[data-palette="hill-light"][data-mode="noon"] code span.wa { color: #7E510F; }
+
+/* 溪山暮烟 · 17:00–19:59 */
+html[data-palette="hill-light"][data-mode="dusk"] code span:not([class]),
+html[data-palette="hill-light"][data-mode="dusk"] div.sourceCode,
+html[data-palette="hill-light"][data-mode="dusk"] div.sourceCode pre.sourceCode { color: #3A2C26; }
+
+html[data-palette="hill-light"][data-mode="dusk"] code span.al { color: #8A352A; font-weight: 600; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.an { color: #725F55; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.at { color: #8A5518; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.bn { color: #8A5518; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.bu { color: #616486; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.cf { color: #35645D; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.ch { color: #3C6A4C; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.cn { color: #8A5518; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.co { color: #725F55; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.cv { color: #725F55; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.do { color: #725F55; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.dt { color: #4A4F7A; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.dv { color: #8A5518; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.er { color: #8A352A; text-decoration: underline; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.ex { color: #8A352A; font-weight: 600; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.fl { color: #8A5518; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.fu { color: #616486; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.im { color: #8A5518; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.in { color: #725F55; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.kw { color: #35645D; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.op { color: #35645D; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.ot { color: #4A4F7A; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.pp { color: #8A5518; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.re { color: #725F55; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.sc { color: #8A352A; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.ss { color: #3C6A4C; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.st { color: #3C6A4C; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.va { color: #616486; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.vs { color: #3C6A4C; }
+html[data-palette="hill-light"][data-mode="dusk"] code span.wa { color: #8A5518; }
+
+/* 溪山夜月 · 20:00–05:59 */
+html[data-palette="hill-light"][data-mode="night"] code span:not([class]),
+html[data-palette="hill-light"][data-mode="night"] div.sourceCode,
+html[data-palette="hill-light"][data-mode="night"] div.sourceCode pre.sourceCode { color: #D7DDD9; }
+
+html[data-palette="hill-light"][data-mode="night"] code span.al { color: #DD9585; font-weight: 600; }
+html[data-palette="hill-light"][data-mode="night"] code span.an { color: #87938E; }
+html[data-palette="hill-light"][data-mode="night"] code span.at { color: #D8AB6E; }
+html[data-palette="hill-light"][data-mode="night"] code span.bn { color: #D8AB6E; }
+html[data-palette="hill-light"][data-mode="night"] code span.bu { color: #9FB3D6; }
+html[data-palette="hill-light"][data-mode="night"] code span.cf { color: #8CB9AE; }
+html[data-palette="hill-light"][data-mode="night"] code span.ch { color: #86B894; }
+html[data-palette="hill-light"][data-mode="night"] code span.cn { color: #D8AB6E; }
+html[data-palette="hill-light"][data-mode="night"] code span.co { color: #87938E; }
+html[data-palette="hill-light"][data-mode="night"] code span.cv { color: #87938E; }
+html[data-palette="hill-light"][data-mode="night"] code span.do { color: #87938E; }
+html[data-palette="hill-light"][data-mode="night"] code span.dt { color: #A3B4DD; }
+html[data-palette="hill-light"][data-mode="night"] code span.dv { color: #D8AB6E; }
+html[data-palette="hill-light"][data-mode="night"] code span.er { color: #DD9585; text-decoration: underline; }
+html[data-palette="hill-light"][data-mode="night"] code span.ex { color: #DD9585; font-weight: 600; }
+html[data-palette="hill-light"][data-mode="night"] code span.fl { color: #D8AB6E; }
+html[data-palette="hill-light"][data-mode="night"] code span.fu { color: #9FB3D6; }
+html[data-palette="hill-light"][data-mode="night"] code span.im { color: #D8AB6E; }
+html[data-palette="hill-light"][data-mode="night"] code span.in { color: #87938E; }
+html[data-palette="hill-light"][data-mode="night"] code span.kw { color: #8CB9AE; }
+html[data-palette="hill-light"][data-mode="night"] code span.op { color: #8CB9AE; }
+html[data-palette="hill-light"][data-mode="night"] code span.ot { color: #A3B4DD; }
+html[data-palette="hill-light"][data-mode="night"] code span.pp { color: #D8AB6E; }
+html[data-palette="hill-light"][data-mode="night"] code span.re { color: #87938E; }
+html[data-palette="hill-light"][data-mode="night"] code span.sc { color: #DD9585; }
+html[data-palette="hill-light"][data-mode="night"] code span.ss { color: #86B894; }
+html[data-palette="hill-light"][data-mode="night"] code span.st { color: #86B894; }
+html[data-palette="hill-light"][data-mode="night"] code span.va { color: #9FB3D6; }
+html[data-palette="hill-light"][data-mode="night"] code span.vs { color: #86B894; }
+html[data-palette="hill-light"][data-mode="night"] code span.wa { color: #D8AB6E; }

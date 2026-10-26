@@ -1,0 +1,107 @@
+/* dsh-quarto-book Quarto 主题 · 编辑注 callout（2px 色条 + 无底色 + 无圆角）
+ *
+ * 书籍阅读方向：callout 不是「卡片」，而是正文外侧的编辑注。
+ * 类型只在左色条和图标上出现，标题回到正文色，避免 GitHub admonition 的彩色小卡观感。
+ * 下面的 border: none 简写会把 border-left-color 重置为 currentColor，
+ * Bootstrap 的 div.callout-<type>.callout 又是 (0,2,1)，因此类型规则必须写成
+ * div.callout.callout-<type> 才能特异性相同、靠加载顺序胜出。 */
+
+div.callout.callout-style-default,
+div.callout.callout-style-simple {
+  border: none;
+  border-left-width: 2px;
+  border-left-style: solid;
+  border-radius: 0;
+  margin: 0;
+  padding: 0.1rem 0 0.1rem 1.1rem;
+  overflow-wrap: break-word;
+  display: block;
+  background-color: transparent;
+}
+
+div.callout.callout-style-default > .callout-header,
+div.callout.callout-style-simple > .callout-header {
+  margin: 0 0 0.35rem;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+  opacity: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+div.callout.callout-style-default:not(.no-icon) div.callout-icon-container,
+div.callout.callout-style-simple:not(.no-icon) div.callout-icon-container {
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+}
+
+.callout .callout-title-container {
+  /* 标题一面用黑体栈：13px 下才有真正的 600（正文楷体在 font-synthesis: none
+     下请求 600 仍是常规笔画）；色条仍标类型，字重与字面差把标签从正文里拎出来。 */
+  font-family: var(--heading-font);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  /* 中文汉字等宽，加字距只把词拉散：标签层级靠字重与字号。 */
+  text-transform: none;
+  color: var(--body-color);
+}
+
+div.callout .callout-body,
+div.callout.callout-style-default .callout-body {
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.85;
+  font-weight: 400;
+  color: var(--body-color);
+}
+
+div.callout.callout-style-default .callout-body > :first-child,
+.callout:not(.callout-titled) .callout-body > :first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+#quarto-document-content > .callout,
+#quarto-document-content section > .callout {
+  margin-top: 1.4rem;
+}
+#quarto-document-content > .callout + .callout,
+#quarto-document-content section > .callout + .callout {
+  margin-top: 1.6rem;
+}
+
+/* 图标按类型着色；标题保持正文色，避免整块变成彩色便签。 */
+.callout.callout-note .callout-title-container,
+.callout.callout-tip .callout-title-container,
+.callout.callout-warning .callout-title-container,
+.callout.callout-important .callout-title-container,
+.callout.callout-caution .callout-title-container {
+  color: var(--body-color);
+}
+
+.callout.callout-note .callout-icon { color: var(--callout-note-border); }
+.callout.callout-tip .callout-icon { color: var(--callout-tip-border); }
+.callout.callout-warning .callout-icon { color: var(--callout-warning-border); }
+.callout.callout-important .callout-icon { color: var(--callout-important-border); }
+.callout.callout-caution .callout-icon { color: var(--callout-caution-border); }
+
+div.callout.callout-note {
+  border-left-color: var(--callout-note-border);
+}
+div.callout.callout-tip {
+  border-left-color: var(--callout-tip-border);
+}
+div.callout.callout-warning {
+  border-left-color: var(--callout-warning-border);
+}
+div.callout.callout-important {
+  border-left-color: var(--callout-important-border);
+}
+div.callout.callout-caution {
+  border-left-color: var(--callout-caution-border);
+}

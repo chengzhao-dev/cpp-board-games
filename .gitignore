@@ -9,8 +9,11 @@
 *_files/
 /site_libs/
 
-# C++ 与 CMake 产物
+# C++ 与 CMake 产物（.agents/context/conventions/build/ 是规范源码目录，不受此规则约束）
 build/
+build-release/
+!.agents/context/conventions/build/
+!.agents/context/conventions/build/**
 *.o
 *.obj
 a.out

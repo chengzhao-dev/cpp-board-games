@@ -1,0 +1,62 @@
+//===------------------------------------------------------------------------------------------===//
+// settings.json - 井字棋工程的编辑器配置
+//
+// 用 Remote - WSL 打开 games/tictactoe/ 目录本身，配置才会命中；
+// 配置、构建、运行和调试入口都留在 CMake Tools，不另建 tasks.json/launch.json。
+//===------------------------------------------------------------------------------------------===//
+{
+  // 通用编辑行为
+  "editor.formatOnSave": true,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+
+  // clangd 使用 WSL 里的 clang++ 取系统头；标准来自编译数据库。
+  "clangd.arguments": [
+    "--query-driver=/usr/bin/clang++",
+    "--header-insertion=never",
+    "--background-index"
+  ],
+
+  // CMake Tools 与 running-build.sh 共用 build/。
+  "cmake.buildDirectory": "${workspaceFolder}/build",
+  "cmake.generator": "Ninja",
+  "cmake.configureOnOpen": false,
+  "cmake.buildBeforeRun": true,
+  "cmake.exportCompileCommandsFile": true,
+
+  // CMake Tools 的快速调试使用 C/C++ 扩展的 cppdbg 适配器；
+  // 这里只把后端换成 LLDB，并给动态库补上 build/lib。
+  // GCC 模式改成 gdb + /usr/bin/gdb。
+  "cmake.debugConfig": {
+    "type": "cppdbg",
+    "request": "launch",
+    "MIMode": "lldb",
+    "miDebuggerPath": "/usr/bin/lldb",
+    "stopAtEntry": false,
+    "externalConsole": false,
+    "environment": [
+      {
+        "name": "LD_LIBRARY_PATH",
+        "value": "${workspaceFolder}/build/lib"
+      }
+    ]
+  },
+
+  // cpptools 只做 CMake 的调试后端，不再提供 IntelliSense；
+  // 补全、跳转、诊断和格式化都由 clangd 读取 compile_commands.json。
+  "C_Cpp.intelliSenseEngine": "disabled",
+
+  // 格式化与补全由 clangd 完成：直接读取本目录 .clang-format，
+  // 并从 build/compile_commands.json 定位头文件与编译参数。
+  "[cpp]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
+  "[c]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
+
+  // 文件排除：不显示 clangd 的缓存目录
+  "files.exclude": {
+    "**/.cache": true
+  }
+}

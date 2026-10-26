@@ -3,51 +3,49 @@
 [![render check](https://github.com/chengzhao-dev/cpp-board-games/actions/workflows/render-check.yml/badge.svg)](https://github.com/chengzhao-dev/cpp-board-games/actions/workflows/render-check.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](LICENSE)
 
-从终端井字棋开始的 C++ 工程实践。`games/tictactoe/` 下有三个可运行目录，从双人终端对局演进到电脑对手与逐行 JSON 协议。
+从终端井字棋开始的 C++ 工程实践。`games/tictactoe/` 是一份井字棋工程，当前构建只包含动态库与最小主程序；终端层、测试与快照保留源码，等待接回构建。这个工程从双人终端对局演进到电脑对手与逐行 JSON 协议。
 
 在线阅读：<https://chengzhao-dev.github.io/cpp-board-games/>
 
 ## 从哪里读起
 
 1. [确定对局规则](content/tictactoe/01-rules.qmd)
-2. [对应工程目录](content/tictactoe/02-project-layout.qmd)
+2. [对应工程目录](content/tictactoe/02-mapping-layout.qmd)
 3. [实现棋盘存储](content/tictactoe/03-board.qmd)
 
-完整列表见[井字棋落地页](content/tictactoe/index.qmd)。
+读完这三章，可以按顺序读工程。对局持有一块棋盘，在棋盘上判定胜负。电脑担任另一名玩家；完整设计里，终端程序打印棋盘并读入坐标，入口把标准流交给对局循环，测试核对库的行为。当前构建先验收动态库：入口只创建一局、落一子并检查返回值。最后的局面快照把每一轮写成一行 JSON，供其他程序读取。全部章节见 [井字棋首页](content/tictactoe/index.qmd)。
 
-## 当前状态
+## 仓库构成
 
-- 井字棋有三个可运行目录：`01-cli-game` 双人终端、`02-cpu-opponent` 电脑对手、`03-line-protocol` 逐行 JSON 协议
-- 文档：Quarto Book 由 GitHub Actions 渲染并发布
+仓库由四部分组成：
 
-## 仓库地图
+- **在线书**：`content/` 与根 `index.qmd` 保存章节正文。GitHub Actions 渲染并发布。
+- **井字棋工程**：`games/tictactoe/` 包含动态库、主程序，以及保留的终端层、测试与回放脚本；当前能独立构建并运行最小入口。
+- **维护规则**：`.agents/` 保存项目技能、三个维护脚本与内容检查配置。
+- **主题与过滤器**：`theme/` 与 `filters/` 提供渲染主题、配色和可折叠答案。内容检查由 `.agents/skills/quarto-book-project/checks.json` 与插件 `writing-quarto` 的脚本执行。
 
-仓库分四块：`content/` 是在线书的正文；`games/tictactoe/` 下的 `01-cli-game`、`02-cpu-opponent`、`03-line-protocol` 是三份各自完整的程序（双人终端、电脑对手、逐行 JSON 协议），每份都能单独配置、编译、测试和运行；`games/tictactoe/python/` 是协议之后的回放脚本与本地网页，只启动 03 已编好的程序；`.agents/` 是维护规则、领域知识库与检查脚本。章号与目录编号不必对齐，前五章都讲 `01-cli-game`。
+修改仓库之前先读 [AGENTS.md](AGENTS.md)。贡献约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-需要修改仓库时，先阅读 [AGENTS.md](AGENTS.md)；贡献约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+## 运行工程
 
-## 在本机运行
-
-前提：WSL Ubuntu，装好 CMake 4.2、Clang 和 Ninja。用 VS Code 的 Remote - WSL 打开某一个游戏目录（不是仓库根），三个目录各自执行一条构建命令。编辑器保存文件时读取仓库根的 `.editorconfig`，行尾和缩进保持仓库约定：
+前提：WSL Ubuntu，装好 CMake 3.20 或更高、Clang、Ninja 与 libc++ 开发包。用 VS Code Remote - WSL 打开仓库根，编辑器读取根目录的 `.editorconfig`，行尾和缩进保持仓库约定。构建从仓库根执行：
 
 ```bash
-cd games/tictactoe/01-cli-game && ./build-and-run.sh
-cd games/tictactoe/02-cpu-opponent && ./build-and-run.sh
-cd games/tictactoe/03-line-protocol && ./build-and-run.sh
+python .agents/scripts/building-wsl.py tictactoe
 ```
 
-脚本完成配置、编译、格式与静态检查、测试和一局管道棋谱。回放与本地网页用仓库根 `config.toml` 指定的 Python 运行：
+脚本在 WSL 里进入工程目录，运行 `running-build.sh`；CI 在 Linux 上直接执行 `bash games/tictactoe/running-build.sh`。构建脚本完成 Debug 的配置与编译，跑 CTest 的 13 条棋盘用例，再运行最小入口。首次配置会下载 GoogleTest v1.15.2。回放与本地网页用 `config/config.toml` 指定的 Python 运行：
 
 ```bash
 python games/tictactoe/python/replay.py
 python games/tictactoe/python/web.py
 ```
 
-`replay.py` 自带协议自检；`web.py` 启动后访问它打印出的地址，网页依赖 03 已生成的 `build/bin/app`。
+`replay.py` 自带协议自检；`web.py` 启动后访问它打印出的地址。两个脚本都在 `games/tictactoe/python/` 目录。网页按终端层的快照协议读取对局；当前入口不写快照，终端层接回后才会生成可回放的数据。
 
-## 学习路线
+## 延伸阅读
 
-语言机制见姊妹仓库 [cpp-notes](https://github.com/chengzhao-dev/cpp-notes)。这些机制在棋盘上的用法见[实现棋盘存储](content/tictactoe/03-board.qmd)和[完成一次落子](content/tictactoe/04-game.qmd)。
+数组与枚举在棋盘上的用法见 [实现棋盘存储](content/tictactoe/03-board.qmd) 和 [完成一次落子](content/tictactoe/04-game.qmd)。若要系统阅读这些机制，见姊妹仓库 [cpp-notes](https://github.com/chengzhao-dev/cpp-notes)。
 
 ## 许可证
 

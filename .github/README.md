@@ -1,6 +1,6 @@
 # GitHub 展示与 CI
 
-CI 只覆盖文档：Quarto 渲染与文档脚本校验。C++/游戏代码不进 CI，只在本地、且仅当有相关改动时经对应阶段的 `build-and-run.sh` 验证。
+CI 只覆盖文档：Quarto 渲染与文档脚本校验。C++/游戏代码不进 CI，只在本地、且仅当有相关改动时经对应阶段的 `running-build.sh` 验证。Git 工作流、提交门禁与 Pages 发布操作见插件 `dsh-git-workflow` 的 `shipping-github` 技能。
 
 ## Workflows
 

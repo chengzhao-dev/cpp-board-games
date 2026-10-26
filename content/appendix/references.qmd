@@ -1,0 +1,48 @@
+---
+title: "参考资料"
+number-sections: false
+---
+
+按主题列出本书用到的语言规范、库文档和工程资料。链接指向官方文档与参考站点，正文结论以这些页面为依据。
+
+## C++ 语言与标准库
+
+- [cppreference: `std::array`][array]：数组长度在编译期确定，接口与元素访问。
+- [cppreference: `std::array::at`][array-at]：带边界检查，越界时抛出 `std::out_of_range`。本书的公开接口与测试都直接使用这个标准异常。
+- [cppreference: `std::expected`][expected]：用一个返回值同时携带成功值与错误码；读入器用它区分“读到了”“重试”“读完”。
+- [C++ Core Guidelines][core-guidelines]：C++ 工程实践的公共参考。本书的边界划分与资源管理思路与之一致。
+
+## 代码风格
+
+- [Google C++ Style Guide][google-style]：本书命名与格式的主要参照。
+- [Google C++ Style Guide: Naming][google-naming]：类型、函数、变量和枚举项的命名规则。
+- [LLVM Coding Standards][llvm-style]：本书注释写法的另一个参照，`///` 接口注释与 `@param`/`@return` 的用法取自这里的通用习惯。两处规范冲突时，本书以项目内统一的注释规则为准。
+
+## 测试
+
+- [GoogleTest Primer][gtest-primer]：`TEST`、`EXPECT_*` 与 `ASSERT_*` 的用法和失败语义。
+- [GoogleTest Advanced][gtest-advanced]：测试套件、夹具与更复杂的断言组织。
+
+## 构建
+
+- [CMake Tutorial][cmake-tutorial]：从配置、编译到 CTest 的完整流程。
+- [CMake: `add_library`][cmake-add-library]：动态库目标与导出宏的构建基础。
+
+## 终端输入输出
+
+- [cppreference: `std::iostream`][iostream]：标准输入输出流与格式化。
+- [cppreference: `std::getline`][getline]：按行读入，终端输入循环的基础。
+
+[array]: https://en.cppreference.com/w/cpp/container/array
+[array-at]: https://en.cppreference.com/w/cpp/container/array/at
+[expected]: https://en.cppreference.com/w/cpp/utility/expected
+[core-guidelines]: https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines
+[google-style]: https://google.github.io/styleguide/cppguide.html
+[google-naming]: https://google.github.io/styleguide/cppguide.html#Naming
+[llvm-style]: https://llvm.org/docs/CodingStandards.html
+[gtest-primer]: https://google.github.io/googletest/primer.html
+[gtest-advanced]: https://google.github.io/googletest/advanced.html
+[cmake-tutorial]: https://cmake.org/cmake/help/latest/guide/tutorial/index.html
+[cmake-add-library]: https://cmake.org/cmake/help/latest/command/add_library.html
+[iostream]: https://en.cppreference.com/w/cpp/io/basic_iostream
+[getline]: https://en.cppreference.com/w/cpp/string/basic_string/getline

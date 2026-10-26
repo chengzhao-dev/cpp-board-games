@@ -8,7 +8,7 @@ body-classes: homepage
 用可验证的棋盘游戏学习 C++ 工程
 :::
 
-这个项目用可运行、可测试的棋盘游戏承载 C++ 工程实践。内容从需求和规则开始，逐步说明程序边界、构建、测试与可观察的运行结果。当前从井字棋这个完整样例开始。
+这个项目用可运行、可测试的棋盘游戏讲 C++ 工程实践，正文从井字棋这个完整样例开始。对局规则与工程结构先定下玩法与程序边界，构建、测试与局面快照再写出后续流程。
 
 ## 当前游戏
 
@@ -16,15 +16,15 @@ body-classes: homepage
 ::: {.landing-card}
 ### [井字棋](content/tictactoe/index.qmd)
 
-按顺序查看井字棋的完整演进：从对局规则、工程目录到棋盘存储，再到电脑对手与局面快照。
+十一章从对局规则读到局面快照，章节入口在游戏首页。
 
-[进入井字棋 →](content/tictactoe/index.qmd){.cta}
+[进入井字棋 →](content/tictactoe/index.qmd){.cta tabindex="-1" aria-hidden="true"}
 :::
 :::
 
 ## 后续棋类
 
-::: {.feature-grid}
+::: {.feature-grid .future-games}
 ::: {.landing-card .coming-soon}
 ### 四子棋
 
@@ -34,12 +34,12 @@ body-classes: homepage
 ::: {.landing-card .coming-soon}
 ### 五子棋
 
-工具链与井字棋相同，规则另写。
+工具链与井字棋相同。规则另写。
 :::
 
 ::: {.landing-card .coming-soon}
 ### 黑白棋
 
-至少两个游戏真实复用同一规则之前，不抽共享库。
+至少两个游戏真实复用同一规则之前，不提取共享库。
 :::
 :::

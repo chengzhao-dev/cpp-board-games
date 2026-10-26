@@ -1,0 +1,43 @@
+/*-- scss:defaults --*/
+
+$font-family-sans-serif: "LXGW Bright Medium", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "Apple Color Emoji", "Segoe UI Emoji", sans-serif !default;
+
+$font-family-monospace: "LXGW Bright Code", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", monospace !default;
+
+$web-font-path: false !default;
+
+$font-size-root: 16px !default;
+$line-height-base: 1.75 !default;
+$font-size-base: 1rem !default;
+
+// Solarized Dark：base03 页面 + base0 正文；链接按官方 rebase 取 base1，blue 只作 accent。
+$primary: #51A0D5 !default;
+
+$body-color: #839496 !default;
+$link-color: #93A1A1 !default;
+
+$code-bg: #073642 !default;
+$code-color: #839496 !default;
+
+$body-secondary: #93A1A1 !default;
+
+$navbar-fg: #839496 !default;
+
+$callout-color-note: #93A1A1 !default;
+$callout-color-tip: #859900 !default;
+$callout-color-warning: #CB4B16 !default;
+$callout-color-important: #6C71C4 !default;
+$callout-color-caution: #DC322F !default;
+$callout-color-danger: #DC322F !default;
+
+$border-color: rgba(147, 161, 161, 0.18) !default;
+
+// 面包屑用页面底色：清除 darkly 默认灰底与内边距，明暗布局一致
+$breadcrumb-bg: transparent !default;
+$breadcrumb-padding-y: 0 !default;
+$breadcrumb-padding-x: 0 !default;
+$breadcrumb-margin-bottom: 0 !default;
+
+$table-bg: transparent !default;
+
+/*-- scss:rules --*/

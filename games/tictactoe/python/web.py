@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""本地网页：先选双人或人机，人机再选难度，然后在棋盘上落子。
+"""本地网页：用户先选双人或人机。人机再选难度。最后在棋盘上落子。
 
-规则仍由 03-line-protocol 的 app 计算。本文件只打开页面，并把点击写成
+规则仍由旁边工程编出的 app 计算。本文件只打开页面。页面把点击写成
 该程序已经在读的两行选择和「行 列」。
 """
 
@@ -18,8 +18,8 @@ _EOF = object()
 HOST = "127.0.0.1"
 PORT = 8765
 MAX_BODY = 4096
-# app 由旁边的编号目录 03-line-protocol 编出：本目录只启动它，不重复构建。
-STAGE = Path(__file__).resolve().parent.parent / "03-line-protocol"
+# app 由旁边的 C++ 工程编出。本目录只启动它。构建不在本目录重复。
+STAGE = Path(__file__).resolve().parent.parent
 
 # 页面只服务这一局。重新选择对局时关掉上一局进程。
 SESSION = None
@@ -54,7 +54,7 @@ def app_command():
 
 
 class MatchSession:
-    """握住一个 app 进程，把终端提示和 JSON 行收进队列。"""
+    """握住一个 app 进程。终端提示和 JSON 行收进队列。"""
 
     def __init__(self):
         command, env = app_command()
@@ -74,7 +74,7 @@ class MatchSession:
         self._start_pumps()
 
     def _start_pumps(self):
-        """stdout 按行进队列；stderr 另存，避免管道写满把对局卡住。"""
+        """stdout 按行进队列。stderr 另存。管道写满时对局不会被卡住。"""
         threading.Thread(target=self._pump_out, daemon=True).start()
         threading.Thread(target=self._pump_err, daemon=True).start()
 
@@ -100,7 +100,7 @@ class MatchSession:
             return None
 
     def _wait_for(self, marker, timeout=8):
-        """读到含 marker 的一行，或进程结束。函数返回等待期间收到的最后一条 JSON。"""
+        """等待在两种情况下结束：读到含 marker 的一行，或进程结束。函数返回等待期间收到的最后一条 JSON。"""
         latest = None
         waited = 0.0
         while waited < timeout:
@@ -119,7 +119,7 @@ class MatchSession:
         return latest
 
     def begin(self, mode, strength):
-        """先等到对局选择，再送难度，最后返回开局的九个棋盘格子。"""
+        """先等到对局选择。之后送难度。最后返回开局的九个棋盘格子。"""
         self._wait_for("请选择对局")
         lines = opening_lines(mode, strength)
         self._write(lines[0])

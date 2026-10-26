@@ -2,46 +2,98 @@
 title: "对局规则"
 ---
 
-这一章只确定一局井字棋要做什么。
+井字棋由两名玩家轮流落子，先手用 `X`，后手用 `O`。在 3 行 3 列的棋盘上形成三连的一方获胜。棋盘下满而没有三连就是平局。本章用一块可交互面板演示对局，确认落子与胜负规则。
 
-## 行为与画面
+## 落子规则
 
-程序答应做的事要逐项核对，先看程序回应，再看终局画面里各部分对应什么。
+每一轮按顺序做四件事：
 
-### 程序回应
+1. 程序显示当前棋盘，提示轮到谁落子。
+2. 玩家给出两个 0 到 2 的行列号，要落的棋盘格子必须为空。
+3. 程序检查输入；行列越界、棋盘格子已被占用或格式错误时说明原因，棋盘保持不变，要求重新输入。
+4. 输入有效时写入棋盘格子，随后判定胜负。
 
-两名玩家轮流在 3×3 棋盘上落子。程序对输入的回应有下面四项：
+::: {.callout-note title="术语：先手与后手"}
+先落第一子的一方叫先手。另一方叫后手。
+:::
 
-- **显示棋盘**：程序每一轮都先显示当前棋盘，再提示接下来轮到谁落子。
-- **拒绝非法输入**：行列越界、棋盘格子已被占用或格式错误时，程序说明原因并保持棋盘不变，要求重新输入。
-- **判定对局结果**：在一行、一列或一条对角线上三连即获胜，棋盘下满且没有三连则是平局。
-- **结束对局**：对局一旦结束，程序就打印明确的对局结果，不再接受落子。
+## 胜负判定
 
-### 终局画面
+三连一共有八条线：三行、三列和两条对角线。任意一方先把三个自己的棋子连成一条线，就对局获胜；X 与 O 用同一条判定，先连成的一方直接结束对局。
 
-X 在第一行三连时，程序的终局画面如下：
+九个棋盘格子全部下满、而双方都没有三连时，对局是平局。对局一旦结束，程序打印明确的对局结果，不再接受落子。
 
-```{.text filename="运行效果"}
-    0   1   2
+## 对局演示
+
+面板模拟终端程序的画面。九个棋盘格子可以直接点，也可以在“输入坐标”里按行列落子。每一步都会按终端程序的格式打印到“终端输出”。
+
+```{=html}
+<div class="terminal-lab" data-terminal-lab>
+  <div class="tl-head">
+    <span class="tl-kicker">运行效果</span>
+    <span class="tl-live"><span class="tl-live-dot" aria-hidden="true"></span>可交互</span>
+  </div>
+
+  <div class="tl-status">
+    <span class="tl-turn" data-tl-turn data-player="X">轮到 X</span>
+    <span class="tl-count" data-tl-count>第 1 手</span>
+  </div>
+
+  <div class="tl-board" role="grid" aria-label="棋盘，三行三列" data-tl-board>
+    <div class="tl-cols" aria-hidden="true"><span>0</span><span>1</span><span>2</span></div>
+  </div>
+
+  <p class="tl-message" data-kind="hint" role="status" aria-live="polite" data-tl-feedback>X 先手。点任意棋盘格子，或在下面按“行 列”落子。</p>
+
+  <div class="tl-toolbar">
+    <button class="tl-button" type="button" data-terminal-start>再来一局</button>
+    <button class="tl-button" type="button" data-terminal-hint>提示</button>
+    <button class="tl-button tl-button--mode" type="button" data-terminal-coord-toggle aria-expanded="false" aria-controls="tl-coord-form">输入坐标</button>
+  </div>
+
+  <form class="tl-prompt" id="tl-coord-form" data-terminal-coord hidden>
+    <label class="tl-prompt-label" for="rules-terminal-input">行列</label>
+    <input id="rules-terminal-input" class="tl-prompt-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="0 0" aria-describedby="rules-terminal-help">
+    <button class="tl-prompt-submit" type="submit">落子<span class="tl-prompt-key" aria-hidden="true">Enter</span></button>
+    <p class="tl-prompt-help" id="rules-terminal-help">和 C++ 程序一样，按“行 列”输入，按 Enter 键落子。</p>
+    <p class="tl-prompt-error" role="alert" data-tl-coord-error hidden></p>
+  </form>
+
+  <details class="tl-terminal">
+    <summary class="tl-terminal-bar">
+      <span class="tl-terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="tl-terminal-title">终端输出</span>
+      <span class="tl-terminal-file" aria-hidden="true">app</span>
+    </summary>
+    <div class="tl-terminal-body">
+      <p class="tl-terminal-cmd" aria-hidden="true">$ ./build/bin/app  # 终端程序接回后的目标画面</p>
+      <pre class="tl-terminal-pre" data-terminal-output>    0   1   2
   +---+---+---+
-0 | X | X | X |
+0 |   |   |   |
   +---+---+---+
-1 | O | O |   |
+1 |   |   |   |
   +---+---+---+
 2 |   |   |   |
   +---+---+---+
-对局结果：X 获胜
+轮到 X。请输入行和列（0 到 2）：</pre>
+    </div>
+  </details>
+
+  <noscript><p class="terminal-lab-note">启用 JavaScript 后，这块面板可以点棋盘格子落子。</p></noscript>
+</div>
 ```
 
-从上往下读这段画面，依次会看到三处信息：
+面板演示完整对局规则，展示的是终端程序接回构建后的目标画面。当前构建的 `app` 只做最小动态库调用，不会打印棋盘或提示输入；终端对局要等终端程序接回构建后才会出现。
 
-- **行列标记**：列号排在棋盘上方，行号写在左边框左侧，玩家输入的就是这些数字。
-- **棋盘格子**：空棋盘格子显示为框里的空位，落子后棋盘格子里显示对应的 X 或 O。
-- **结果提示**：末行的 `对局结果：X 获胜` 报告获胜方，平局与 O 获胜也用这一行显示。
+面板与终端输出描述同一件事，三处一一对应：
+
+- **行列标记**：终端画面的列号排在棋盘上方，行号写在左侧。面板上的九个棋盘格子与行列号一一对应。
+- **棋盘格子**：落子前棋盘格子里没有字母，落子后显示 `X` 或 `O`；终端画面同步显示相同的内容。
+- **结果提示**：对局结束时状态栏显示对局结果，终端画面的末行也打印 `对局结果：X 获胜`。平局与 O 获胜也打印在同一处。
 
 ## 自测问题
 
-先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。
+不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
 
 1. 什么情况下是平局？
 
@@ -52,9 +104,9 @@ X 在第一行三连时，程序的终局画面如下：
 2. 同一个棋盘格子已经有 X，再输入它的行和列会怎样？
 
    ::: {.answer}
-   程序拒绝这次落子，棋盘保持不变，并要求重新输入。
+   程序拒绝这次落子，棋盘保持不变，随后要求重新输入。
    :::
 
 ## 本章回顾
 
-你已经能对照终局画面说明程序的每一步回应。下一章把这些可观察结果对应到工程里的目录和文件。
+你已经能说出这套落子与胜负规则，并在演示面板里核对程序的落子与判定。下一章是工程结构，看这些规则落在哪些目录和文件里。

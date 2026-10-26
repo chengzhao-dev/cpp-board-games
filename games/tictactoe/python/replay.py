@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""解析井字棋逐行 JSON，不重新判断胜负。"""
+"""解析井字棋逐行 JSON。本模块不重新判断胜负。"""
 
 import json
 import subprocess
@@ -10,7 +10,7 @@ _VALID_STATUS = {"in_progress", "x_wins", "o_wins", "draw"}
 
 
 def parse_snapshot(line):
-    """读取并校验一行版本化局面；胜负字段直接信任 C++ 协议。"""
+    """读取一行版本化局面。行内容按协议校验。胜负字段直接信任 C++ 协议。"""
     payload = json.loads(line)
     if payload.get("version") != 1:
         raise ValueError("不支持的协议版本")
@@ -32,7 +32,7 @@ def parse_snapshot(line):
 
 
 def read_snapshots(lines):
-    """按输入顺序解析快照，并拒绝重复或倒退的序号。"""
+    """按输入顺序解析快照。重复或倒退的序号会被拒绝。"""
     snapshots = []
     previous = -1
     for line in lines:
@@ -45,7 +45,7 @@ def read_snapshots(lines):
 
 
 def run_app(command, moves, timeout=8):
-    """驱动阶段 app，分离 stdout/stderr，并限制协议进程等待时间。"""
+    """驱动可执行文件 app。本函数分离 stdout/stderr。协议进程的等待时间也有限制。"""
     input_text = "\n".join(moves) + "\n"
     completed = subprocess.run(
         command, input=input_text, text=True, encoding="utf-8",

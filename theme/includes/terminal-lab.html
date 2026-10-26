@@ -1,0 +1,268 @@
+<script>
+/* 运行效果：可点的井字棋棋盘 + 与程序同步的终端画面。
+   棋盘负责「能玩」，details 里的 <pre> 负责「程序真的会打印什么」——两者共用同一份状态，
+   每一步同时更新，不另造一套假输出。无 JS 时保留 <noscript> 里的静态终局画面。 */
+(() => {
+  const labs = document.querySelectorAll("[data-terminal-lab]");
+  if (!labs.length) return;
+
+  const LINES = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6],
+  ];
+  const EMPTY = ["", "", "", "", "", "", "", "", ""];
+  const ROW_NAMES = ["第一行", "第二行", "第三行"];
+  const COL_NAMES = ["第一列", "第二列", "第三列"];
+
+  const boardText = (board, tail) => {
+    const cell = (i) => (board[i] ? ` ${board[i]} ` : "   ");
+    const lines = [
+      "    0   1   2",
+      "  +---+---+---+",
+      `0 |${cell(0)}|${cell(1)}|${cell(2)}|`,
+      "  +---+---+---+",
+      `1 |${cell(3)}|${cell(4)}|${cell(5)}|`,
+      "  +---+---+---+",
+      `2 |${cell(6)}|${cell(7)}|${cell(8)}|`,
+      "  +---+---+---+",
+    ];
+    if (tail) lines.push(tail);
+    return lines.join("\n");
+  };
+
+  labs.forEach((lab, index) => {
+    const boardEl = lab.querySelector("[data-tl-board]");
+    const turnText = lab.querySelector("[data-tl-turn]");
+    const countText = lab.querySelector("[data-tl-count]");
+    const feedback = lab.querySelector("[data-tl-feedback]");
+    const note = lab.querySelector("[data-terminal-note]");
+    const output = lab.querySelector("[data-terminal-output]");
+    const startButton = lab.querySelector("[data-terminal-start]");
+    const hintButton = lab.querySelector("[data-terminal-hint]");
+    const coordToggle = lab.querySelector("[data-terminal-coord-toggle]");
+    const coordForm = lab.querySelector("[data-terminal-coord]");
+    const coordInput = lab.querySelector(".tl-prompt-input");
+    const coordError = lab.querySelector("[data-tl-coord-error]");
+    if (!boardEl || !turnText || !startButton) return;
+
+    if (coordInput && !coordInput.id) coordInput.id = `tl-coord-input-${index}`;
+
+    const cells = [];
+    for (let row = 0; row < 3; row += 1) {
+      const rowEl = document.createElement("div");
+      rowEl.className = "tl-row";
+      rowEl.setAttribute("role", "row");
+      rowEl.dataset.rowIndex = String(row);
+      for (let col = 0; col < 3; col += 1) {
+        const i = row * 3 + col;
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "tl-cell";
+        cell.setAttribute("role", "gridcell");
+        cell.dataset.index = String(i);
+        cell.tabIndex = i === 0 ? 0 : -1;
+        cell.addEventListener("click", () => place(i));
+        cells.push(cell);
+        rowEl.appendChild(cell);
+      }
+      boardEl.appendChild(rowEl);
+    }
+
+    let board = EMPTY.slice();
+    let player = "X";
+    let moves = 0;
+    let over = false;
+    let result = "";
+    let focusIndex = 0;
+
+    const clearCoordError = () => {
+      if (!coordError) return;
+      coordError.hidden = true;
+      coordError.textContent = "";
+    };
+    const showCoordError = (text) => {
+      if (!coordError) return;
+      coordError.textContent = text;
+      coordError.hidden = false;
+    };
+    const say = (text, kind) => {
+      if (!feedback) return;
+      feedback.textContent = text;
+      feedback.dataset.kind = kind || "hint";
+    };
+
+    const winnerLine = () => {
+      for (const line of LINES) {
+        const [a, b, c] = line;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) return line;
+      }
+      return null;
+    };
+
+    const goalReached = () => board[0] === "X" && board[1] === "X" && board[2] === "X";
+
+    const setNote = (text, kind) => {
+      if (!note) return;
+      note.textContent = text;
+      note.classList.toggle("is-success", kind === "success");
+    };
+
+    const render = () => {
+      cells.forEach((cell, i) => {
+        const value = board[i];
+        cell.textContent = value;
+        cell.dataset.mark = value.toLowerCase() || "empty";
+        cell.setAttribute(
+          "aria-label",
+          `${ROW_NAMES[Math.floor(i / 3)]}${COL_NAMES[i % 3]}，${value || "空"}`,
+        );
+      });
+      const win = over ? winnerLine() : null;
+      cells.forEach((cell, i) => cell.classList.toggle("is-win", !!win && win.includes(i)));
+
+      if (turnText) {
+        turnText.textContent = over ? `对局结束` : `轮到 ${player}`;
+        turnText.dataset.player = over ? "none" : player;
+      }
+      if (countText) countText.textContent = over ? result || "已结束" : `第 ${moves + 1} 手`;
+      if (startButton) startButton.textContent = "再来一局";
+      if (output) {
+        const tail = over ? `对局结果：${result}` : `轮到 ${player}。请输入行和列（0 到 2）：`;
+        output.textContent = boardText(board, tail);
+      }
+    };
+
+    const finish = (text, message) => {
+      over = true;
+      result = text;
+      lab.classList.add("is-over");
+      render();
+      say(message, text === "平局" ? "warn" : "success");
+      if (goalReached()) {
+        setNote("目标达成：X 在第一行连成三子。点「再来一局」可以再走一遍。", "success");
+      }
+    };
+
+    const place = (i) => {
+      if (over) {
+        say("对局已经结束。点「再来一局」重新开始。", "warn");
+        return;
+      }
+      if (board[i]) {
+        say("这个格子已经有棋子，换一个格子。", "warn");
+        return;
+      }
+      clearCoordError();
+      board[i] = player;
+      moves += 1;
+      const line = winnerLine();
+      if (line) {
+        finish(`${player} 获胜`, `${player} 连成三子，对局结束。`);
+        return;
+      }
+      if (board.every(Boolean)) {
+        finish("平局", "九个格子下满，没有三连，平局。");
+        return;
+      }
+      const previous = player;
+      player = player === "X" ? "O" : "X";
+      render();
+      if (coordInput) coordInput.value = "";
+      say(`${previous} 在${ROW_NAMES[Math.floor(i / 3)]}${COL_NAMES[i % 3]}落子，轮到 ${player}。`);
+    };
+
+    const start = () => {
+      board = EMPTY.slice();
+      player = "X";
+      moves = 0;
+      over = false;
+      result = "";
+      clearCoordError();
+      if (coordInput) coordInput.value = "";
+      lab.classList.remove("is-over");
+      render();
+      setNote("目标：让 X 在第一行连成三子。", "");
+      say("X 先手。点任意格子，或在下面按「行 列」落子。");
+      setFocus(0, false);
+    };
+
+    const setFocus = (i, doFocus) => {
+      focusIndex = (i + 9) % 9;
+      cells.forEach((cell, n) => {
+        cell.tabIndex = n === focusIndex ? 0 : -1;
+      });
+      if (doFocus) cells[focusIndex].focus();
+    };
+
+    boardEl.addEventListener("keydown", (event) => {
+      const row = Math.floor(focusIndex / 3);
+      const col = focusIndex % 3;
+      let next = null;
+      if (event.key === "ArrowRight") next = row * 3 + Math.min(col + 1, 2);
+      else if (event.key === "ArrowLeft") next = row * 3 + Math.max(col - 1, 0);
+      else if (event.key === "ArrowDown") next = Math.min(row + 1, 2) * 3 + col;
+      else if (event.key === "ArrowUp") next = Math.max(row - 1, 0) * 3 + col;
+      else if (event.key === "Home") next = row * 3;
+      else if (event.key === "End") next = row * 3 + 2;
+      if (next === null) return;
+      event.preventDefault();
+      setFocus(next, true);
+    });
+    boardEl.addEventListener("focusin", (event) => {
+      const index = cells.indexOf(event.target);
+      if (index >= 0) setFocus(index, false);
+    });
+
+    const hint = () => {
+      if (over) {
+        say("对局已经结束。点「再来一局」重新开始。", "warn");
+        return;
+      }
+      if (player === "X") {
+        const target = [0, 1, 2].find((c) => !board[c]);
+        if (target !== undefined) {
+          say(`X 下第 0 行第 ${target} 列：输入「0 ${target}」或点对应格子。`);
+        } else {
+          say("第一行已经下满但没有三连。点「再来一局」重新走。");
+        }
+        return;
+      }
+      const empty = board.findIndex((value, i) => !value && i >= 3);
+      const cell = empty >= 0 ? empty : board.findIndex((value) => !value);
+      say(`O 随便下一格，例如「${Math.floor(cell / 3)} ${cell % 3}」。`);
+    };
+
+    startButton.addEventListener("click", start);
+    if (hintButton) hintButton.addEventListener("click", hint);
+
+    if (coordToggle && coordForm && coordInput) {
+      coordToggle.addEventListener("click", () => {
+        const open = coordForm.hidden;
+        coordForm.hidden = !open;
+        coordToggle.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open) coordInput.focus();
+      });
+      coordForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const raw = coordInput.value.trim();
+        const match = raw.match(/^(\d)(?:\s*[,，]\s*|\s+)(\d)$/);
+        if (!match) {
+          showCoordError("格式不对：输入两个 0–2 的数字，用空格分开，例如 0 0。");
+          return;
+        }
+        const row = Number(match[1]);
+        const col = Number(match[2]);
+        if (row > 2 || col > 2) {
+          showCoordError("坐标超出棋盘：行列都只能是 0、1 或 2。");
+          return;
+        }
+        clearCoordError();
+        place(row * 3 + col);
+      });
+    }
+
+    start();
+  });
+})();
+</script>

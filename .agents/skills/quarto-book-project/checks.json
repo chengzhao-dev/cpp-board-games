@@ -1,0 +1,35 @@
+{
+  "forbidden_terms": [
+    "第一版", "探针", "阶段", "切片", "自足", "链路", "四步",
+    "契约", "契约链", "状态外壳", "地基", "执行纪律", "闭环", "落地",
+    "这条路线", "这条流程", "这套流程", "下面分别精读", "如下分别说明",
+    "刻意保持", "只可能", "不可能来自", "只包含", "读懂", "看懂",
+    "务必", "严禁", "千万不要", "千万别", "动手前", "弄清", "咱们",
+    "搞定", "别慌", "本章规划", "落点是", "类型名只是设计方向",
+    "标明", "跑通", "重建", "重读", "这正是", "容易混淆", "接口桩", "静态到动态",
+    "翻译单元", "纯数据聚合", "取值封闭", "数据组合用", "按 Google 风格",
+    "命名遵守", "语言依据", "格子内容", "用有符号整型承载", "选定宽有符号",
+    "空位", "对应的字母", "这一格", "某一格", "公开段", "私有段",
+    "公共成员", "成员变量", "公共头", "公共值类型", "固定",
+    "遵循同一套", "执 X", "执 O", "职责", "负责", "承担", "分进",
+    "返回假", "返回真", "是定义", "是声明", "的声明", "和总数", "、总数",
+    "消费", "谁消费", "CLI 打印", "课"
+  ],
+  "fragment_prefixes": ["games/", "content/", "theme/", "filters/"],
+  "chapter_titles": {
+    "content/tictactoe/01-rules.qmd": "对局规则",
+    "content/tictactoe/02-mapping-layout.qmd": "工程结构",
+    "content/tictactoe/viewing-program.qmd": "程序结构",
+    "content/tictactoe/03-board.qmd": "棋盘",
+    "content/tictactoe/04-game.qmd": "对局",
+    "content/tictactoe/05-ai.qmd": "电脑落子",
+    "content/tictactoe/06-writing-terminal.qmd": "终端程序",
+    "content/tictactoe/07-main.qmd": "程序入口",
+    "content/tictactoe/08-tests.qmd": "测试",
+    "content/tictactoe/09-running-build.qmd": "构建与运行",
+    "content/tictactoe/10-defining-snapshot.qmd": "局面快照"
+  },
+  "later_chapter_names": {
+    "content/tictactoe/03-board.qmd": ["GameResult", "Game", "Ai"]
+  }
+}

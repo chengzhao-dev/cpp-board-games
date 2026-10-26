@@ -8,5 +8,5 @@
 
 ## 改动边界
 
-- GitHub Actions 只检查在线书与 `.agents/`（Quarto 渲染与文档校验）；游戏代码不进 CI，改动后在对应目录执行 `build-and-run.sh`。
+- GitHub Actions 只检查在线书与 `.agents/`（Quarto 渲染与文档校验）；游戏代码不进 CI，改动后在对应目录执行 `running-build.sh`。
 - 修改仓库前先读 [AGENTS.md](AGENTS.md)：它是内容、代码、工具与验收边界的唯一入口。

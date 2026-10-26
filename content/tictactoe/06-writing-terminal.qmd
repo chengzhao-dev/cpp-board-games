@@ -1,0 +1,276 @@
+---
+title: "终端程序"
+---
+
+终端程序由 `RunMatch` 驱动一局：先读入对局模式，人机对局再读入电脑强度，随后进入循环。每轮打印棋盘，轮到人类时读入坐标，轮到电脑时从 [电脑落子](05-ai.qmd) 取一步 `Move`。头文件在 `apps/include/` 下的 [cli.h][06-cli-h]，实现在 `apps/src/` 下的 [cli.cpp][06-cli-cpp]。
+
+::: {.callout-note title="当前构建范围"}
+`cli.h` 与 `cli.cpp` 仍在 `apps/`。当前 CMake 只构建 `tictactoe` 动态库和 `app`。终端程序没有接入构建。本章保留为终端程序的实现说明，接回构建时再按这里的接口恢复。
+:::
+
+## 输入与输出
+
+终端程序做两类事：把棋盘与结果打印出去，把玩家输入的坐标读进来。打印一侧每个函数只管一种输出；读入一侧则要分开已处理、重新读、输入结束三种结果。
+
+### 定义读入结果
+
+读入玩家输入之前，先在 `cli.h` 里定下三个类型。`ReadError` 列出读入除成功外的两种结果，`RowAndCol` 暂存读到的一对整数，`HumanMove` 记录一次人类落子的处理结果：
+
+```{.cpp filename="cli.h"}
+/// 读取行列时除成功外的两种结果。
+enum class ReadError : std::uint8_t {
+  kRetry = 0,  ///< 这一行无效，重新读。
+  kEof = 1,    ///< 输入结束。
+};
+
+/// 读到的一对行列坐标。
+struct RowAndCol {
+  int row = 0;  ///< 可能为负数，合法性由落子入口判定。
+  int col = 0;  ///< 可能越界，合法性由落子入口判定。
+};
+
+/// 一次人类落子的读入结果。
+enum class HumanMove : std::uint8_t {
+  kPlaced = 0,    ///< 这一行已处理，继续下一轮。
+  kRetry = 1,     ///< 重新读一行。
+  kInputEnd = 2,  ///< 输入结束。
+};
+```
+
+`ReadError` 没有“成功”这一项。读入器返回 `std::expected<RowAndCol, ReadError>`，成功值本身就说明读到了两个整数，枚举只列需要处理的两条失败路径。读入时先接住任意整数，棋盘内的合法性留给 `TryPlace` 判定。
+
+`HumanMove` 记录一次落子的结果。`kPlaced` 表示这一行已经处理完：棋盘已经修改，或者被拒绝的说明已经写完；`kRetry` 表示这一行需要重新读；`kInputEnd` 表示输入结束，调用方应当退出。
+
+两个结果类型把读和落子分开。底层读入器接受两个整数，不依赖 `Game`。上层把读入和落子连起来，被拒绝时把具体原因写给玩家。循环代码不必分辨是坐标写错还是棋盘格子已被占用：两种情况都返回 `kPlaced`，下一轮再读一行。
+
+### 打印棋盘
+
+打印棋盘的两个函数都在 `cli.cpp` 里。它们把对局拼成多行文本，并写进输出流：
+
+```{.cpp filename="cli.cpp"}
+std::string BoardToString(const Game& game) {
+  // 列号写在表头、行号写在最左：玩家按“先看行号再看列号”的顺序数格子，
+  // 与落子提示里的“行和列”同序，不必在脑子里交换。
+  std::string board = "    0   1   2\n";
+  const std::string rule = "  +---+---+---+\n";
+  board += rule;
+  for (int row = 0; row < kBoardRows; ++row) {
+    board += std::to_string(row);
+    board += " |";
+    for (int col = 0; col < kBoardCols; ++col) {
+      board += ' ';
+      board += CellSymbol(game.GetCellType({.row = row, .col = col}));
+      board += " |";
+    }
+    board += '\n';
+    board += rule;
+  }
+  return board;
+}
+```
+
+`PrintGame` 把棋盘文本连同一行结果写进输出流：
+
+```{.cpp filename="cli.cpp"}
+void PrintGame(std::ostream& out, const Game& game) {
+  out << BoardToString(game) << "对局结果：" << GameResultToString(game.GetResult()) << '\n';
+  WriteSnapshot(out, game);
+}
+```
+
+`CellSymbol` 把棋盘格子类型换成单个显示字符：空格子显示为空白，X 与 O 各用同名大写字母。
+
+`GameResultToString` 把终局结果换成中文结果短语，`PrintGame` 在棋盘文本之后补这一行，并写出机器可读的 JSON 快照。快照每个字段的含义见 [局面快照](10-defining-snapshot.qmd)。
+
+### 读入两个整数
+
+最底层的读入器是 `ReadRowAndCol`，实现同样在 `cli.cpp` 里：
+
+```{.cpp filename="cli.cpp"}
+std::expected<RowAndCol, ReadError> ReadRowAndCol(std::istream& in, std::ostream& err) {
+  std::int64_t input_row = 0;
+  std::int64_t input_col = 0;
+  if (in >> input_row >> input_col) {
+    if (input_row >= std::numeric_limits<int>::min() &&
+        input_row <= std::numeric_limits<int>::max() &&
+        input_col >= std::numeric_limits<int>::min() &&
+        input_col <= std::numeric_limits<int>::max()) {
+      return RowAndCol{.row = static_cast<int>(input_row), .col = static_cast<int>(input_col)};
+    }
+    in.clear();
+    in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    Report(err, "坐标超出可用范围");
+    return std::unexpected(ReadError::kRetry);
+  }
+  if (in.eof()) {
+    return std::unexpected(ReadError::kEof);
+  }
+  // 清掉失败位再丢整行：不丢的话下一次读会立刻再失败，同一行会被反复报告。
+  in.clear();
+  in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  Report(err, "请输入两个整数");
+  return std::unexpected(ReadError::kRetry);
+}
+```
+
+先读成 `std::int64_t` 再收窄到 `int`：`operator>>` 直接读进 `int` 时，超大的数会让流进入失败状态。此时溢出量级已经丢失，无法区分“写了个太大的数”和“写了个字母”。先读 64 位，读到了才比较范围；超出 `int` 的输入当作本行不可用，报的是准确原因。
+
+没能读到两个整数时，先看 `in.eof()`，再按“格式错误”处理。`in.clear()` 用于清掉失败位，`in.ignore(...)` 丢掉这一行剩下的字符。先清掉失败位，才能继续从流里读；丢掉这一行，下一次读入才从新的一行开始。
+
+### 读入一次落子
+
+一次落子的读入交给 `ReadHumanMove`：
+
+```{.cpp filename="cli.cpp"}
+HumanMove ReadHumanMove(std::istream& in, std::ostream& err, Game& game) {
+  const std::expected<RowAndCol, ReadError> input = ReadRowAndCol(in, err);
+  if (!input) {
+    return input.error() == ReadError::kEof ? HumanMove::kInputEnd : HumanMove::kRetry;
+  }
+  const CellPosition position{.row = input->row, .col = input->col};
+  const PlaceResult result =
+      game.TryPlace({.position = position, .player = game.GetCurrentPlayer()});
+  if (result == PlaceResult::kRejected) {
+    ReportRejected(err, game, position);
+  }
+  return HumanMove::kPlaced;
+}
+```
+
+`input` 有值才继续往下走。`!input` 把两个失败码分别换成 `kInputEnd` 与 `kRetry`；成功时用 `input->row` 和 `input->col` 拼出 `CellPosition`。`std::expected` 在这里省掉一个出参，也让“读到了”只从这一条路径出现。
+
+整数到手后，以当前玩家为落子者交给 `Game::TryPlace`。被拒绝时不在这一层重试，返回 `kPlaced`，由循环读下一行；`ReportRejected` 把具体原因写到诊断流。玩家会看到坐标问题的具体原因，棋盘保持原样，等待下一行输入。
+
+### 提示与读入分开
+
+读入函数只返回结果，不打印落子提示：同一段读入既服务双人模式也服务人机模式，提示文案留在一处。
+
+`cli.cpp` 的两条 `PlayToEnd` 各打印自己的提示，`ReadHumanMove` 只管把一行输入变成落子。提示文案因此只出现在调用方，两段循环都调用同一个 `ReadHumanMove`，读入代码只有一份。
+
+## 对局循环
+
+`RunMatch` 询问双人还是人机，人机时询问强度，随后按选择调用 `PlayToEnd` 的两个重载之一。
+
+### 开局选择对局
+
+两种选择各有一个整行菜单读入器，`RunMatch` 把它们连成开局流程：
+
+```{.cpp filename="cli.cpp"}
+int RunMatch(std::istream& in, std::ostream& out, std::ostream& err) {
+  bool against_cpu = false;
+  if (!ReadMatchKind(in, out, err, against_cpu)) {
+    return 1;
+  }
+  if (!against_cpu) {
+    return PlayToEnd(in, out, err);
+  }
+  AiStrength strength = AiStrength::kMinimax;
+  if (!ReadAiStrength(in, out, err, strength)) {
+    return 1;
+  }
+  return PlayToEnd(in, out, err, strength);
+}
+```
+
+`ReadMatchKind` 提示输入 1 或 2，整行比较后写回 `against_cpu`。`ReadAiStrength` 同样整行读入，把 1、2、3 换成三种强度。两个读入器对无效输入的处理一致：丢掉本行，写一条诊断，重新提示，直到读到有效选择或输入结束。输入结束时 `RunMatch` 返回 1。对局没有开始，进程以这个退出码结束。
+
+### 双人下到结束
+
+双人 `PlayToEnd` 每轮打印棋盘，随后读入坐标：
+
+```{.cpp filename="cli.cpp"}
+int PlayToEnd(std::istream& in, std::ostream& out, std::ostream& err) {
+  Game game;
+  while (game.GetResult() == GameResult::kInProgress) {
+    PrintGame(out, game);
+    const char mark = game.GetCurrentPlayer() == Player::kCross ? 'X' : 'O';
+    out << "轮到 " << mark << "。请输入行和列（0 到 2）：" << std::flush;
+    const HumanMove move = ReadHumanMove(in, err, game);
+    if (move == HumanMove::kInputEnd) {
+      Report(err, "输入结束");
+      return 1;
+    }
+  }
+  PrintGame(out, game);
+  return 0;
+}
+```
+
+`while` 的条件直接问 `GetResult` 是否仍为 `kInProgress`。循环体里 `PrintGame` 输出棋盘和结果行。`ReadHumanMove` 读一行两个整数，交给 `Game::TryPlace`。输入结束（比如按 Ctrl+D）时返回 `1`，让进程把这件事报告给调用方。对局走完则再打印一次终局画面，返回 `0`。
+
+### 人机下到结束
+
+人机 `PlayToEnd` 多接收一个强度。它按强度创建选择对象，轮到 O 时改调 `Ai::Choose`：
+
+```{.cpp filename="cli.cpp"}
+int PlayToEnd(std::istream& in, std::ostream& out, std::ostream& err, AiStrength strength) {
+  Game game;
+  const std::unique_ptr<Ai> ai = MakeAi(strength);
+  while (game.GetResult() == GameResult::kInProgress) {
+    PrintGame(out, game);
+    if (game.GetCurrentPlayer() == Player::kNought) {
+      const PlaceResult placed = game.TryPlace(ai->Choose(game));
+      if (placed == PlaceResult::kRejected) {
+        Report(err, "现在不能落子");
+        return 1;
+      }
+      continue;
+    }
+    const char mark = 'X';
+    out << "轮到 " << mark << "。请输入行和列（0 到 2）：" << std::flush;
+    if (ReadHumanMove(in, err, game) == HumanMove::kInputEnd) {
+      Report(err, "输入结束");
+      return 1;
+    }
+  }
+  PrintGame(out, game);
+  return 0;
+}
+```
+
+两段循环体的轮次分支不同，落子交给同一个 `Game::TryPlace`。X 走 `ReadHumanMove`，O 由 `Ai::Choose` 产生 `Move`；其余部分一致，终局判定与返回值也相同。输入结束同样返回 `1`，把这个结果报告给调用方。
+
+## 常见错误
+
+### 循环内重复构造
+
+把 `Game game;` 写进循环体时，对局走不到终局。
+
+- **出错的原因**：每一轮都是新对局，棋盘会清空，`GetResult` 不会离开 `kInProgress`。
+- **正确的做法**：对局创建在循环外，循环内推进它。
+
+### 打印放进动态库
+
+把 `std::cout` 写进动态库时，没有终端的调用方读不到输出。
+
+- **出错的原因**：网页等调用方没有终端，读不到 `std::cout` 的内容。
+- **正确的做法**：终端交互留在 `apps/`，动态库返回值。
+
+## 自测问题
+
+不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
+
+1. 双人和人机两条 `PlayToEnd`，哪一段代码相同，哪一段不同？
+
+   ::: {.answer}
+   相同的是循环结构和 `Game::TryPlace` 落子路径。不同的是 O 的落子来源：双人由 `ReadHumanMove` 读入，人机由 `Ai::Choose` 产生。
+   :::
+
+2. `ReadHumanMove` 返回 `kInputEnd` 时程序做什么？
+
+   ::: {.answer}
+   `PlayToEnd` 报告“输入结束”并返回 `1`，进程以非零退出码结束，不再继续对局。
+   :::
+
+3. 菜单输入 5 时程序会立刻开始对局吗？
+
+   ::: {.answer}
+   不会。`ReadMatchKind` 接受整行 1 或 2。其他输入整行丢掉，重新提示，直到读到有效选择或输入结束。
+   :::
+
+## 本章回顾
+
+你已经能读入、打印并循环一局终端对局。下一章是程序入口，看它怎样最小调用动态库；终端程序接回构建后，再由入口把标准流交给 `RunMatch`。
+
+[06-cli-h]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/apps/include/cli.h
+[06-cli-cpp]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/apps/src/cli.cpp

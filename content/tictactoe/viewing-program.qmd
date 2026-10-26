@@ -1,0 +1,202 @@
+---
+title: "程序结构"
+---
+
+[工程结构](02-mapping-layout.qmd) 已经把代码放进目录和文件。本章看这些文件里的类怎样连成一份程序。棋盘、对局、电脑落子和终端循环四块，通过函数调用与组成关系连接。
+
+::: {.callout-note title="当前构建范围"}
+当前 CMake 只构建 `tictactoe` 动态库与 `app`。入口 `main` 创建 `Game`、落一子并读回棋盘格子类型，不进入终端循环。总览图保留 `RunMatch`、`PlayToEnd` 与快照设计，作为终端程序的设计图。这些代码仍在 `apps/`，但没有接入当前构建。
+:::
+
+## 结构总览
+
+`Board`、`Game`、`Ai`、`PlayToEnd` 和入口 `RunMatch` 之间的调用与组成关系画在一张图里。
+
+::: {.class-diagram}
+```{mermaid}
+%%| fig-cap: "程序结构总览。实线箭头表示调用或依赖，菱形实线表示组成，虚线箭头表示只读依赖；箭头不表示运行顺序。"
+%%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
+classDiagram
+  direction LR
+  class Board
+  class Game
+  class Ai
+  class PlayToEnd
+  class RunMatch
+  Game *-- Board
+  Ai ..> Game
+  PlayToEnd --> Ai
+  PlayToEnd --> Game
+  RunMatch --> PlayToEnd
+```
+:::
+
+`Board` 与坐标类型 `CellPosition` 在[棋盘](03-board.qmd)一章。`Game` 拥有棋盘，并记录当前玩家和结果。`Ai` 读取对局，选出一手。
+
+当前构建的入口 `main` 直接创建 `Game` 并调用 `TryPlace`；完整设计里的 `RunMatch` 读取设置，再把控制交给 `PlayToEnd`。`PlayToEnd` 创建对局和电脑选手，终端循环在[终端程序](06-writing-terminal.qmd)。
+
+## 分块明细
+
+### 棋盘
+
+`Board` 保存九个棋盘格子，把查询、规则判定与写入分成三组公开操作。图里只画本章用到的代表性入口，完整列表见 `board.h`。
+
+::: {.class-diagram}
+```{mermaid}
+%%| fig-cap: "棋盘类型与 Board 的代表性入口。cells_ 保存每个棋盘格子的 CellType，坐标与格子类型由 CellPosition、CellType 表示。"
+%%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
+classDiagram
+  direction TB
+  class CellType {
+    <<enum>>
+    kEmpty
+    kX
+    kO
+  }
+  class CellPosition {
+    <<struct>>
+    int row
+    int col
+  }
+  class Game
+  class Board {
+    -cells_
+    +bool PlaceCell(position, cell_type)
+    +CellType GetCellType(position)
+    +optional~CellType~ GetWinner()
+  }
+  Board --> CellPosition : 坐标
+  Board --> CellType : 格子类型
+  Game *-- Board
+```
+:::
+
+规则判断做成只读成员函数，所以 `GetWinner`、`IsLineComplete` 这些查询不修改棋盘。写入入口是 `PlaceCell` 与 `Clear`；`PlaceCell` 越界或目标棋盘格子已被占用时返回 `false`，`Clear` 把整盘恢复为空。这样分的原因见[棋盘](03-board.qmd)一章。
+
+### 对局
+
+`Game` 拥有棋盘，记录当前玩家、结果与落子历史；`TryPlace` 接收 `Move`，返回 `PlaceResult`。
+
+::: {.class-diagram}
+```{mermaid}
+%%| fig-cap: "对局类型与 Game 的状态。Game 拥有一个 Board，并用 Player、GameResult 记录当前玩家和结果。"
+%%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
+classDiagram
+  direction TB
+  class Player {
+    <<enum>>
+    kCross
+    kNought
+  }
+  class Move
+  class GameResult {
+    <<enum>>
+    kInProgress
+    kCrossWin
+    kNoughtWin
+    kDraw
+  }
+  class Board
+  class Game {
+    -board_
+    -current_player_
+    -result_
+    -history_
+    +PlaceResult TryPlace(move)
+  }
+  Game *-- Board
+  Game --> Player
+  Game --> Move
+  Game --> GameResult
+```
+:::
+
+`Move` 是 `TryPlace` 的输入，包含 `CellPosition position` 与 `Player player`。`TryPlace` 返回的 `PlaceResult` 定义在[对局](04-game.qmd)，有已落子和被拒绝两种取值。`history_` 保存已执行的落子，快照里的 `sequence` 就取自它的长度。
+
+### 电脑落子
+
+`Ai` 是电脑落子的接口，`Choose` 只读对局；三种强度各有一个派生类。
+
+::: {.class-diagram}
+```{mermaid}
+%%| fig-cap: "电脑落子的接口与三种实现。Ai 的 Choose 只读对局，三个派生类分别实现一种强度。"
+%%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
+classDiagram
+  direction TB
+  class Ai {
+    <<interface>>
+    +Move Choose(const Game& game)
+  }
+  class RandomAi
+  class HeuristicAi
+  class MinimaxAi
+  class Game
+  Ai ..> Game : 只读
+  RandomAi --|> Ai
+  HeuristicAi --|> Ai
+  MinimaxAi --|> Ai
+```
+:::
+
+`Ai` 声明 `Choose`，三个派生类各自实现一种强度。
+
+### 终端程序
+
+完整设计里，`RunMatch` 读取对局类型和电脑强度，再调用 `PlayToEnd` 进入一局的循环；当前构建没有接入这两个函数。
+
+::: {.class-diagram}
+```{mermaid}
+%%| fig-cap: "一局终端循环的调用链。RunMatch 读设置后调用 PlayToEnd，后者打印棋盘、读入落子并写入对局。"
+%%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
+classDiagram
+  direction TB
+  class RunMatch {
+    <<function>>
+  }
+  class PlayToEnd {
+    <<function>>
+  }
+  class PrintGame {
+    <<function>>
+  }
+  class ReadHumanMove {
+    <<function>>
+  }
+  class Ai
+  class Game
+  RunMatch --> PlayToEnd
+  PlayToEnd --> PrintGame
+  PlayToEnd --> ReadHumanMove
+  PlayToEnd --> Ai : Choose
+  PlayToEnd --> Game : TryPlace
+  ReadHumanMove --> Game
+```
+:::
+
+完整设计里，`PlayToEnd` 每一轮打印当前棋盘，然后读入人类落子，或让 `Ai` 选子；人类落子和电脑的一手都通过 `Game::TryPlace` 写入对局。`PrintGame` 在棋盘文本之后调用 `WriteSnapshot` 追加 JSON 行。当前构建不执行这条终端链，入口只走 `main → Game::TryPlace`。
+
+## 常见错误
+
+### 接口当作实现类
+
+`Ai` 是接口，三种强度各自派生。`Ai::Choose` 在 `ai.h` 里声明，具体算法在三个派生类里。
+
+## 自测问题
+
+不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
+
+1. `Game` 与 `Board` 是什么关系？
+
+   ::: {.answer}
+   `Game` 持有一个 `Board` 作为组成部分。棋盘随对局对象一起创建和销毁，对局通过这个成员读写棋盘。
+   :::
+
+2. `PlayToEnd` 每一轮把落子交给哪两个对象？
+
+   ::: {.answer}
+   `PlayToEnd` 调用 `Ai::Choose` 取得一步落子，再调用 `Game::TryPlace` 写进对局。
+   :::
+
+## 本章回顾
+
+你已经能按总图定位四块并说明边的关系，也能分清当前构建（`Board`、`Game`、`Ai`、`main`）与保留的终端程序。下一章是棋盘，从 `Board` 的保存与读写开始。

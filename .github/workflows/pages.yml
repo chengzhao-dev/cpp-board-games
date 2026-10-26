@@ -9,7 +9,7 @@ permissions:
   contents: write
   pages: write
 
-# 同一时刻只允许一个部署任务，后来者排队（不取消进行中的发布，避免 gh-pages 半更新）
+# 并发：同一时刻只允许一个部署任务。后来者排队。进行中的发布不取消，gh-pages 不会半更新。
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -23,24 +23,41 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/ci-prepare
-      # 渲染前先跑编码与文档规则：content/ 的乱码在这里被硬性拦下，而不是发到线上
-      - name: Pre-render checks
-        run: /usr/bin/python3 .agents/skills/governing-agents/scripts/run.py check --profile fast
+      # 渲染前先跑文档规则与构建检查。检查不过就不渲染，坏内容不会发到线上。
+      - name: Check book
+        run: /usr/bin/python3 .agents/scripts/checking-book.py
+      - name: Build changed games
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          if ! git rev-parse --verify "$base" >/dev/null 2>&1; then
+            echo "跳过：找不到比较基线 $base"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$base"...HEAD -- games || true)
+          games=$(printf '%s\n' "$changed" | cut -d/ -f2 | sort -u)
+          for game in $games; do
+            [ -n "$game" ] || continue
+            [ -f "games/$game/running-build.sh" ] || continue
+            (cd "games/$game" && bash running-build.sh)
+          done
       - name: Render book
-        run: /usr/bin/python3 .agents/skills/governing-agents/scripts/run.py render
-      - name: Post-render checks
-        run: /usr/bin/python3 .agents/skills/governing-agents/scripts/run.py check --profile full
+        run: quarto render
       - name: Publish _book to gh-pages branch
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453  # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./_book
           publish_branch: gh-pages
-          # 每次部署用孤立分支覆盖 gh-pages：产物是生成物，不累积历史
+          # 部署分支：每次用孤立分支覆盖 gh-pages。产物是生成物。分支不累积历史。
           force_orphan: true
-      # 幂等纠正 Pages 源分支：POST 首次创建、PUT 纠正（成功返回 204）。
-      # GITHUB_TOKEN 可能无权创建/修改（403 Resource not accessible by integration），
-      # 所以最终以读回的 GET 结果判定，源不是 gh-pages /(root) 就让 job 失败
+      # 幂等纠正 Pages 源分支：POST 首次创建。PUT 纠正既有值。成功时两者都返回 204。
+      # GITHUB_TOKEN 可能无权创建/修改（403 Resource not accessible by integration）。
+      # 最终以读回的 GET 结果判定。源不是 gh-pages /(root) 时让 job 失败。
       - name: Verify Pages source = gh-pages /(root)
         run: |
           api=https://api.github.com/repos/${{ github.repository }}/pages

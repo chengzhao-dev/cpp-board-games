@@ -1,0 +1,214 @@
+{
+    "metadata": {
+        "name": "Quarto Book Solarized Dark",
+        "revision": 1,
+        "license": "SPDX-License-Identifier: MIT",
+        "copyright": [
+            "SPDX-FileCopyrightText: Ethan Schoonover (Solarized, MIT)",
+            "SPDX-FileCopyrightText: 2020 Waqar Ahmed <waqar.17a@gmail.com> (skylighting 结构基础)"
+        ]
+    },
+    "background-color": "#073642",
+    "editor-colors": {
+        "BackgroundColor": "#073642",
+        "BracketMatching": "#0a3f4c",
+        "CodeFolding": "#073642",
+        "CurrentLine": "#073642",
+        "CurrentLineNumber": "#93a1a1",
+        "IconBorder": "#073642",
+        "IndentationLine": "#0a3f4c",
+        "LineNumbers": "#93a1a1",
+        "MarkBookmark": "#51a0d5",
+        "MarkBreakpointActive": "#dc322f",
+        "MarkBreakpointDisabled": "#6c71c4",
+        "MarkBreakpointReached": "#b58900",
+        "MarkError": "#dc322f",
+        "MarkExecution": "#6c71c4",
+        "MarkWarning": "#cb4b16",
+        "ModifiedLines": "#dc322f",
+        "ReplaceHighlight": "#859900",
+        "SavedLines": "#859900",
+        "SearchHighlight": "#b58900",
+        "Separator": "#586e75",
+        "SpellChecking": "#dc322f",
+        "TabMarker": "#586e75",
+        "TextSelection": "#0a3f4c",
+        "WordWrapMarker": "#586e75"
+    },
+    "text-styles": {
+        "Alert": {
+            "bold": true,
+            "selected-text-color": "#dc322f",
+            "text-color": "#dc322f"
+        },
+        "Annotation": {
+            "selected-text-color": "#93a1a1",
+            "text-color": "#93a1a1"
+        },
+        "Attribute": {
+            "selected-text-color": "#b58900",
+            "text-color": "#b58900"
+        },
+        "BaseN": {
+            "selected-text-color": "#6c71c4",
+            "text-color": "#6c71c4"
+        },
+        "BuiltIn": {
+            "selected-text-color": "#51a0d5",
+            "text-color": "#51a0d5"
+        },
+        "Char": {
+            "selected-text-color": "#2aa198",
+            "text-color": "#2aa198"
+        },
+        "Comment": {
+            "selected-text-color": "#93a1a1",
+            "text-color": "#93a1a1"
+        },
+        "CommentVar": {
+            "selected-text-color": "#93a1a1",
+            "text-color": "#93a1a1"
+        },
+        "Constant": {
+            "selected-text-color": "#6c71c4",
+            "text-color": "#6c71c4"
+        },
+        "ControlFlow": {
+            "selected-text-color": "#859900",
+            "text-color": "#859900"
+        },
+        "DataType": {
+            "selected-text-color": "#b58900",
+            "text-color": "#b58900"
+        },
+        "DecVal": {
+            "selected-text-color": "#6c71c4",
+            "text-color": "#6c71c4"
+        },
+        "Documentation": {
+            "selected-text-color": "#93a1a1",
+            "text-color": "#93a1a1"
+        },
+        "Error": {
+            "selected-text-color": "#dc322f",
+            "text-color": "#dc322f",
+            "underline": true
+        },
+        "Extension": {
+            "bold": true,
+            "selected-text-color": "#dc322f",
+            "text-color": "#dc322f"
+        },
+        "Float": {
+            "selected-text-color": "#6c71c4",
+            "text-color": "#6c71c4"
+        },
+        "Function": {
+            "selected-text-color": "#51a0d5",
+            "text-color": "#51a0d5",
+            "bold": true
+        },
+        "Import": {
+            "selected-text-color": "#cb4b16",
+            "text-color": "#cb4b16"
+        },
+        "Information": {
+            "selected-text-color": "#93a1a1",
+            "text-color": "#93a1a1"
+        },
+        "Keyword": {
+            "selected-text-color": "#859900",
+            "text-color": "#859900"
+        },
+        "Normal": {
+            "selected-text-color": "#839496",
+            "text-color": "#839496"
+        },
+        "Operator": {
+            "selected-text-color": "#859900",
+            "text-color": "#859900"
+        },
+        "Others": {
+            "selected-text-color": "#6c71c4",
+            "text-color": "#6c71c4"
+        },
+        "Preprocessor": {
+            "selected-text-color": "#cb4b16",
+            "text-color": "#cb4b16"
+        },
+        "RegionMarker": {
+            "selected-text-color": "#93a1a1",
+            "text-color": "#93a1a1"
+        },
+        "SpecialChar": {
+            "selected-text-color": "#dc322f",
+            "text-color": "#dc322f"
+        },
+        "SpecialString": {
+            "selected-text-color": "#2aa198",
+            "text-color": "#2aa198"
+        },
+        "String": {
+            "selected-text-color": "#2aa198",
+            "text-color": "#2aa198"
+        },
+        "Variable": {
+            "selected-text-color": "#51a0d5",
+            "text-color": "#51a0d5"
+        },
+        "VerbatimString": {
+            "selected-text-color": "#2aa198",
+            "text-color": "#2aa198"
+        },
+        "Warning": {
+            "selected-text-color": "#cb4b16",
+            "text-color": "#cb4b16"
+        }
+    },
+    "custom-styles": {
+        "INI Files": {
+            "Section": {
+                "selected-text-color": "#6c71c4",
+                "text-color": "#6c71c4"
+            }
+        },
+        "Python": {
+            "Builtin Function": {
+                "selected-text-color": "#51a0d5",
+                "text-color": "#51a0d5"
+            },
+            "Import": {
+                "selected-text-color": "#cb4b16",
+                "text-color": "#cb4b16"
+            },
+            "Special Variable": {
+                "selected-text-color": "#6c71c4",
+                "text-color": "#6c71c4"
+            }
+        },
+        "Rust": {
+            "Attribute": {
+                "selected-text-color": "#b58900",
+                "text-color": "#b58900"
+            },
+            "Macro": {
+                "selected-text-color": "#51a0d5",
+                "text-color": "#51a0d5"
+            },
+            "Self": {
+                "selected-text-color": "#d33682",
+                "text-color": "#d33682"
+            },
+            "Trait": {
+                "selected-text-color": "#cb4b16",
+                "text-color": "#cb4b16"
+            }
+        },
+        "XML": {
+            "Element": {
+                "selected-text-color": "#51a0d5",
+                "text-color": "#51a0d5"
+            }
+        }
+    }
+}

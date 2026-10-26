@@ -1,0 +1,322 @@
+/* ============================================================
+   Palette: hill-light · 山光四时（dawn / noon / dusk / night）
+   色值源：D:/Github/hill-light/hill-light-theme/css/tokens.css（单一色值来源）。
+   本文件把山光的「纸/墨/强调/线」映射到本插件的 59 个语义令牌；
+   四种模式由 html[data-mode] 选择，night 同时声明 color-scheme: dark。
+   几何、字号、行高与明暗共用，见 css/tokens.css。
+   ============================================================ */
+
+html[data-palette="hill-light"][data-mode="dawn"],
+html[data-palette="hill-light"]:not([data-mode]) {
+  /* 溪山晓雾 · 06:00–10:59 */
+  color-scheme: light;
+}
+
+html[data-palette="hill-light"][data-mode="dawn"] body,
+html[data-palette="hill-light"]:not([data-mode]) body {
+  /* 溪山晓雾 · 06:00–10:59 · 语义令牌 */
+  --body-color: #2B3538;
+  --emphasis-color: #2B3538;
+  --code-bg: #E9E5DA;
+  --code-border: #D6D2C6;
+  --code-fg: #2B3538;
+  --code-title-bg: #EEEAE0;
+  --code-title-fg: #58686B;
+  --line-num-color: #556565;
+  --inline-code-bg: rgba(43, 53, 56, 0.06);
+  --inline-code-fg: #2B3538;
+  --text-secondary: #58686B;
+  --link-color: #2B3538;
+  --link-hover-color: #2D6A66;
+  --link-underline: rgba(43, 53, 56, 0.38);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #2D6A66;
+  --table-border: #D6D2C6;
+  --callout-note-border: #58686B;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #2F6B4F;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #8A5A12;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #40548A;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #8C352C;
+  --callout-caution-bg: transparent;
+  --copy-btn-bg: #E9E5DA;
+  --copy-btn-border: #D6D2C6;
+  --scrollbar-thumb: #D6D2C6;
+  --selection-bg: #CFE0DA;
+  --mark-bg: rgba(138, 90, 18, 0.24);
+  --sidebar-hover-bg: rgba(43, 53, 56, 0.04);
+  --sidebar-active-bg: rgba(45, 106, 102, 0.10);
+  --sidebar-fg: #58686B;
+  --accent: var(--action-color);
+  --navbar-bg: #F2EFE7;
+  --navbar-fg: #2B3538;
+  --navbar-muted: #58686B;
+  --navbar-border: #DCD8CD;
+  --navbar-input-bg: #E9E5DA;
+  --navbar-hover-bg: rgba(43, 53, 56, 0.04);
+  --navbar-secondary-bg: rgba(242, 239, 231, 0.88);
+  --dot-accent: #2D6A66;
+  --card-bg: transparent;
+  --card-border: #D6D2C6;
+  --toc-active: var(--body-color);
+  --page-bg: #F2EFE7;
+  --surface-raised: #F8F5EE;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(43, 53, 56, 0.04);
+  --line-hover-bg: rgba(45, 106, 102, 0.06);
+  --overlay-scrim: rgba(0, 0, 0, 0.42);
+}
+
+html[data-palette="hill-light"][data-mode="noon"] {
+  /* 溪山午荫 · 11:00–16:59 */
+  color-scheme: light;
+}
+
+html[data-palette="hill-light"][data-mode="noon"] body {
+  /* 溪山午荫 · 11:00–16:59 · 语义令牌 */
+  --body-color: #263230;
+  --emphasis-color: #263230;
+  --code-bg: #F0EBDD;
+  --code-border: #D8D3C3;
+  --code-fg: #263230;
+  --code-title-bg: #F5F0E4;
+  --code-title-fg: #4F615B;
+  --line-num-color: #5A6B62;
+  --inline-code-bg: rgba(38, 50, 48, 0.06);
+  --inline-code-fg: #263230;
+  --text-secondary: #4F615B;
+  --link-color: #263230;
+  --link-hover-color: #1D6A55;
+  --link-underline: rgba(38, 50, 48, 0.38);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #1D6A55;
+  --table-border: #D8D3C3;
+  --callout-note-border: #4F615B;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #276847;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #7E510F;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #3B4F86;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #853027;
+  --callout-caution-bg: transparent;
+  --copy-btn-bg: #F0EBDD;
+  --copy-btn-border: #D8D3C3;
+  --scrollbar-thumb: #D8D3C3;
+  --selection-bg: #CCE5D8;
+  --mark-bg: rgba(126, 81, 15, 0.24);
+  --sidebar-hover-bg: rgba(38, 50, 48, 0.04);
+  --sidebar-active-bg: rgba(29, 106, 85, 0.10);
+  --sidebar-fg: #4F615B;
+  --accent: var(--action-color);
+  --navbar-bg: #FAF6EC;
+  --navbar-fg: #263230;
+  --navbar-muted: #4F615B;
+  --navbar-border: #E0DACC;
+  --navbar-input-bg: #F0EBDD;
+  --navbar-hover-bg: rgba(38, 50, 48, 0.04);
+  --navbar-secondary-bg: rgba(250, 246, 236, 0.88);
+  --dot-accent: #1D6A55;
+  --card-bg: transparent;
+  --card-border: #D8D3C3;
+  --toc-active: var(--body-color);
+  --page-bg: #FAF6EC;
+  --surface-raised: #FFFCF4;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(38, 50, 48, 0.04);
+  --line-hover-bg: rgba(29, 106, 85, 0.06);
+  --overlay-scrim: rgba(0, 0, 0, 0.42);
+}
+
+html[data-palette="hill-light"][data-mode="dusk"] {
+  /* 溪山暮烟 · 17:00–19:59 */
+  color-scheme: light;
+}
+
+html[data-palette="hill-light"][data-mode="dusk"] body {
+  /* 溪山暮烟 · 17:00–19:59 · 语义令牌 */
+  --body-color: #3A2C26;
+  --emphasis-color: #3A2C26;
+  --code-bg: #E8D6C1;
+  --code-border: #D8C4AE;
+  --code-fg: #3A2C26;
+  --code-title-bg: #ECDCC8;
+  --code-title-fg: #67534A;
+  --line-num-color: #68554B;
+  --inline-code-bg: rgba(58, 44, 38, 0.06);
+  --inline-code-fg: #3A2C26;
+  --text-secondary: #67534A;
+  --link-color: #3A2C26;
+  --link-hover-color: #35645D;
+  --link-underline: rgba(58, 44, 38, 0.38);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #35645D;
+  --table-border: #D8C4AE;
+  --callout-note-border: #67534A;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #3C6A4C;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #8A5518;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #4A4F7A;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #8A352A;
+  --callout-caution-bg: transparent;
+  --copy-btn-bg: #E8D6C1;
+  --copy-btn-border: #D8C4AE;
+  --scrollbar-thumb: #D8C4AE;
+  --selection-bg: #E4CFB6;
+  --mark-bg: rgba(138, 85, 24, 0.24);
+  --sidebar-hover-bg: rgba(58, 44, 38, 0.04);
+  --sidebar-active-bg: rgba(53, 100, 93, 0.10);
+  --sidebar-fg: #67534A;
+  --accent: var(--action-color);
+  --navbar-bg: #F1E2D0;
+  --navbar-fg: #3A2C26;
+  --navbar-muted: #67534A;
+  --navbar-border: #DECCB8;
+  --navbar-input-bg: #E8D6C1;
+  --navbar-hover-bg: rgba(58, 44, 38, 0.04);
+  --navbar-secondary-bg: rgba(241, 226, 208, 0.88);
+  --dot-accent: #35645D;
+  --card-bg: transparent;
+  --card-border: #D8C4AE;
+  --toc-active: var(--body-color);
+  --page-bg: #F1E2D0;
+  --surface-raised: #F8EBDA;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(58, 44, 38, 0.04);
+  --line-hover-bg: rgba(53, 100, 93, 0.06);
+  --overlay-scrim: rgba(0, 0, 0, 0.42);
+}
+
+html[data-palette="hill-light"][data-mode="night"] {
+  /* 溪山夜月 · 20:00–05:59 */
+  color-scheme: dark;
+}
+
+html[data-palette="hill-light"][data-mode="night"] body {
+  /* 溪山夜月 · 20:00–05:59 · 语义令牌 */
+  --body-color: #D7DDD9;
+  --emphasis-color: #D7DDD9;
+  --code-bg: #283132;
+  --code-border: #3A4644;
+  --code-fg: #D7DDD9;
+  --code-title-bg: #2E3738;
+  --code-title-fg: #A2AEA9;
+  --line-num-color: #8F9B96;
+  --inline-code-bg: rgba(215, 221, 217, 0.08);
+  --inline-code-fg: #D7DDD9;
+  --text-secondary: #A2AEA9;
+  --link-color: #D7DDD9;
+  --link-hover-color: #8CB9AE;
+  --link-underline: rgba(215, 221, 217, 0.38);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #8CB9AE;
+  --table-border: #3A4644;
+  --callout-note-border: #A2AEA9;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #86B894;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #D8AB6E;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #A3B4DD;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #DD9585;
+  --callout-caution-bg: transparent;
+  --copy-btn-bg: #283132;
+  --copy-btn-border: rgba(162, 174, 169, 0.40);
+  --scrollbar-thumb: #3A4644;
+  --selection-bg: #35514B;
+  --mark-bg: rgba(216, 171, 110, 0.24);
+  --sidebar-hover-bg: rgba(215, 221, 217, 0.06);
+  --sidebar-active-bg: rgba(140, 185, 174, 0.10);
+  --sidebar-fg: #A2AEA9;
+  --accent: var(--action-color);
+  --navbar-bg: #1B2223;
+  --navbar-fg: #D7DDD9;
+  --navbar-muted: #A2AEA9;
+  --navbar-border: #313C3A;
+  --navbar-input-bg: #283132;
+  --navbar-hover-bg: rgba(215, 221, 217, 0.06);
+  --navbar-secondary-bg: rgba(27, 34, 35, 0.88);
+  --dot-accent: #8CB9AE;
+  --card-bg: transparent;
+  --card-border: #3A4644;
+  --toc-active: var(--body-color);
+  --page-bg: #1B2223;
+  --surface-raised: #232B2C;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(215, 221, 217, 0.04);
+  --line-hover-bg: rgba(140, 185, 174, 0.06);
+  --overlay-scrim: rgba(0, 0, 0, 0.62);
+}
+
+@media print {
+  html[data-palette="hill-light"][data-mode="night"] { color-scheme: light; }
+html[data-palette="hill-light"][data-mode="night"] body {
+  /* 打印 · 夜月换回晓雾纸墨 */
+  --body-color: #2B3538;
+  --emphasis-color: #2B3538;
+  --code-bg: #E9E5DA;
+  --code-border: #D6D2C6;
+  --code-fg: #2B3538;
+  --code-title-bg: #EEEAE0;
+  --code-title-fg: #58686B;
+  --line-num-color: #556565;
+  --inline-code-bg: rgba(43, 53, 56, 0.06);
+  --inline-code-fg: #2B3538;
+  --text-secondary: #58686B;
+  --link-color: #2B3538;
+  --link-hover-color: #2D6A66;
+  --link-underline: rgba(43, 53, 56, 0.38);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #2D6A66;
+  --table-border: #D6D2C6;
+  --callout-note-border: #58686B;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #2F6B4F;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #8A5A12;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #40548A;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #8C352C;
+  --callout-caution-bg: transparent;
+  --copy-btn-bg: #E9E5DA;
+  --copy-btn-border: #D6D2C6;
+  --scrollbar-thumb: #D6D2C6;
+  --selection-bg: #CFE0DA;
+  --mark-bg: rgba(138, 90, 18, 0.24);
+  --sidebar-hover-bg: rgba(43, 53, 56, 0.04);
+  --sidebar-active-bg: rgba(45, 106, 102, 0.10);
+  --sidebar-fg: #58686B;
+  --accent: var(--action-color);
+  --navbar-bg: #F2EFE7;
+  --navbar-fg: #2B3538;
+  --navbar-muted: #58686B;
+  --navbar-border: #DCD8CD;
+  --navbar-input-bg: #E9E5DA;
+  --navbar-hover-bg: rgba(43, 53, 56, 0.04);
+  --navbar-secondary-bg: rgba(242, 239, 231, 0.88);
+  --dot-accent: #2D6A66;
+  --card-bg: transparent;
+  --card-border: #D6D2C6;
+  --toc-active: var(--body-color);
+  --page-bg: #F2EFE7;
+  --surface-raised: #F8F5EE;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(43, 53, 56, 0.04);
+  --line-hover-bg: rgba(45, 106, 102, 0.06);
+  --overlay-scrim: rgba(0, 0, 0, 0.42);
+}
+}

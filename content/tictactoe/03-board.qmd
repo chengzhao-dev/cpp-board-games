@@ -1,207 +1,433 @@
 ---
-title: "棋盘存储"
-engine: jupyter
+title: "棋盘"
 ---
 
-[工程目录](02-project-layout.qmd)已经指出井字棋动态库的头文件位置。这一章实现可以检查坐标的棋盘读写，接口与实现在头文件 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/include/board.h) 和源文件 [board.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/01-cli-game/tictactoe/src/board.cpp) 里。
+井字棋棋盘是 3 行 3 列。`Board` 保存这九个棋盘格子，并提供写入与读出的接口；接口写在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h)，实现放在 [board.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp)。
 
-## 格子定义
+## 类型与坐标
 
-在[对局规则](01-rules.qmd)的画面里，玩家用行列数字选中一个棋盘格子。这一节先写出行列坐标，再区分格子状态。
+在 [对局规则](01-rules.qmd) 里，棋盘格子用行列数字定位，每个棋盘格子的取值是 X、O 或空。`CellPosition` 表示一对行列，`CellType` 表示这个取值。
 
-### 行列坐标
+### 棋盘格子坐标
 
-棋盘尺寸由行数 `kRows`、列数 `kCols` 和棋盘格子总数 `kCellCount` 确定，棋盘格子的位置用结构体 `CellPosition` 表达。它们都定义在 `board.h` 里：
+棋盘坐标由行数和列数确定，行向下、列向右，左上角是 `(0, 0)`。一对行列写成 `(row, col)`，先写行后写列。尺寸和坐标定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
 
 ```{.cpp filename="board.h"}
-/// 棋盘的行数。
-inline constexpr int kRows = 3;
-/// 棋盘的列数。
-inline constexpr int kCols = 3;
-/// 棋盘格子总数。
-inline constexpr int kCellCount = kRows * kCols;
+/// 棋盘行数。
+inline constexpr int kBoardRows = 3;
+/// 棋盘列数。
+inline constexpr int kBoardCols = 3;
 
-/// 棋盘格子的行列坐标。
+/// 棋盘格子坐标。
 struct CellPosition {
-  int row = 0;  ///< 行坐标。
-  int col = 0;  ///< 列坐标。
+  int row = 0;  ///< 行坐标，0 表示最上面一行。
+  int col = 0;  ///< 列坐标，0 表示最左边一列。
 };
-```
 
-三条约定都来自上面的四个定义：
-
-- **坐标**：一对行列写成 `(row, col)`，按先行后列写入 `CellPosition` 的两个字段。
-- **取值**：行和列从 0 开始，合法范围由 `kRows` 和 `kCols` 界定，在这块棋盘上都是 0 到 2。
-- **尺寸**：`kCellCount` 由 `kRows` 乘 `kCols` 得出，改这两个数字时棋盘格子总数跟着变。
-
-下面的图标出这块棋盘上可用的 `(row, col)`。
-
-```{python}
-#| echo: false
-#| warning: false
-#| fig-cap: "行向下、列向右，左上角是 (0, 0)"
-#| fig-align: center
-
-import sys
-from pathlib import Path
-
-from IPython.display import HTML
-
-root = Path.cwd()
-while not (root / "config.toml").exists():
-    root = root.parent
-sys.path.append(str(root / ".agents/skills/writing-quarto/scripts/diagrams"))
-from coords_grid import render_grid
-
-HTML(render_grid())
-```
-
-### 格子状态
-
-棋盘格子上除了 X 和 O，还没有落子的空格也是一种状态，`CellState` 用三种取值区分它们：
-
-```{.cpp filename="board.h"}
-/// 棋盘格子的状态。
-enum class CellState : std::uint8_t {
-  kEmpty = 0,   ///< 空格。
-  kCross = 1,   ///< X 棋子。
-  kNought = 2,  ///< O 棋子。
-};
-```
-
-棋盘上还没有棋子的空格取 `kEmpty`，写入 `kCross` 或 `kNought` 后，终端程序显示对应的字母。三种状态都保存在井字棋动态库里，终端程序决定画成什么样。
-
-## 读写格子
-
-`Board` 对内用一个数组和一次下标换算存放九个棋盘格子，对外只暴露检查后的读写入口。出界坐标进不了棋盘，下标换算也绕不过去。
-
-### 存储数组
-
-九个棋盘格子的状态存放在 `board.h` 里 `private:` 下的数组 `cells_` 中：
-
-```{.cpp filename="board.h"}
- private:
-  // 棋盘格子的存储数组，按行依次存放。
-  std::array<CellState, static_cast<std::size_t>(kCellCount)> cells_{};
-```
-
-棋盘一共九个格子，数量从开局到终局不变。这个数量编译期就能确定，所以 `cells_` 用 `std::array` 存放，长度取常量 `kCellCount`，下标范围是 0 到 8。
-
-### 下标换算
-
-九个棋盘格子在 `cells_` 里按一个下标存放，`Board::ToFlatIndex` 把 `row` 和 `col` 换成这个下标，实现写在 `board.cpp` 里：
-
-```{.cpp filename="board.cpp"}
-std::size_t Board::ToFlatIndex(CellPosition position) noexcept {
-  return (static_cast<std::size_t>(position.row) * kCols) + static_cast<std::size_t>(position.col);
+/// 检查两个棋盘格子坐标的行与列是否都相同。
+[[nodiscard]] constexpr bool operator==(CellPosition lhs, CellPosition rhs) noexcept {
+  return lhs.row == rhs.row && lhs.col == rhs.col;
 }
 ```
 
-每一行有 `kCols` 个棋盘格子，第 0 行占下标 0、1、2。要落到第 `row` 行，先跳过前面 `row` 个整行，这一行的第一个格子就在 `row` 乘以 `kCols` 的位置。`col` 再从这里往后数，列号从 0 起算。`(1, 2)` 里 `row` 是 1，`col` 是 2，`kCols` 是 3，算式是 `1 * 3 + 2`，下标是 5。
+代码定义了行列上限、坐标成员和比较操作；下图标出每个棋盘格子的行列编号。
 
-下面的图按行排开 `cells_` 的九个下标，加粗的 5 就是这次代入。
-
-```{python}
-#| echo: false
-#| warning: false
-#| fig-cap: "数组下标 0–8 与行列坐标的对应"
-#| fig-align: center
-
-import sys
-from pathlib import Path
-
-from IPython.display import HTML
-
-root = Path.cwd()
-while not (root / "config.toml").exists():
-    root = root.parent
-sys.path.append(str(root / ".agents/skills/writing-quarto/scripts/diagrams"))
-from coords_grid import render_index_strip
-
-HTML(render_index_strip(count=9, cols=3, highlight=5))
+```{=html}
+<figure class="book-figure">
+<svg class="coords-grid" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 258 258" width="258" height="258" role="img" aria-label="棋盘坐标：3 行 3 列，左上角为 (0,0)，行向下、列向右。" font-family="LXGW Bright Medium, system-ui, sans-serif" font-size="14">
+<style>.coords-grid{color:#1F2328}@media (prefers-color-scheme: dark){.coords-grid{color:#CDD9E5}}</style>
+<g stroke="currentColor" fill="none" stroke-width="1.25">
+<line x1="18" y1="18" x2="250" y2="18"/>
+<polygon points="250,14 258,18 250,22" fill="currentColor" stroke="none"/>
+<text x="144" y="12" text-anchor="middle" fill="currentColor" stroke="none">col</text>
+<line x1="18" y1="18" x2="18" y2="250"/>
+<polygon points="14,250 18,258 22,250" fill="currentColor" stroke="none"/>
+<text x="10" y="144" transform="rotate(-90 10 144)" text-anchor="middle" fill="currentColor" stroke="none">row</text>
+<text x="80" y="38" text-anchor="middle" fill="currentColor" stroke="none">0</text>
+<text x="144" y="38" text-anchor="middle" fill="currentColor" stroke="none">1</text>
+<text x="208" y="38" text-anchor="middle" fill="currentColor" stroke="none">2</text>
+<text x="38" y="80" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">0</text>
+<text x="38" y="144" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">1</text>
+<text x="38" y="208" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">2</text>
+<rect x="48" y="48" width="64" height="64"/>
+<text x="80" y="80" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,0)</text>
+<rect x="112" y="48" width="64" height="64"/>
+<text x="144" y="80" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,1)</text>
+<rect x="176" y="48" width="64" height="64"/>
+<text x="208" y="80" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,2)</text>
+<rect x="48" y="112" width="64" height="64"/>
+<text x="80" y="144" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,0)</text>
+<rect x="112" y="112" width="64" height="64"/>
+<text x="144" y="144" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,1)</text>
+<rect x="176" y="112" width="64" height="64"/>
+<text x="208" y="144" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,2)</text>
+<rect x="48" y="176" width="64" height="64"/>
+<text x="80" y="208" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,0)</text>
+<rect x="112" y="176" width="64" height="64"/>
+<text x="144" y="208" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,1)</text>
+<rect x="176" y="176" width="64" height="64"/>
+<text x="208" y="208" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,2)</text>
+</g>
+</svg>
+<figcaption>棋盘坐标图：每格标出 <code>(row, col)</code>；行向下、列向右，左上角是 <code>(0, 0)</code>。</figcaption>
+</figure>
 ```
 
-### 读写入口
+### 棋盘格子类型
 
-`Board` 把存储和换算收在 `private:` 下，读写用 `IsValidPosition`、`GetCellState`、`PlacePiece` 和 `IsFull`，`Board()` 只建出空棋盘。
+棋盘格子有三种类型：空格子、X 标记和 O 标记，代码用 `CellType` 表示：
 
 ```{.cpp filename="board.h"}
-/// 井字棋的棋盘。
-///
-/// 提供获取棋盘格子状态、放置棋子和检查棋盘是否已满的功能；棋盘为 3 行 3 列。
-class Board {
- public:
-  /// 检查坐标是否在棋盘范围内。
-  [[nodiscard]] static bool IsValidPosition(CellPosition position) noexcept;
-
-  /// 构造函数：创建一个所有棋盘格子均为空的棋盘。
-  Board() = default;
-
-  /// 获取指定坐标处的棋盘格子状态。
-  [[nodiscard]] CellState GetCellState(CellPosition position) const;
-
-  /// 在指定坐标放置棋子。
-  [[nodiscard]] bool PlacePiece(CellPosition position, CellState state);
-
-  /// 检查棋盘是否已满（每个棋盘格子都有棋子；不含胜负或平局判定）。
-  [[nodiscard]] bool IsFull() const noexcept;
+/// 棋盘格子类型。
+enum class CellType : std::uint8_t {
+  kEmpty = 0,  ///< 空格子。
+  kX = 1,      ///< X 标记。
+  kO = 2,      ///< O 标记。
+};
 ```
 
-读取和写入都先检查坐标，出界和占用分开处理：
+终端一行 `|   | X | O |` 从左到右依次是空棋盘格子、X 标记和 O 标记。对局进行到任何时刻，每个棋盘格子都取其中一种。这些取值保存在 `Board` 的二维数组里，行列坐标不单独存放。落子换掉目标棋盘格子的取值，其余棋盘格子保持原样。
 
-- **出界坐标**：说明调用方算错了行列，没有可返回的棋盘格子，`GetCellState` 直接抛出 `std::out_of_range`。
-- **棋盘格子被占用**：`PlacePiece` 返回 `false`，棋盘保持不变，调用方另选棋盘格子就行。
+## 成员与接口
+
+`Board` 对内用二维数组存棋盘格子，对外提供带边界检查的读写入口。头文件里的类声明、构造函数与数据成员：
+
+```{.cpp filename="board.h"}
+/// 井字棋棋盘。
+class Board {
+ public:
+  /// 默认构造函数：得到空棋盘，每个棋盘格子都是 kEmpty。
+  Board() = default;
+
+ private:
+  /// 棋盘格子数组：外层下标是行，内层下标是列。
+  std::array<std::array<CellType, kBoardCols>, kBoardRows> cells_{};
+};
+```
+
+井字棋一局在这九个棋盘格子里落子，棋盘大小在对局进行中不变；`kBoardRows` 和 `kBoardCols` 是编译期常量，`cells_` 的长度由它们决定，编译时就能确定。
+
+### 检查下标区间
+
+`IsInRange` 检查一个棋盘格子坐标是否落在棋盘的下标区间里，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 检查坐标是否落在棋盘下标区间内。
+  ///
+  /// 行的有效区间是 [0, kBoardRows)，列的有效区间是 [0, kBoardCols)。
+  /// 判断几何边界，不检查棋盘格子是否为空、对局是否已经结束。
+  ///
+  /// @param position 待检查的坐标。
+  /// @return 行和列都在区间内返回 true；任一越界返回 false。
+  [[nodiscard]] static bool IsInRange(CellPosition position) noexcept;
+};
+```
+
+`IsInRange` 可以直接调用，不用先创建 `Board`。
+
+### 只读接口
+
+`Board` 的三个只读接口都定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 检查指定坐标上的棋盘格子是否为空。
+  ///
+  /// 越界返回 false。不判断对局是否结束：终局后空棋盘格子仍在，本函数按棋盘格子上有没有棋子返回。
+  ///
+  /// @param position 待检查的坐标。
+  /// @return 坐标在棋盘内且该棋盘格子为空时返回 true；越界或该棋盘格子已有棋子时返回 false。
+  [[nodiscard]] bool IsCellEmpty(CellPosition position) const;
+
+  /// 检查棋盘是否已满。
+  [[nodiscard]] bool IsFull() const noexcept;
+
+  /// 合法坐标返回该棋盘格子的类型；越界时抛出 std::out_of_range。
+  ///
+  /// @param position 行列坐标。
+  /// @throws std::out_of_range 坐标不在棋盘范围内。
+  [[nodiscard]] CellType GetCellType(CellPosition position) const;
+};
+```
+
+`GetCellType`、`IsCellEmpty` 和 `IsFull` 都只读棋盘，区别在返回什么、越界怎么处理：
+
+| 接口 | 返回 | 边界 |
+| --- | --- | --- |
+| `GetCellType` | 坐标处的 `CellType` | 越界时抛出 `std::out_of_range` |
+| `IsCellEmpty` | 空棋盘格子为 `true` | 坐标越界或该棋盘格子已有棋子时返回 `false` |
+| `IsFull` | 九个棋盘格子都有棋子时为 `true` | 不判断谁获胜 |
+: {tbl-colwidths="[24,30,46]"}
+
+调用方按场合选择：
+
+- 终端打印棋盘时逐格调用 `GetCellType`。
+- 判断单个棋盘格子是否为空时调用 `IsCellEmpty`。
+- 测试用 `GetCellType` 核对空棋盘格子、已有棋子与越界坐标；满盘局面由 `PlaceCell` 逐格摆出。
+- `IsFull` 用来判断是否满盘，测试里也用它确认未满或已满。
+
+### GetCellType 的越界处理
+
+`GetCellType` 越界时抛标准库的 `std::out_of_range`。相关异常如下：
+
+```{.cpp filename="board.cpp"}
+if (!IsInRange(position)) {
+  throw std::out_of_range{std::format(
+      "Board::GetCellType: board position is out of range (row={}, col={}); board is {}x{}",
+      position.row, position.col, kBoardRows, kBoardCols)};
+}
+```
+
+## 棋子写入
+
+### 落子校验
+
+`PlaceCell` 在指定坐标放置棋子，写入前先检查坐标区间，再确认目标棋盘格子还没有棋子，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 在指定坐标放置棋子。
+  ///
+  /// 越界、已占或要写空棋盘格子都返回 false。
+  ///
+  /// @param position 目标行列坐标。
+  /// @param cell_type 要放置的棋盘格子类型，必须是 kX 或 kO。
+  /// @return 放置成功返回 true；坐标越界、要写的是空棋盘格子或目标已有棋子时返回 false，棋盘不变。
+  [[nodiscard]] bool PlaceCell(CellPosition position, CellType cell_type);
+};
+```
+
+实现写在 [board.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp) 里：
+
+```{.cpp filename="board.cpp"}
+bool Board::PlaceCell(CellPosition position, CellType cell_type) {
+  // 越界或写入空类型时直接拒绝，不碰数组。
+  if (!IsInRange(position) || cell_type == CellType::kEmpty) {
+    return false;
+  }
+
+  // 坐标已确认在界内；目标棋盘格子已有棋子时也不覆盖。
+  CellType& cell = cells_.at(position.row).at(position.col);
+  if (cell != CellType::kEmpty) {
+    return false;
+  }
+
+  // 三种拒绝都在赋值前返回，棋盘保持原样。
+  cell = cell_type;
+  return true;
+}
+```
+
+### 清空棋盘
+
+`Clear` 把整盘恢复为空，声明在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 清空棋盘：每个棋盘格子恢复为 kEmpty。
+  void Clear() noexcept;
+};
+```
+
+清空后 `GetWinner` 没有值，`IsFull` 与 `IsGameOver` 都为假，原先占过的棋盘格子可以再次 `PlaceCell`。
+
+## 终局判定
+
+`Board` 也判定胜负与平局，落子写进棋盘之后从当前棋盘算出终局答案。
+
+### 三连类型
+
+`GetWinner` 获取形成三连的棋盘格子类型，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 获取形成三连的棋盘格子类型。
+  ///
+  /// 按 kX、kO 的次序检查，先手优先；同一棋盘不会让双方同时成线，次序一致是为了让结果可复现。
+  ///
+  /// @return 有赢家时返回形成三连的棋盘格子类型；没有三连时返回 std::nullopt。
+  [[nodiscard]] std::optional<CellType> GetWinner() const;
+};
+```
+
+`GetWinner` 的返回分两种情形：
+
+- **有三连**：返回形成三连的棋盘格子类型，`kX` 或 `kO`。
+- **没有三连**：返回 `std::nullopt`。
+
+### 线坐标表
+
+八条线的坐标写在 [board.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp) 的 `namespace tictactoe` 里，存成一张 `constexpr` 常量表：
+
+```{.cpp filename="board.cpp"}
+// 八条线的坐标表：三行、三列、两条对角线。
+constexpr std::array<std::array<CellPosition, 3>, 8> kLines{{
+    {{{.row = 0, .col = 0}, {.row = 0, .col = 1}, {.row = 0, .col = 2}}},  // 行 0
+    {{{.row = 1, .col = 0}, {.row = 1, .col = 1}, {.row = 1, .col = 2}}},  // 行 1
+    {{{.row = 2, .col = 0}, {.row = 2, .col = 1}, {.row = 2, .col = 2}}},  // 行 2
+    {{{.row = 0, .col = 0}, {.row = 1, .col = 0}, {.row = 2, .col = 0}}},  // 列 0
+    {{{.row = 0, .col = 1}, {.row = 1, .col = 1}, {.row = 2, .col = 1}}},  // 列 1
+    {{{.row = 0, .col = 2}, {.row = 1, .col = 2}, {.row = 2, .col = 2}}},  // 列 2
+    {{{.row = 0, .col = 0}, {.row = 1, .col = 1}, {.row = 2, .col = 2}}},  // 对角线
+    {{{.row = 0, .col = 2}, {.row = 1, .col = 1}, {.row = 2, .col = 0}}},  // 反对角线
+}};
+```
+
+坐标都是常数，直接列出来比两层循环运行时推算更好查：新增一条线时改表即可，扫线代码不动。每个坐标都写 `.row` 与 `.col`，读者不用记住成员次序。
+
+### 成线判断
+
+`HasLine` 扫这张表，判断有没有一条线全是同一种棋子：
+
+```{.cpp filename="board.cpp"}
+bool Board::HasLine(CellType cell_type) const {
+  return std::ranges::any_of(kLines, [&](const auto& line) {
+    return std::ranges::all_of(line, [&](CellPosition position) {
+      return cells_.at(position.row).at(position.col) == cell_type;
+    });
+  });
+}
+```
+
+### 赢家判断
+
+`IsWin` 检查棋盘是否已有赢家，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 检查棋盘是否已有赢家。
+  [[nodiscard]] bool IsWin() const;
+};
+```
+
+`GetWinner` 有返回值，就说明已经有一方三连；`IsWin` 据此返回 `true`，否则返回 `false`。它复用 `GetWinner` 已经完成的三连判定，不再单独扫描棋盘。
+
+### 平局判断
+
+`IsDraw` 检查棋盘是否已满且没有赢家，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 检查棋盘是否已满且没有赢家。
+  [[nodiscard]] bool IsDraw() const;
+};
+```
+
+`IsDraw` 用 `IsFull() && !IsWin()` 把两个条件合起来。满盘时有两种结果：
+
+- **已满且有三连**：算赢家获胜，不算平局。
+- **已满且没有三连**：算平局。
+
+棋盘未满时 `IsFull` 返回 `false`，`IsDraw` 因此为 `false`。
+
+### 结束判断
+
+`IsGameOver` 检查棋盘是否已有赢家或已经平局，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 检查棋盘是否已有赢家或已经平局。
+  [[nodiscard]] bool IsGameOver() const;
+};
+```
+
+`IsWin` 或 `IsDraw` 成立，对局就结束；两个都不成立，则继续落子。`Board` 没有对局结束的状态位，`IsGameOver` 因此每次都从当前棋盘重新计算。同一盘面重复调用，答案不变；终局之后棋盘仍然保留，`GetWinner` 随时可以再读。
+
+### 三连判定
+
+电脑落子前需要知道“在某个空棋盘格子落子会不会连成三个”，此时这一手还没有写进棋盘。`Board::IsLineComplete` 判断这一手会不会连成三个，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+
+```{.cpp filename="board.h"}
+class Board {
+ public:
+  /// 检查在指定坐标放入给定棋子后，是否会形成三连。
+  [[nodiscard]] bool IsLineComplete(CellPosition position, CellType cell_type) const;
+};
+```
+
+实现不复制棋盘：候选落子先当成棋盘上已有的棋子，再用同一张 `kLines` 表扫线：
+
+```{.cpp filename="board.cpp"}
+bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
+  // 拒绝条件与 PlaceCell 相同：越界、空类型、目标棋盘格子已有棋子。
+  if (!IsInRange(position) || cell_type == CellType::kEmpty) {
+    return false;
+  }
+  if (cells_.at(position.row).at(position.col) != CellType::kEmpty) {
+    return false;
+  }
+
+  // 候选坐标按已经放入该类型参与匹配，其余棋盘格子照常读取。
+  const auto matches = [&](CellPosition cell) {
+    return cell == position || cells_.at(cell.row).at(cell.col) == cell_type;
+  };
+
+  // 先找包含候选坐标的那条线，再确认整条线都匹配。
+  return std::ranges::any_of(kLines, [&](const auto& line) {
+    return std::ranges::find(line, position) != line.end() && std::ranges::all_of(line, matches);
+  });
+}
+```
 
 ## 常见错误
 
-### 自己算下标
+### 写入空棋盘格子
 
-想在 `Board` 之外自己用行列数算下标时，负坐标和 `3` 这类出界行列不会遇到任何检查。
+给 `Board::PlaceCell` 传入 `CellType::kEmpty` 时，它返回 `false`，棋盘保持不变。
 
-- **出错的原因**：下标换算收在 `Board` 的 `private:` 下，出界检查发生在读写入口里，绕开读写入口就同时绕开了这两道保护，算出的下标可能落在九个棋盘格子之外。
-- **正确的做法**：把坐标交给读写入口，出界的行列由 `IsValidPosition` 拒绝，合法坐标由 `ToFlatIndex` 换算。
+- **出错的原因**：`kEmpty` 表示空棋盘格子，不是一枚棋子。`Board` 把它当作无效写入拒绝。
+- **正确的做法**：写入时传 `kX` 或 `kO`。
 
-### 空格当棋子
+### 误用越界坐标
 
-给 `Board::PlacePiece` 传入 `CellState::kEmpty` 时，放置失败并返回 `false`，棋盘保持不变。
+把行号或列号写到 `0` 到 `2` 之外时，`PlaceCell` 返回 `false`，棋盘保持不变。
 
-- **出错的原因**：`kEmpty` 是还没有棋子的空格，不是一种棋子，`Board` 把它当作无效落子拒绝。
-- **正确的做法**：落子时传 `kCross` 或 `kNought`。
+- **出错的原因**：`IsInRange` 先检查坐标，越界坐标不会进入写入步骤。
+- **正确的做法**：写入前确认行列号都在 `0` 到 `2` 之间，或者先调用 `IsInRange` 核对。
 
 ## 自测问题
 
-先不要展开答案，试着自己把回答完整说出来，再展开对照。说不出来的部分，回到对应小节对照正文。
+不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
 
 1. 为什么行号 `-1` 和 `3` 都会被拒绝？
 
    ::: {.answer}
-   `Board::IsValidPosition` 要求行号从 `0` 到 `kRows - 1`。`kRows` 是 3，所以 `-1` 和 `3` 都不属于棋盘。
+   `Board::IsInRange` 要求行号从 `0` 到 `kBoardRows - 1`。`kBoardRows` 是 3，所以 `-1` 和 `3` 都不属于棋盘。
    :::
 
 2. 向已有 X 的棋盘格子再落一次 O，棋盘会变吗？
 
    ::: {.answer}
-   不会。`Board::PlacePiece` 在棋盘格子已被占用时返回 `false`，棋盘保持不变。
+   不会。`Board::PlaceCell` 在棋盘格子已被占用时返回 `false`，棋盘保持不变。
    :::
 
-3. 坐标 `(1, 2)` 换算后的数组下标是多少？
+3. `cells_[row][col]` 里的两个下标各是什么？
 
    ::: {.answer}
-   `ToFlatIndex` 按 `row * kCols + col` 换算：`1 * 3 + 2 = 5`，即下标 5。
+   `row` 是行号，`col` 是列号。`cells_[row][col]` 就是 `(row, col)` 处的棋盘格子。
    :::
 
-4. 九个棋盘格子的个数在对局中会变吗？
+4. 棋盘格子的数量在对局中会变吗？
 
    ::: {.answer}
-   不会变。棋盘从开局到终局都是九个格子，这个数量编译期就能确定。
+   不会变。井字棋的盘面一直是 3 行 3 列，`cells_` 的长度由 `kBoardRows` 和 `kBoardCols` 在编译期确定。
    :::
 
-5. 棋盘格子的个数写在常量 `kRows`、`kCols` 还是 `kCellCount` 里？
+5. 棋盘的行数和列数写在什么常量里？
 
    ::: {.answer}
-   写在 `kCellCount` 里，它由 `kRows` 乘 `kCols` 得出。
+   写在 `kBoardRows` 和 `kBoardCols` 里，都是 3。
    :::
 
 ## 本章回顾
 
-你已经能把九个棋盘格子存进数组，并通过 `Board` 的入口读写它们。下一章一次落子，决定哪些落子能写入。
+你已经能把九个棋盘格子存进二维数组，通过 `Board` 落子与读回，并判断满盘、三连、赢家与平局。下一章对局，看一次落子怎样改变棋盘并得出结果。

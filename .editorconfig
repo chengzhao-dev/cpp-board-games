@@ -2,7 +2,7 @@
 # .editorconfig - 本仓编辑器统一约定
 #===--------------------------------------------------------------------------------------------===#
 
-# 保存即符合仓库格式：行尾与编码跟 .gitattributes 一致，缩进按下表分文件。
+# 根配置：保存即符合仓库格式，行尾与编码跟 .gitattributes 一致，缩进按下表分文件。
 root = true
 
 [*]
@@ -10,6 +10,15 @@ end_of_line = lf
 charset = utf-8
 insert_final_newline = true
 trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# CMake 官方仓库的 .editorconfig 用 2 空格；与 C++ 保持一致。
+[CMakeLists.txt]
+indent_style = space
+indent_size = 2
+
+[*.cmake]
 indent_style = space
 indent_size = 2
 

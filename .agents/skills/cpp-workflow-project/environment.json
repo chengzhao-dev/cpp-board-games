@@ -1,0 +1,6 @@
+{
+  "host": "windows",
+  "build_host": "wsl",
+  "compiler": "clang",
+  "standard": "c++23"
+}

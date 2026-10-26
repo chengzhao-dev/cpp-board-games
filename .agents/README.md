@@ -1,46 +1,33 @@
 # Agent 工作区
 
-`.agents/` 是本项目 Agent 资源的唯一工作区。根目录 `AGENTS.md` 只保留项目级硬约束；本文件负责定位，不重复规则。本目录结构与 cpp-notes 仓库同构（五区 + 同名知识领域目录），统一决策与保留差异见 `skills/governing-agents/references/structure.md` 第 6 节对照表。
+`.agents/` 保存本项目的 Agent 资源。根 `AGENTS.md` 只写项目级硬约束；本文件负责定位，不重复规则。通用 C++、Quarto 与 GitHub 流程由插件技能提供，本仓只留项目事实与检查配置。
 
 ## 按任务进入
 
 | 任务 | 入口 |
 | --- | --- |
-| 维护 Agent 规则、检查脚本与 `.agents/` 结构 | `skills/governing-agents/SKILL.md` |
-| C++、CMake、WSL 游戏阶段开发 | `skills/cpp-development/SKILL.md` |
-| 棋盘游戏抽象和规则设计 | `skills/game-design/SKILL.md` |
-| 测试和验证 | `skills/testing/SKILL.md` |
-| Python 脚本、知识库管道与 C++ 衔接工具 | `skills/maintaining-python/SKILL.md`、`skills/python-tooling/SKILL.md` |
-| 编写 Quarto 文档和章节 | `skills/writing-quarto/SKILL.md` |
-| 调整主题、布局和页面资源 | `skills/designing-theme/SKILL.md` |
-| GitHub、提交和发布边界 | `skills/shipping-github/SKILL.md` |
-| 只读代码审查 | `skills/reviewing-code/SKILL.md` |
-| 现行事实与规范条文（现在是什么、怎么做） | `context/README.md` |
-| 领域依据（为什么这样设计） | `knowledge/KNOWLEDGE.md` |
-| 跨会话教训（过去哪里易错） | `memory/MEMORY.md` |
-| 失败复盘（仅排查时） | `incidents/INDEX.md` |
-
-一次任务只读命中技能的 `SKILL.md` 与其路由指向的文件；完整短路由见 `skills/governing-agents/references/catalog.md`。知识按 `knowledge/KNOWLEDGE.md` 的定点取用表直取 `kb_id`，不通读整个知识库。
+| C++、CMake、WSL 游戏阶段开发 | 插件 `developing-cpp`、`building-cpp`；工程事实 `skills/cpp-workflow-project/SKILL.md` |
+| 棋盘游戏抽象和规则设计 | 插件 `developing-cpp` 的 project-design 参考 |
+| 编写 Quarto 文档和章节 | 插件 `writing-quarto`；本书事实 `skills/quarto-book-project/SKILL.md` |
+| 调整主题、布局和页面资源 | 插件 `designing-theme`；主题副本在根 `theme/` |
+| 提交、推送与发布 | 插件 `shipping-github` |
+| 查看读取边界 | `scripts/scope.py` |
+| 校验全部章节正文 | `scripts/checking-book.py` |
+| 构建某个游戏工程 | `scripts/building-wsl.py <game>` |
+| 检查已安装插件是否可用 | `scripts/checking-plugins.py` |
 
 ## 目录职责
 
 ```text
 .agents/
-├── context/         # 现行事实与规范条文；入口 README.md（任务 → 文件路由）
-├── knowledge/       # 取舍记录、否决理由与正反对照：<domain>/<subdomain>/<topic>.md；入口 KNOWLEDGE.md
-├── memory/          # 跨会话教训；入口 MEMORY.md
-├── incidents/       # 失败复盘，仅排查时读；入口 INDEX.md
-├── mcp/             # 项目级 MCP server 与说明
-├── skills/          # 可复用流程；每个 skill 含 SKILL.md、agents/openai.yaml，按需 references/、scripts/、assets/
-└── README.md        # 本导航
+├── scripts/                        #/ 仓库脚本
+├── skills/cpp-workflow-project/    #/ 工程事实与阶段表
+├── skills/quarto-book-project/     #/ 章节规则
+└── README.md                        # 本目录导航
 ```
-
-规则只保留一份权威来源：流程放 `skills/`，现行事实与条文放 `context/`，取舍原因放 `knowledge/`，历史经验放 `memory/`，失败案例放 `incidents/`。知识库索引产物写入根目录 `temp/knowledge-index/`，不入库。不要把临时计划、构建产物或缓存放进本目录。
 
 ## 运行入口
 
-统一入口是 `skills/governing-agents/scripts/run.ps1`（Python 侧 `run.py`）。子命令以 `run.py` 文件头为准，这里不复制命令表。解释器只读根目录 `config.toml` 的 `python`。
+四个脚本都从自身路径解析仓库根，不依赖当前工作目录。`scope.py` 输出读取边界；`checking-book.py` 调用已安装插件的正文检查器；`building-wsl.py` 在 WSL（Windows）或本机 bash（CI）里运行 `games/<game>/running-build.sh`；`checking-plugins.py` 检查两个已安装插件的入口、技能文件与语法。解释器以 `config/config.toml` 为准，这里不复制子命令。
 
-脚本不得从当前工作目录推断仓库根；移动或新增脚本后，必须检查 `Path(__file__)` 的根目录解析，并更新所有统一入口、测试和文档引用。
-
-游戏代码按编号阶段目录组织在 `games/<game>/` 下：每个阶段（如 `01-cli-game/`）是拥有自身 `.clang-format`、`.vscode/`、构建和测试的完整项目，配置归属阶段目录本身；格式模板在 `skills/cpp-development/assets/config/.clang-format`；判断依据见 `context/conventions/stages.md`。
+游戏代码按游戏工程目录组织在 `games/<game>/` 下；配置归属与格式模板的判断依据在插件 `building-cpp` 的 `references/cmake.md`，阶段表见本仓 `skills/cpp-workflow-project/stages/stage-table.md`。

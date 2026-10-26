@@ -1,0 +1,508 @@
+/* dsh-quarto-book Quarto 主题 · 运行效果面板（井字棋试走）
+   面板站在书页里，不装扮成终端窗口：纸质底色 + 九个可点格子；
+   程序真正的终端画面收在下面的「程序输出」里，逐手同步。
+   颜色全部走色板令牌，明暗与三套色板自动跟随。 */
+
+.terminal-lab {
+  --tl-gap: 8px;
+  /* 面板宽度由内容列决定：桌面封顶 27rem（棋盘≈382px），窄屏通栏，
+     格子随面板宽度等比缩放，不再用 vw 猜屏幕尺寸。 */
+  width: min(100%, 27rem);
+  margin: 1.8rem auto 1.2rem;
+  padding: 0.95rem 1rem 1.05rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface-raised);
+}
+
+/* ---------- 题头：左侧项目名，右侧「在浏览器中运行」 ---------- */
+.tl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.tl-kicker {
+  font-family: var(--ui-font);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+.tl-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  font-family: var(--ui-font);
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+.tl-live-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background-color: var(--action-color);
+}
+
+/* ---------- 状态行：轮到谁 / 第几手 ---------- */
+.tl-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.7rem 0 0.6rem;
+  font-family: var(--ui-font);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.tl-turn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--body-color);
+}
+.tl-turn::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--text-secondary);
+}
+.tl-turn[data-player="X"]::before {
+  background-color: var(--action-color);
+}
+.tl-turn[data-player="none"]::before {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--text-secondary);
+}
+
+/* ---------- 棋盘 ---------- */
+/* 行列数字贴着棋盘：读者刚在终端画面里见过同一组数字，
+   面板上再标一次，点击格子与 cin >> row >> col 就对得上了。 */
+.tl-board {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tl-gap);
+  padding: 1.25rem 0 0 1.15rem;
+}
+.tl-cols {
+  position: absolute;
+  top: 0;
+  left: 1.15rem;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--tl-gap);
+  font-family: var(--mono-font);
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--text-secondary);
+  text-align: center;
+}
+.tl-cols span {
+  display: block;
+}
+.tl-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--tl-gap);
+}
+.tl-row::before {
+  content: attr(data-row-index);
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-right: 0.55rem;
+  transform: translateY(-50%);
+  font-family: var(--mono-font);
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+.tl-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background-color: var(--page-bg);
+  color: var(--body-color);
+  font-family: var(--mono-font);
+  font-size: clamp(1.85rem, 6.2vw, 2.6rem);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease-in-out,
+    border-color 0.12s ease-in-out;
+}
+.tl-cell:hover {
+  background-color: var(--inline-code-bg);
+}
+.terminal-lab.is-over .tl-cell {
+  cursor: default;
+}
+.terminal-lab.is-over .tl-cell:hover {
+  background-color: var(--page-bg);
+}
+.tl-cell:focus-visible {
+  outline: 2px solid var(--action-color);
+  outline-offset: 2px;
+}
+.tl-cell[data-mark="x"] {
+  color: var(--action-color);
+}
+.tl-cell[data-mark="o"] {
+  color: var(--text-secondary);
+}
+.tl-cell.is-win {
+  border-color: var(--action-color);
+  background-color: color-mix(in srgb, var(--action-color) 12%, transparent);
+}
+
+/* ---------- 反馈行：一条带色条的留言条，不再是散落的灰字 ---------- */
+.tl-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-height: 2.45rem;
+  margin: 0.8rem 0 0;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--card-border);
+  border-left: 2px solid var(--text-secondary);
+  border-radius: var(--radius-sm);
+  background-color: var(--page-bg);
+  font-family: var(--ui-font);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--body-color);
+}
+.tl-message::before {
+  content: "";
+  flex: 0 0 auto;
+  /* 留言换行时圆点贴第一行字，而不是落在两行中间 */
+  margin-top: 0.34em;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background-color: var(--text-secondary);
+}
+.tl-message[data-kind="warn"] {
+  border-left-color: var(--callout-caution-border);
+}
+.tl-message[data-kind="warn"]::before {
+  background-color: var(--callout-caution-border);
+}
+.tl-message[data-kind="success"] {
+  border-left-color: var(--action-color);
+}
+.tl-message[data-kind="success"]::before {
+  background-color: var(--action-color);
+}
+
+/* ---------- 工具条：一局的控制，浮在留言条下面 ---------- */
+.tl-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.tl-button {
+  height: 2rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--page-bg);
+  color: var(--body-color);
+  font-family: var(--ui-font);
+  font-size: 0.78rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease-in-out,
+    border-color 0.12s ease-in-out,
+    color 0.12s ease-in-out;
+}
+.tl-button:hover {
+  border-color: var(--text-secondary);
+  background-color: var(--inline-code-bg);
+}
+.tl-button:focus-visible {
+  outline: 2px solid var(--action-color);
+  outline-offset: 2px;
+}
+/* 「输入坐标」是一个模式开关：展开时留一枚强调色的边与字，
+   和「再来一局 / 提示」这类一次性动作分开。 */
+.tl-button--mode {
+  margin-left: auto;
+  border-color: transparent;
+  background-color: transparent;
+  color: var(--text-secondary);
+}
+.tl-button--mode:hover {
+  border-color: transparent;
+  background-color: transparent;
+  color: var(--body-color);
+}
+.tl-button--mode[aria-expanded="true"] {
+  border-color: var(--action-color);
+  background-color: transparent;
+  color: var(--action-color);
+}
+
+/* ---------- 坐标输入：一条对应 cin >> row >> col 的提示行 ---------- */
+.tl-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.5rem;
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--page-bg);
+}
+.tl-prompt-label {
+  font-family: var(--mono-font);
+  font-size: 0.72rem;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+.tl-prompt-input {
+  width: 4.2rem;
+  height: 1.9rem;
+  padding: 0 0.45rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-raised);
+  color: var(--body-color);
+  font-family: var(--mono-font);
+  font-size: 0.8rem;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: 0.08em;
+}
+.tl-prompt-input::placeholder {
+  color: var(--text-secondary);
+}
+.tl-prompt-input:focus-visible {
+  outline: 2px solid var(--action-color);
+  outline-offset: 1px;
+}
+.tl-prompt-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 1.9rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--action-color);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--action-color);
+  font-family: var(--ui-font);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease-in-out,
+    color 0.12s ease-in-out;
+}
+.tl-prompt-submit:hover {
+  background-color: color-mix(in srgb, var(--action-color) 10%, transparent);
+}
+.tl-prompt-submit:focus-visible {
+  outline: 2px solid var(--action-color);
+  outline-offset: 2px;
+}
+.tl-prompt-key {
+  font-family: var(--mono-font);
+  font-size: 0.68rem;
+  opacity: 0.75;
+}
+.tl-prompt-help {
+  flex-basis: 100%;
+  margin: 0;
+  font-family: var(--ui-font);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.tl-prompt-error {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: 0.9rem;
+  position: relative;
+  font-family: var(--ui-font);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--callout-caution-border);
+}
+.tl-prompt-error::before {
+  content: "!";
+  position: absolute;
+  left: 0;
+  top: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-family: var(--mono-font);
+  font-size: 0.6rem;
+  line-height: 1;
+}
+.tl-prompt-error[hidden] {
+  display: none;
+}
+/* 报错时让帮助行让位，输入行只留一条说明 */
+.tl-prompt:has(.tl-prompt-error:not([hidden])) .tl-prompt-help {
+  display: none;
+}
+
+/* ---------- 终端输出：一块真正的终端，和面板本体分开 ---------- */
+.tl-terminal {
+  margin-top: 0.85rem;
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-md);
+  background-color: var(--code-bg);
+  overflow: hidden;
+}
+.tl-terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.42rem 0.6rem;
+  background-color: color-mix(in srgb, var(--code-bg) 82%, var(--body-color) 6%);
+  border-bottom: 1px solid var(--code-border);
+  font-family: var(--ui-font);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  cursor: pointer;
+  list-style: none;
+}
+.tl-terminal-bar::-webkit-details-marker {
+  display: none;
+}
+.tl-terminal-bar:hover {
+  color: var(--body-color);
+}
+.tl-terminal-bar:focus-visible {
+  outline: 2px solid var(--action-color);
+  outline-offset: -2px;
+}
+.tl-terminal-dots {
+  display: inline-flex;
+  gap: 0.22rem;
+}
+.tl-terminal-dots i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background-color: var(--text-secondary);
+  opacity: 0.5;
+}
+.tl-terminal-title {
+  color: var(--body-color);
+}
+.tl-terminal-file {
+  margin-left: auto;
+  font-family: var(--mono-font);
+  font-size: 0.66rem;
+  opacity: 0.8;
+}
+.tl-terminal-bar::after {
+  content: "";
+  width: 0.38rem;
+  height: 0.38rem;
+  margin-left: 0.1rem;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg) translate(-0.1rem, -0.1rem);
+  transition: transform 0.15s ease;
+}
+.tl-terminal[open] .tl-terminal-bar::after {
+  transform: rotate(-135deg) translate(-0.05rem, -0.05rem);
+}
+.tl-terminal-body {
+  padding: 0.6rem 0.7rem 0.7rem;
+}
+.tl-terminal-cmd {
+  margin: 0 0 0.45rem;
+  font-family: var(--mono-font);
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+/* 终端窗自己就是框，里面的 pre 不再套第二层边框与底色 */
+#quarto-document-content .tl-terminal-pre {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow-x: auto;
+  color: var(--code-fg);
+  font-family: var(--mono-font);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  tab-size: 4;
+}
+
+/* ---------- 目标说明 ---------- */
+.terminal-lab-note {
+  margin: 0.7rem 0 0;
+  font-family: var(--ui-font);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.terminal-lab-note.is-success {
+  color: var(--action-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-terminal-bar::after,
+  .tl-button,
+  .tl-prompt-submit {
+    transition: none;
+  }
+}
+
+@media (max-width: 34rem) {
+  .terminal-lab {
+    padding: 0.85rem 0.8rem 0.95rem;
+  }
+  .tl-cell {
+    font-size: 2rem;
+  }
+
+}
+
+@media print {
+  .tl-toolbar,
+  .tl-prompt,
+  .tl-live {
+    display: none;
+  }
+  .tl-terminal {
+    break-inside: avoid;
+  }
+  /* 打印时终端内容照常给出：details 收起也要展开正文 */
+  .tl-terminal > .tl-terminal-body {
+    display: block !important;
+  }
+  .terminal-lab {
+    break-inside: avoid;
+  }
+}

@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 
-# 同一 ref 只跑最新一次：新提交取消旧跑，省 runner 时间
+# 并发：同一 ref 只跑最新一次。新提交取消旧的跑。这样省 runner 时间。
 concurrency:
   group: render-check-${{ github.ref }}
   cancel-in-progress: true
@@ -22,7 +22,27 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/ci-prepare
-      # agents 域与 qmd 侧检查（渲染产物尚未生成，文档检查自动跳过渲染节）
-      - run: /usr/bin/python3 .agents/skills/governing-agents/scripts/run.py check --profile fast
-      - run: /usr/bin/python3 .agents/skills/governing-agents/scripts/run.py render
-      - run: /usr/bin/python3 .agents/skills/governing-agents/scripts/run.py check --profile full
+      # 检查范围：读者正文与改动过的游戏工程。渲染产物尚未生成。
+      - name: Check book
+        run: /usr/bin/python3 .agents/scripts/checking-book.py
+      - name: Build changed games
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          if ! git rev-parse --verify "$base" >/dev/null 2>&1; then
+            echo "跳过：找不到比较基线 $base"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$base"...HEAD -- games || true)
+          games=$(printf '%s\n' "$changed" | cut -d/ -f2 | sort -u)
+          for game in $games; do
+            [ -n "$game" ] || continue
+            [ -f "games/$game/running-build.sh" ] || continue
+            (cd "games/$game" && bash running-build.sh)
+          done
+      - name: Render book
+        run: quarto render

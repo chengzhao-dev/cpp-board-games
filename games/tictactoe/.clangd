@@ -1,0 +1,27 @@
+#===--------------------------------------------------------------------------------------------===#
+# .clangd - 编辑器语言服务配置
+#===--------------------------------------------------------------------------------------------===#
+CompileFlags:
+  # 编译数据库：构建后从 build/compile_commands.json 读取真实编译参数。
+  CompilationDatabase: build
+  # 解析参数：标准只来自 build/compile_commands.json；不要写 -std 覆盖数据库。
+  Add:
+    - -stdlib=libc++
+    - -Wall
+    - -Wextra
+    - -Werror
+    # 头文件搜索路径：未构建时相对本文件所在目录查找。
+    - -Itictactoe/include
+    - -Iapps/include
+
+Diagnostics:
+  # 检查补齐：补上 clangd 默认未开的命名与 google 检查，与同目录 .clang-tidy 一致。
+  ClangTidy:
+    Add:
+      - readability-identifier-naming
+      - google-build-using-namespace
+      - google-global-names-in-headers
+      - google-explicit-constructor
+  # 噪音压制：只压制首次未构建时找不到头文件的噪音；构建后以编译数据库为准。
+  Suppress:
+    - pp_file_not_found
