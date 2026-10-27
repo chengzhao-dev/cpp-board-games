@@ -570,13 +570,29 @@ html[data-palette="solarized"] .navbar-brand::before {
     width: 6rem;
   }
 
+  /* 只剩书标：书标放到 1.375rem 补回丢掉标题后的视觉重量，并撤掉桌面端那条
+     0.2rem 抬升——它原本用来对齐汉字基线，没有标题时反而把图标顶高。 */
+  .navbar-brand {
+    position: relative;
+  }
   .navbar-brand::before {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.375rem;
+    height: 1.375rem;
+    margin-bottom: 0;
   }
 
+  /* 书名改成视觉隐藏而不是 display:none：这枚链接仍是「回到首页」，
+     屏幕阅读器要能读出书名，否则书标就是一个没有名字的链接。 */
   .navbar-title {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 /* 主题切换：可点区域 44px，图标仍是 16px */
@@ -687,6 +703,11 @@ nav.quarto-secondary-nav .container-fluid.d-flex {
 }
 /* 次级导航里的重复搜索按钮隐藏（品牌栏已含搜索框） */
 nav.quarto-secondary-nav .quarto-search-button {
+  display: none;
+}
+/* 首页与部首页在次级导航里只有一项（书名或部名），紧挨顶栏品牌又说一遍；
+   它也说不出“书内位置”，故只留侧栏开关，让次级导航只承担章节轨迹。 */
+nav.quarto-secondary-nav .quarto-page-breadcrumbs ol.breadcrumb:has(> li:only-child) {
   display: none;
 }
 /* 宽屏只隐藏次级导航里的面包屑（仅留汉堡）；标题块面包屑桌面端显示、与标题同栏左对齐，
