@@ -43,6 +43,14 @@ python games/tictactoe/python/web.py
 
 `replay.py` 自带协议自检；`web.py` 启动后访问它打印出的地址。两个脚本都在 `games/tictactoe/python/` 目录。网页按终端层的快照协议读取对局；当前入口不写快照，终端层接回后才会生成可回放的数据。
 
+推送前先在本地复现 CI 的检查序列：
+
+```bash
+python .agents/scripts/checking-ci.py
+```
+
+它依次执行章节检查与所有游戏工程的构建；加 `--render` 再渲染整本书。CI 的 `pages.yml` 与 `render-check.yml` 用的是同一组命令，本地跑通再推送，失败会停在第一个不过的步骤。
+
 ## 延伸阅读
 
 数组与枚举在棋盘上的用法见 [实现棋盘存储](content/tictactoe/03-board.qmd) 和 [完成一次落子](content/tictactoe/04-game.qmd)。若要系统阅读这些机制，见姊妹仓库 [cpp-notes](https://github.com/chengzhao-dev/cpp-notes)。
