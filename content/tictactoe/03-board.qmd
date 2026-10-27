@@ -2,7 +2,7 @@
 title: "棋盘"
 ---
 
-井字棋棋盘是 3 行 3 列。`Board` 保存这九个棋盘格子，并提供写入与读出的接口；接口写在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h)，实现放在 [board.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp)。
+井字棋棋盘是 3 行 3 列。`Board` 保存这九个棋盘格子，并提供写入与读出的接口；声明在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h)，实现在 [board.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp)。
 
 ## 类型与坐标
 
@@ -17,7 +17,7 @@ title: "棋盘"
 /// 棋盘保存九个棋盘格子的状态，提供查询、落子与清空棋盘。
 ```
 
-`@file` 写文件名本身，`@brief` 用一句话说明这个文件定义什么，空一行后只写本文件自己的范围。下面各段摘录声明附近的行，不再重复文件头。
+`@file` 写文件名本身，`@brief` 用一句话说明这个文件定义什么，空一行后只写本文件自己的范围。
 
 ### 棋盘格子坐标
 
@@ -41,7 +41,7 @@ struct CellPosition {
 }
 ```
 
-代码定义了行列上限、坐标成员和比较操作；图里的行列编号与 `CellPosition` 的两个成员一一对应。
+`kBoardRows` 和 `kBoardCols` 定下 3 行 3 列，`CellPosition` 把一对行列打成一个值，`operator==` 让两个坐标可以直接比较。图里每个格子标的就是这两个值。
 
 ```{=html}
 <figure class="book-figure">
@@ -107,11 +107,11 @@ enum class CellType : std::uint8_t {
 /// 井字棋棋盘。
 class Board {
  public:
-  /// 默认构造函数：得到空棋盘，每个棋盘格子都是 kEmpty。
+  /// 默认构造函数：初始化一个空棋盘，每个棋盘格子都是 kEmpty。
   Board() = default;
 
  private:
-  /// 棋盘格子数组：外层下标是行，内层下标是列。
+  /// 棋盘格子数组：外层下标是行，内层下标是列，每个元素表示一个棋盘格子的类型。
   std::array<std::array<CellType, kBoardCols>, kBoardRows> cells_{};
 };
 ```
@@ -147,10 +147,11 @@ class Board {
  public:
   /// 检查指定坐标上的棋盘格子是否为空。
   ///
-  /// 越界返回 false。不判断对局是否结束：终局后空格仍在，本函数只按格子上有没有棋子返回。
+  /// 越界返回 false。本函数只看格子上有没有棋子，不判断对局是否结束。
+  /// 终局后空格仍在。
   ///
   /// @param position 待检查的坐标。
-  /// @return 坐标在棋盘内且该棋盘格子为空时返回 true；越界或该棋盘格子已有棋子时返回 false。
+  /// @return 坐标在棋盘内且该格子为空时返回 true；越界或已有棋子时返回 false。
   [[nodiscard]] bool IsCellEmpty(CellPosition position) const;
 
   /// 检查棋盘是否已满。
@@ -213,7 +214,7 @@ class Board {
   ///
   /// @param position 目标行列坐标。
   /// @param cell_type 要放置的棋盘格子类型，必须是 kX 或 kO。
-  /// @return 放置成功返回 true；坐标越界、要写的是空棋盘格子或目标已有棋子时返回 false，棋盘不变。
+  /// @return 放置成功返回 true；越界、写空或目标已有棋子时返回 false，棋盘不变。
   [[nodiscard]] bool PlaceCell(CellPosition position, CellType cell_type);
 };
 ```
@@ -227,13 +228,13 @@ bool Board::PlaceCell(CellPosition position, CellType cell_type) {
     return false;
   }
 
-  /// 坐标已确认在界内；目标棋盘格子已有棋子时也不覆盖。
+  /// 已确认坐标在界内；目标棋盘格子已有棋子时同样不覆盖。
   CellType& cell = cells_.at(position.row).at(position.col);
   if (cell != CellType::kEmpty) {
     return false;
   }
 
-  /// 三种拒绝都在赋值前返回，棋盘保持原样。
+  /// 越界、空类型与已占都已在赋值前返回，走到这里棋盘保持原样。
   cell = cell_type;
   return true;
 }
@@ -251,7 +252,16 @@ class Board {
 };
 ```
 
-清空后九个棋盘格子恢复为空，同一格可以再次 `PlaceCell`。
+实现只有一行，把数组整体赋回默认值：
+
+```{.cpp filename="board.cpp"}
+void Board::Clear() noexcept {
+  /// 整体赋回默认值，九个棋盘格子一起恢复为空。
+  cells_ = {};
+}
+```
+
+清空后九个格子都是 `kEmpty`，同一格可以再次落子。
 
 ## 终局判定
 
@@ -266,7 +276,8 @@ class Board {
  public:
   /// 获取形成三连的棋盘格子类型。
   ///
-  /// 按 kX、kO 的次序检查，先手优先；同一棋盘不会让双方同时成线，次序一致只为结果可复现。
+  /// 按 kX、kO 的次序检查，先手优先；同一棋盘不会让双方同时成线。
+  /// 次序一致只为结果可复现。
   ///
   /// @return 有赢家时返回形成三连的棋盘格子类型；没有三连时返回 std::nullopt。
   [[nodiscard]] std::optional<CellType> GetWinner() const;
@@ -308,7 +319,23 @@ bool Board::HasLine(CellType cell_type) const {
 }
 ```
 
-代码注释交代了为什么不改成“编号求和”：把 `kX`、`kO` 记成不同数字再相加，`X`、`O` 与一个空格相加的和，可能正好等于三个 `X` 的和，于是没有三连的盘面也被判成三连。逐格比较类型没有这个漏洞。
+不要改写成编号求和：若把 `kX`、`kO` 记成 1 和 2，空格记 0，那么 `X + O + 空` 等于 3，与三个 `X` 的和相同，没有三连的盘面会被判成三连。逐格比较类型没有这个漏洞。
+
+### 赢家判定
+
+`GetWinner` 依次问 `HasLine(kX)` 与 `HasLine(kO)`，先命中先返回；两个都没有，就是平局或对局还没结束：
+
+```{.cpp filename="board.cpp"}
+std::optional<CellType> Board::GetWinner() const {
+  if (HasLine(CellType::kX)) {
+    return CellType::kX;
+  }
+  if (HasLine(CellType::kO)) {
+    return CellType::kO;
+  }
+  return std::nullopt;
+}
+```
 
 ### 赢家、平局与结束
 
@@ -356,7 +383,7 @@ bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
     return false;
   }
 
-  /// 候选坐标按已经放入该类型参与匹配，其余棋盘格子照常读取。
+  /// 候选坐标视为已放入该类型，其余棋盘格子照常读取。
   const auto matches = [&](CellPosition cell) {
     return cell == position || cells_.at(cell.row).at(cell.col) == cell_type;
   };
@@ -374,19 +401,17 @@ bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
 
 给 `Board::PlaceCell` 传入 `CellType::kEmpty` 时，它返回 `false`，棋盘保持不变。
 
-- **出错的原因**：`kEmpty` 表示空棋盘格子，不是一枚棋子。`Board` 把它当作无效写入拒绝。
-- **正确的做法**：写入时传 `kX` 或 `kO`。
+`kEmpty` 表示空棋盘格子而不是一枚棋子，`Board` 把它当作无效写入拒绝；写入时传 `kX` 或 `kO`。
 
 ### 误用越界坐标
 
 把行号或列号写到 `0` 到 `2` 之外时，`PlaceCell` 返回 `false`，棋盘保持不变。
 
-- **出错的原因**：`IsInRange` 先检查坐标，越界坐标不会进入写入步骤。
-- **正确的做法**：写入前确认行列号都在 `0` 到 `2` 之间，或者先调用 `IsInRange` 核对。
+`IsInRange` 在写入前拦下越界坐标；调用前自己核对 `0` 到 `2` 更省事，也能用来禁用按钮。
 
 ## 自测问题
 
-不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
+先自己回答，再展开答案对照；答不上来就回到对应小节。
 
 1. 为什么行号 `-1` 和 `3` 都会被拒绝？
 
@@ -420,4 +445,4 @@ bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
 
 ## 本章回顾
 
-你已经能把九个棋盘格子存进二维数组，通过 `Board` 落子与读回，并判断满盘、三连、赢家与平局。下一章对局，看一次落子怎样改变棋盘并得出结果。
+棋盘用 3×3 的二维数组存九个格子，越界与占用都在写入前拒绝；判胜扫八条线，先看 X 再看 O。下一章看一次落子怎样改变棋盘，并决定谁继续下。

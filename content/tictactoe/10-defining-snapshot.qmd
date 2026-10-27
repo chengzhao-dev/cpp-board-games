@@ -77,7 +77,7 @@ JSON 行给程序：`cells`、`status`、`winner` 等字段逐行可解析，不
 
 ## 本章回顾
 
-你已经能读出快照里的棋盘、当前玩家和对局结果。本章介绍了快照的设计；终端程序接回构建后，代码、测试、运行与快照才会重新连成一条可运行的流程。
+你已经能读出快照里的棋盘、当前玩家和对局结果。终端程序接回构建后，代码、测试、运行与快照会重新连成一条可跑的流程。
 
 [10-cli-cpp]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/apps/src/cli.cpp
 [10-replay-py]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/python/replay.py

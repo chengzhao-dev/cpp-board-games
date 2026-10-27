@@ -2,7 +2,7 @@
 title: "电脑落子"
 ---
 
-电脑落子时，从空格子里按强度选一个位置，三种强度各对应一个派生类。选出的 `Move` 仍交给 [对局](04-game.qmd) 里的 `Game::TryPlace`。`Ai` 的接口写在 [ai.h][ai-h]，实现放在 [ai.cpp][ai-cpp]。
+电脑落子时，从空格子里按强度选一个位置，三种强度各对应一个派生类。选出的 `Move` 仍交给 [对局](04-game.qmd) 里的 `Game::TryPlace`。`Ai` 的接口在 [ai.h][ai-h]，实现在 [ai.cpp][ai-cpp]。
 
 ## 落子强度
 
@@ -87,7 +87,7 @@ class Ai {
 ```{.cpp filename="ai.cpp"}
 std::vector<CellPosition> CollectEmptyCells(const Game& game) {
   std::vector<CellPosition> cells;
-  /// 返回顺序按行序；同一局面的候选格顺序一致，启发式与极小极大的平手规则才可复现。
+  /// 返回顺序按行序；同一局面的候选格顺序一致，启发式与极小极大的平手规则可复现。
   for (int row = 0; row < kBoardRows; ++row) {
     for (int col = 0; col < kBoardCols; ++col) {
       const CellPosition position = {.row = row, .col = col};
@@ -245,7 +245,7 @@ Move HeuristicAi::Choose(const Game& game) const {
       return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  /// 九格全被占满时对局已经结束，上面的检查会先拦下；这里只保留一条不会取空的返回路径。
+  /// 九格全占满时对局已经结束，上面的检查会先拦下；这里保留不会取空的路径。
   return {.position = cells.front(), .player = game.GetCurrentPlayer()};
 }
 ```
@@ -278,7 +278,7 @@ class MinimaxAi final : public Ai {
   /// @param result 对局结果。
   [[nodiscard]] static int ScoreTerminal(GameResult result);
 
-  /// 极小极大搜索：X 取更大分数，O 取更小分数，alpha、beta 剪掉不可能改变选择的分支。
+  /// 极小极大搜索：X 取更大分数，O 取更小分数，alpha、beta 剪掉不可能的分支。
   ///
   /// @param game 只读的当前对局。
   /// @param alpha 当前已知最好分数的下界。
