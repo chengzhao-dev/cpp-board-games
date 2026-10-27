@@ -8,6 +8,17 @@ title: "棋盘"
 
 在 [对局规则](01-rules.qmd) 里，棋盘格子用行列数字定位，每个棋盘格子的取值是 X、O 或空。`CellPosition` 表示一对行列，`CellType` 表示这个取值。
 
+每个手写源文件开头都有一段 Doxygen 文件头，`board.h` 的前四行是：
+
+```{.cpp filename="board.h"}
+/// @file board.h
+/// @brief 定义井字棋棋盘、格子坐标与格子类型。
+///
+/// 棋盘保存九个棋盘格子的状态，提供查询、落子与清空棋盘。
+```
+
+`@file` 写文件名本身，`@brief` 用一句话说明这个文件定义什么，空一行后只写本文件自己的范围。下面各段摘录声明附近的行，不再重复文件头。
+
 ### 棋盘格子坐标
 
 棋盘坐标由行数和列数确定，一对行列写成 `(row, col)`。尺寸和坐标定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
