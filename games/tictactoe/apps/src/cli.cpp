@@ -1,8 +1,7 @@
-//===------------------------------------------------------------------------------------------===//
-// cli.cpp - 终端程序的打印与读入。
-//
-// 按行列号打印棋盘，读入两个整数并落子，直到终局。
-//===------------------------------------------------------------------------------------------===//
+/// @file cli.cpp
+/// @brief 终端程序的打印与读入。
+///
+/// 按行列号打印棋盘，读入两个整数并落子，直到终局。
 
 #include "cli.h"
 
@@ -35,8 +34,8 @@ char CellSymbol(CellType cell_type) {
 }
 
 std::string BoardToString(const Game& game) {
-  // 列号写在表头、行号写在最左：玩家按“先看行号再看列号”的顺序数格子，
-  // 与落子提示里的“行和列”同序，不必在脑子里交换。
+  /// 列号写在表头、行号写在最左：玩家按“先看行号再看列号”的顺序数格子，
+  /// 与落子提示里的“行和列”同序，不必在脑子里交换。
   std::string board = "    0   1   2\n";
   const std::string rule = "  +---+---+---+\n";
   board += rule;
@@ -74,7 +73,7 @@ void PrintGame(std::ostream& out, const Game& game) {
 }
 
 void WriteSnapshot(std::ostream& out, const Game& game) {
-  // 字段顺序与网页读取顺序一致，改动要同步书里的快照说明。
+  /// 字段顺序与网页读取顺序一致，改动要同步书里的快照说明。
   out << R"({"version":1,"sequence":)" << game.GetHistory().size() << R"(,"cells":[)";
   for (int row = 0; row < kBoardRows; ++row) {
     for (int col = 0; col < kBoardCols; ++col) {
@@ -113,8 +112,8 @@ void Report(std::ostream& err, const std::string& message) {
 }
 
 std::expected<RowAndCol, ReadError> ReadRowAndCol(std::istream& in, std::ostream& err) {
-  // 先按 64 位读，再判断能否收进 int：直接读 int 时溢出会让流失败，量级丢失，
-  // 分不清写错了数还是写了字母。
+  /// 先按 64 位读，再判断能否收进 int：直接读 int 时溢出会让流失败，量级丢失，
+  /// 分不清写错了数还是写了字母。
   std::int64_t input_row = 0;
   std::int64_t input_col = 0;
   if (in >> input_row >> input_col) {
@@ -122,7 +121,7 @@ std::expected<RowAndCol, ReadError> ReadRowAndCol(std::istream& in, std::ostream
         input_row <= std::numeric_limits<int>::max() &&
         input_col >= std::numeric_limits<int>::min() &&
         input_col <= std::numeric_limits<int>::max()) {
-      // 一行只取两个整数；行尾余下的内容一起丢掉，下一轮从新行开始。
+      /// 一行只取两个整数；行尾余下的内容一起丢掉，下一轮从新行开始。
       in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
       return RowAndCol{.row = static_cast<int>(input_row), .col = static_cast<int>(input_col)};
     }
@@ -134,7 +133,7 @@ std::expected<RowAndCol, ReadError> ReadRowAndCol(std::istream& in, std::ostream
   if (in.eof()) {
     return std::unexpected(ReadError::kEof);
   }
-  // 清掉失败位再丢整行：不丢的话下一次读会立刻再失败，同一行会被反复报告。
+  /// 清掉失败位再丢整行：不丢的话下一次读会立刻再失败，同一行会被反复报告。
   in.clear();
   in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   Report(err, "请输入两个整数");
@@ -142,7 +141,7 @@ std::expected<RowAndCol, ReadError> ReadRowAndCol(std::istream& in, std::ostream
 }
 
 void ReportRejected(std::ostream& err, const Game& game, CellPosition position) {
-  // 从最具体的原因往下排：同一坐标可能同时越界且没轮到，玩家先要知道该改哪一个。
+  /// 从最具体的原因往下排：同一坐标可能同时越界且没轮到，玩家先要知道该改哪一个。
   if (!Board::IsInRange(position)) {
     Report(err, "坐标超出棋盘");
     return;
@@ -154,7 +153,7 @@ void ReportRejected(std::ostream& err, const Game& game, CellPosition position) 
   Report(err, "现在不能落子");
 }
 
-// 这一整行要留到比较结束，所以放进 std::string，不借用输入缓冲。
+/// 这一整行要留到比较结束，所以放进 std::string，不借用输入缓冲。
 bool ReadOwnedLine(std::istream& in, std::string& line) {
   if (!std::getline(in, line)) {
     return false;
@@ -220,7 +219,7 @@ HumanMove ReadHumanMove(std::istream& in, std::ostream& err, Game& game) {
   if (result == PlaceResult::kRejected) {
     ReportRejected(err, game, position);
   }
-  // 被拒也算这一轮读完：提示已经打印，主循环继续读下一行；kInputEnd 与 kRetry 只表示输入层状态。
+  /// 被拒也算这一轮读完：提示已经打印，主循环继续读下一行；kInputEnd 与 kRetry 只表示输入层状态。
   return HumanMove::kPlaced;
 }
 
@@ -248,7 +247,7 @@ int PlayToEnd(std::istream& in, std::ostream& out, std::ostream& err, AiStrength
     if (game.GetCurrentPlayer() == Player::kNought) {
       const PlaceResult placed = game.TryPlace(ai->Choose(game));
       if (placed == PlaceResult::kRejected) {
-        // 电脑的落子被拒说明选格逻辑违背了 Game 的规则，重试只会死循环，直接结束并留报告。
+        /// 电脑的落子被拒说明选格逻辑违背了 Game 的规则，重试只会死循环，直接结束并留报告。
         Report(err, "现在不能落子");
         return 1;
       }

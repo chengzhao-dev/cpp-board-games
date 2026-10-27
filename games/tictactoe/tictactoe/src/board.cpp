@@ -1,8 +1,7 @@
-//===------------------------------------------------------------------------------------------===//
-// board.cpp - 棋盘格子的读写与三连、平局判定。
-//
-// 写入只改目标棋盘格子；胜负判定与三连推演共用一张八条线表。
-//===------------------------------------------------------------------------------------------===//
+/// @file board.cpp
+/// @brief 棋盘格子的读写与三连、平局判定。
+///
+/// 写入只改目标棋盘格子；胜负判定与三连推演共用一张八条线表。
 
 #include "board.h"
 
@@ -14,7 +13,7 @@
 
 namespace tictactoe {
 
-// 八条线的坐标表：三行、三列、两条对角线。
+/// 八条线的坐标表：三行、三列、两条对角线。
 constexpr std::array<std::array<CellPosition, 3>, 8> kLines{{
     {{{.row = 0, .col = 0}, {.row = 0, .col = 1}, {.row = 0, .col = 2}}},  // 行 0
     {{{.row = 1, .col = 0}, {.row = 1, .col = 1}, {.row = 1, .col = 2}}},  // 行 1
@@ -77,29 +76,29 @@ std::optional<CellType> Board::GetWinner() const {
 }
 
 bool Board::PlaceCell(CellPosition position, CellType cell_type) {
-  // 越界或写入空类型时直接拒绝，不碰数组。
+  /// 越界或写入空类型时直接拒绝，不碰数组。
   if (!IsInRange(position) || cell_type == CellType::kEmpty) {
     return false;
   }
 
-  // 坐标已确认在界内；目标棋盘格子已有棋子时也不覆盖。
+  /// 坐标已确认在界内；目标棋盘格子已有棋子时也不覆盖。
   CellType& cell = cells_.at(position.row).at(position.col);
   if (cell != CellType::kEmpty) {
     return false;
   }
 
-  // 三种拒绝都在赋值前返回，棋盘保持原样。
+  /// 三种拒绝都在赋值前返回，棋盘保持原样。
   cell = cell_type;
   return true;
 }
 
 void Board::Clear() noexcept {
-  // 整体赋回默认值，九个棋盘格子一起恢复为空。
+  /// 整体赋回默认值，九个棋盘格子一起恢复为空。
   cells_ = {};
 }
 
 bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
-  // 拒绝条件与 PlaceCell 相同：越界、空类型、目标棋盘格子已有棋子。
+  /// 拒绝条件与 PlaceCell 相同：越界、空类型、目标棋盘格子已有棋子。
   if (!IsInRange(position) || cell_type == CellType::kEmpty) {
     return false;
   }
@@ -107,19 +106,19 @@ bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
     return false;
   }
 
-  // 候选坐标按已经放入该类型参与匹配，其余棋盘格子照常读取。
+  /// 候选坐标按已经放入该类型参与匹配，其余棋盘格子照常读取。
   const auto matches = [&](CellPosition cell) {
     return cell == position || cells_.at(cell.row).at(cell.col) == cell_type;
   };
 
-  // 先找包含候选坐标的那条线，再确认整条线都匹配。
+  /// 先找包含候选坐标的那条线，再确认整条线都匹配。
   return std::ranges::any_of(kLines, [&](const auto& line) {
     return std::ranges::find(line, position) != line.end() && std::ranges::all_of(line, matches);
   });
 }
 
 bool Board::HasLine(CellType cell_type) const {
-  // 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。
+  /// 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。
   return std::ranges::any_of(kLines, [&](const auto& line) {
     return std::ranges::all_of(line, [&](CellPosition position) {
       return cells_.at(position.row).at(position.col) == cell_type;

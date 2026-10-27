@@ -1,8 +1,7 @@
-//===------------------------------------------------------------------------------------------===//
-// testing-board.cpp - Board 的行为测试。
-//
-// 验证空棋盘、占格、非法坐标、不可覆盖写入、下满判定、清空与终局判定。
-//===------------------------------------------------------------------------------------------===//
+/// @file testing-board.cpp
+/// @brief Board 的行为测试。
+///
+/// 验证空棋盘、占格、非法坐标、不可覆盖写入、下满判定、清空与终局判定。
 
 #include <array>
 #include <cstddef>
@@ -19,7 +18,7 @@ using tictactoe::Board;
 using tictactoe::CellPosition;
 using tictactoe::CellType;
 
-// 新建棋盘的每个棋盘格子均为空。
+/// 新建棋盘的每个棋盘格子均为空。
 TEST(BoardTest, InitialBoardIsEmpty) {
   const Board board;
   for (int row = 0; row < tictactoe::kBoardRows; ++row) {
@@ -29,14 +28,14 @@ TEST(BoardTest, InitialBoardIsEmpty) {
   }
 }
 
-// 坐标范围包含左上角和右下角。
+/// 坐标范围包含左上角和右下角。
 TEST(BoardTest, ValidPositionIncludesBothCorners) {
   EXPECT_TRUE(Board::IsInRange({.row = 0, .col = 0}));
   EXPECT_TRUE(
       Board::IsInRange({.row = tictactoe::kBoardRows - 1, .col = tictactoe::kBoardCols - 1}));
 }
 
-// 写入 X 后，中心棋盘格子保存 X。
+/// 写入 X 后，中心棋盘格子保存 X。
 TEST(BoardTest, PlaceCellWritesEmptyCell) {
   Board board;
   const CellPosition center{.row = 1, .col = 1};
@@ -44,7 +43,7 @@ TEST(BoardTest, PlaceCellWritesEmptyCell) {
   EXPECT_EQ(board.GetCellType(center), CellType::kX);
 }
 
-// `kEmpty` 类型不是一次有效写入。
+/// `kEmpty` 类型不是一次有效写入。
 TEST(BoardTest, PlaceCellRejectsEmptyType) {
   Board board;
   const CellPosition center{.row = 1, .col = 1};
@@ -52,7 +51,7 @@ TEST(BoardTest, PlaceCellRejectsEmptyType) {
   EXPECT_EQ(board.GetCellType(center), CellType::kEmpty);
 }
 
-// 已占用的棋盘格子不能被第二次写入。
+/// 已占用的棋盘格子不能被第二次写入。
 TEST(BoardTest, PlaceCellRejectsOccupiedCell) {
   Board board;
   const CellPosition origin{.row = 0, .col = 0};
@@ -61,7 +60,7 @@ TEST(BoardTest, PlaceCellRejectsOccupiedCell) {
   EXPECT_EQ(board.GetCellType(origin), CellType::kX);
 }
 
-// 负坐标和上界坐标都不能写入。
+/// 负坐标和上界坐标都不能写入。
 TEST(BoardTest, PlaceCellRejectsInvalidPosition) {
   Board board;
   EXPECT_FALSE(board.PlaceCell({.row = -1, .col = 0}, CellType::kX));
@@ -71,7 +70,7 @@ TEST(BoardTest, PlaceCellRejectsInvalidPosition) {
   EXPECT_EQ(board.GetCellType({.row = 0, .col = 0}), CellType::kEmpty);
 }
 
-// 非法坐标不能用于读取棋盘格子类型。
+/// 非法坐标不能用于读取棋盘格子类型。
 TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
   const Board board;
   EXPECT_THROW((void)board.GetCellType({.row = -1, .col = 0}), std::out_of_range);
@@ -82,7 +81,7 @@ TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
                std::out_of_range);
 }
 
-// 非法坐标抛出的异常文案带函数名和行列值。
+/// 非法坐标抛出的异常文案带函数名和行列值。
 TEST(BoardTest, GetCellTypeErrorMessageIncludesPosition) {
   const Board board;
   try {
@@ -96,7 +95,7 @@ TEST(BoardTest, GetCellTypeErrorMessageIncludesPosition) {
   }
 }
 
-// 每落一子之前棋盘都未满，九个棋盘格子全部落子后才为满。
+/// 每落一子之前棋盘都未满，九个棋盘格子全部落子后才为满。
 TEST(BoardTest, IsFullOnlyAfterEveryCellPlaced) {
   Board board;
   for (int row = 0; row < tictactoe::kBoardRows; ++row) {
@@ -108,7 +107,7 @@ TEST(BoardTest, IsFullOnlyAfterEveryCellPlaced) {
   EXPECT_TRUE(board.IsFull());
 }
 
-// 开局棋盘没有赢家。
+/// 开局棋盘没有赢家。
 TEST(BoardTest, GetWinnerHasNoValueOnNewBoard) {
   const Board board;
   EXPECT_FALSE(board.GetWinner().has_value());
@@ -116,7 +115,7 @@ TEST(BoardTest, GetWinnerHasNoValueOnNewBoard) {
   EXPECT_FALSE(board.IsGameOver());
 }
 
-// 一行 kX 时 GetWinner 返回 kX。
+/// 一行 kX 时 GetWinner 返回 kX。
 TEST(BoardTest, GetWinnerReturnsXForTopRow) {
   Board board;
   for (int col = 0; col < tictactoe::kBoardCols; ++col) {
@@ -129,7 +128,7 @@ TEST(BoardTest, GetWinnerReturnsXForTopRow) {
   EXPECT_FALSE(board.IsDraw());
 }
 
-// 下满且没有三连时 IsDraw 为真。
+/// 下满且没有三连时 IsDraw 为真。
 TEST(BoardTest, IsDrawWhenFullWithoutWinner) {
   Board board;
   const std::array<CellType, static_cast<size_t>(tictactoe::kBoardRows * tictactoe::kBoardCols)>
@@ -154,7 +153,7 @@ TEST(BoardTest, IsDrawWhenFullWithoutWinner) {
   EXPECT_TRUE(board.IsDraw());
 }
 
-// 假设在空角补上 X 后，第一行三连；IsLineComplete 对 X 为真、对 O 为假，棋盘保持不变。
+/// 假设在空角补上 X 后，第一行三连；IsLineComplete 对 X 为真、对 O 为假，棋盘保持不变。
 TEST(BoardTest, IsLineCompleteProbesWithoutPlacing) {
   Board board;
   ASSERT_TRUE(board.PlaceCell({.row = 0, .col = 0}, CellType::kX));
@@ -167,7 +166,7 @@ TEST(BoardTest, IsLineCompleteProbesWithoutPlacing) {
   EXPECT_FALSE(board.GetWinner().has_value());
 }
 
-// 清空棋盘后九个棋盘格子恢复为空，终局查询回到开局，同一格可以再次写入。
+/// 清空棋盘后九个棋盘格子恢复为空，终局查询回到开局，同一格可以再次写入。
 TEST(BoardTest, ClearRestoresEmptyBoard) {
   Board board;
   ASSERT_TRUE(board.PlaceCell({.row = 0, .col = 0}, CellType::kX));
