@@ -69,7 +69,7 @@ struct Move {
 };
 ```
 
-`Move` 不记第几步，步数由它在历史里的位置给出。历史随落子追加，按顺序遍历就能回放整局。
+`Move` 不记第几步，步数由它在历史里的位置给出。历史按落子次序追加，回放时顺着读一遍就能重走整局。
 
 落子是否成功写进棋盘，用 `PlaceResult` 表示：
 
@@ -213,7 +213,7 @@ class Game {
 
 ```{.cpp filename="game.cpp"}
 GameResult Game::JudgeAfterPlace(const Board& board, Player player) {
-  // 次序不能反：先判胜再判满，否则最后一子同时成线和填满棋盘时会被误判成平局。
+  /// 次序不能反：先判胜再判满，否则最后一子同时成线和填满棋盘时会被误判成平局。
   const auto winner = board.GetWinner();
   if (winner.has_value() && *winner == PlayerToCellType(player)) {
     return PlayerToWinResult(player);
@@ -258,23 +258,23 @@ class Game {
 
 ```{.cpp filename="game.cpp"}
 PlaceResult Game::TryPlace(const Move& move) {
-  // 先看对局状态和轮次，再碰棋盘：被拒的落子不应改写任何成员。
+  /// 先看对局状态和轮次，再碰棋盘：被拒的落子不应改写任何成员。
   if (result_ != GameResult::kInProgress || move.player != current_player_) {
     return PlaceResult::kRejected;
   }
 
   const CellType cell_type = PlayerToCellType(move.player);
-  // 历史最多九手；在改棋盘前一次留够容量，push_back 不会在棋盘已改后分配失败。
+  /// 历史最多九手；在改棋盘前一次留够容量，push_back 不会在棋盘已改后分配失败。
   history_.reserve(static_cast<std::size_t>(kBoardRows) * static_cast<std::size_t>(kBoardCols));
   if (!board_.PlaceCell(move.position, cell_type)) {
     return PlaceResult::kRejected;
   }
 
-  // 棋盘已经写好，后面三步按依赖顺序更新：先判结果，再记历史，最后换手。
+  /// 棋盘已经写好，后面三步按依赖顺序更新：先判结果，再记历史，最后换手。
   result_ = JudgeAfterPlace(board_, move.player);
   history_.push_back(move);
   if (result_ == GameResult::kInProgress) {
-    // 终局后不换手：current_player_ 停在落最后一子的人，界面靠它显示胜负归属。
+    /// 终局后不换手：current_player_ 停在落最后一子的人，界面靠它显示胜负归属。
     current_player_ = PlayerToOpponent(current_player_);
   }
   return PlaceResult::kPlaced;

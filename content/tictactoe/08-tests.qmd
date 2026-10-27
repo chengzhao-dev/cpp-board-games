@@ -13,7 +13,7 @@ title: "测试"
 [testing-board.cpp][08-testing-board] 的第一个测试核对新建棋盘的初始状态。
 
 ```{.cpp filename="testing-board.cpp"}
-// 新建棋盘的每个棋盘格子均为空。
+/// 新建棋盘的每个棋盘格子均为空。
 TEST(BoardTest, InitialBoardIsEmpty) {
   const Board board;
   for (int row = 0; row < tictactoe::kBoardRows; ++row) {
@@ -33,7 +33,7 @@ TEST(BoardTest, InitialBoardIsEmpty) {
 测试新建棋盘还不够。`Board` 的放置入口有成功和拒绝两条路径，两条都要有测试。占用与非法坐标各用一条完整用例：
 
 ```{.cpp filename="testing-board.cpp"}
-// 已占用的棋盘格子不能被第二次写入。
+/// 已占用的棋盘格子不能被第二次写入。
 TEST(BoardTest, PlaceCellRejectsOccupiedCell) {
   Board board;
   const CellPosition origin{.row = 0, .col = 0};
@@ -42,7 +42,7 @@ TEST(BoardTest, PlaceCellRejectsOccupiedCell) {
   EXPECT_EQ(board.GetCellType(origin), CellType::kX);
 }
 
-// 负坐标和上界坐标都不能写入。
+/// 负坐标和上界坐标都不能写入。
 TEST(BoardTest, PlaceCellRejectsInvalidPosition) {
   Board board;
   EXPECT_FALSE(board.PlaceCell({.row = -1, .col = 0}, CellType::kX));
@@ -62,7 +62,7 @@ TEST(BoardTest, PlaceCellRejectsInvalidPosition) {
 `PlaceCell` 用返回值报告拒绝。查询没有可返回的“失败”取值，改用异常：
 
 ```{.cpp filename="testing-board.cpp"}
-// 非法坐标不能用于读取棋盘格子类型。
+/// 非法坐标不能用于读取棋盘格子类型。
 TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
   const Board board;
   EXPECT_THROW((void)board.GetCellType({.row = -1, .col = 0}), std::out_of_range);

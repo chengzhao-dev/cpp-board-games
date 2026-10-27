@@ -211,18 +211,18 @@ class Board {
 
 ```{.cpp filename="board.cpp"}
 bool Board::PlaceCell(CellPosition position, CellType cell_type) {
-  // 越界或写入空类型时直接拒绝，不碰数组。
+  /// 越界或写入空类型时直接拒绝，不碰数组。
   if (!IsInRange(position) || cell_type == CellType::kEmpty) {
     return false;
   }
 
-  // 坐标已确认在界内；目标棋盘格子已有棋子时也不覆盖。
+  /// 坐标已确认在界内；目标棋盘格子已有棋子时也不覆盖。
   CellType& cell = cells_.at(position.row).at(position.col);
   if (cell != CellType::kEmpty) {
     return false;
   }
 
-  // 三种拒绝都在赋值前返回，棋盘保持原样。
+  /// 三种拒绝都在赋值前返回，棋盘保持原样。
   cell = cell_type;
   return true;
 }
@@ -267,7 +267,7 @@ class Board {
 八条线的坐标写在 [board.cpp](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp) 的 `namespace tictactoe` 里，存成一张 `constexpr` 常量表：
 
 ```{.cpp filename="board.cpp"}
-// 八条线的坐标表：三行、三列、两条对角线。
+/// 八条线的坐标表：三行、三列、两条对角线。
 constexpr std::array<std::array<CellPosition, 3>, 8> kLines{{
     {{{.row = 0, .col = 0}, {.row = 0, .col = 1}, {.row = 0, .col = 2}}},  // 行 0
     {{{.row = 1, .col = 0}, {.row = 1, .col = 1}, {.row = 1, .col = 2}}},  // 行 1
@@ -288,7 +288,7 @@ constexpr std::array<std::array<CellPosition, 3>, 8> kLines{{
 
 ```{.cpp filename="board.cpp"}
 bool Board::HasLine(CellType cell_type) const {
-  // 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。
+  /// 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。
   return std::ranges::any_of(kLines, [&](const auto& line) {
     return std::ranges::all_of(line, [&](CellPosition position) {
       return cells_.at(position.row).at(position.col) == cell_type;
@@ -299,47 +299,27 @@ bool Board::HasLine(CellType cell_type) const {
 
 代码注释交代了为什么不改成“编号求和”：把 `kX`、`kO` 记成不同数字再相加，`X`、`O` 与一个空格相加的和，可能正好等于三个 `X` 的和，于是没有三连的盘面也被判成三连。逐格比较类型没有这个漏洞。
 
-### 赢家判断
+### 赢家、平局与结束
 
-`IsWin` 检查棋盘是否已有赢家，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+`IsWin`、`IsDraw`、`IsGameOver` 把前面的三连判定收成三个查询，声明都写在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里。三个函数体各只有一行，合起来才是完整的结束判定，所以放在同一个围栏里：
 
-```{.cpp filename="board.h"}
-class Board {
- public:
-  /// 检查棋盘是否已有赢家。
-  [[nodiscard]] bool IsWin() const;
-};
+```{.cpp filename="board.cpp"}
+bool Board::IsGameOver() const {
+  return IsWin() || IsDraw();
+}
+
+bool Board::IsWin() const {
+  return GetWinner().has_value();
+}
+
+bool Board::IsDraw() const {
+  return IsFull() && !IsWin();
+}
 ```
 
-`IsWin` 复用 `GetWinner` 的三连判定，不再单独扫描棋盘。
+`IsGameOver` 把两个判断用 `||` 连起来：有赢家或平局就结束，否则继续落子。`IsWin` 只问赢家有没有出现，`IsDraw` 只问满盘且没有赢家；真正的扫描都在 `GetWinner` 与 `IsFull` 里，这里不再重复。
 
-### 平局判断
-
-`IsDraw` 检查棋盘是否已满且没有赢家，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
-
-```{.cpp filename="board.h"}
-class Board {
- public:
-  /// 检查棋盘是否已满且没有赢家。
-  [[nodiscard]] bool IsDraw() const;
-};
-```
-
-`IsDraw` 用 `IsFull() && !IsWin()` 把两个条件合起来。棋盘未满时 `IsFull` 返回 `false`，`IsDraw` 因此为 `false`。
-
-### 结束判断
-
-`IsGameOver` 检查棋盘是否已有赢家或已经平局，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
-
-```{.cpp filename="board.h"}
-class Board {
- public:
-  /// 检查棋盘是否已有赢家或已经平局。
-  [[nodiscard]] bool IsGameOver() const;
-};
-```
-
-`IsWin` 或 `IsDraw` 成立，对局就结束；两个都不成立，则继续落子。`Board` 没有对局结束的状态位，`IsGameOver` 因此每次都从当前棋盘重新计算。
+棋盘不保存“已结束”这个状态：每问一次都从当前棋盘重新算，落子之后调用哪个函数都得到当前结果。
 
 ### 成线预判
 
@@ -357,7 +337,7 @@ class Board {
 
 ```{.cpp filename="board.cpp"}
 bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
-  // 拒绝条件与 PlaceCell 相同：越界、空类型、目标棋盘格子已有棋子。
+  /// 拒绝条件与 PlaceCell 相同：越界、空类型、目标棋盘格子已有棋子。
   if (!IsInRange(position) || cell_type == CellType::kEmpty) {
     return false;
   }
@@ -365,12 +345,12 @@ bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
     return false;
   }
 
-  // 候选坐标按已经放入该类型参与匹配，其余棋盘格子照常读取。
+  /// 候选坐标按已经放入该类型参与匹配，其余棋盘格子照常读取。
   const auto matches = [&](CellPosition cell) {
     return cell == position || cells_.at(cell.row).at(cell.col) == cell_type;
   };
 
-  // 先找包含候选坐标的那条线，再确认整条线都匹配。
+  /// 先找包含候选坐标的那条线，再确认整条线都匹配。
   return std::ranges::any_of(kLines, [&](const auto& line) {
     return std::ranges::find(line, position) != line.end() && std::ranges::all_of(line, matches);
   });
