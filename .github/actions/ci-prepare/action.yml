@@ -13,7 +13,11 @@ runs:
       run: |
         # 缓存文件：依赖清单只作为缓存键。清单写到已忽略的 temp/。仓库根受 Agent 控制检查白名单的约束。
         mkdir -p temp
-        sed -n '/^quarto_python_packages/,/^]/p' config/config.toml | grep -o '"[^"]*"' > temp/quarto-requirements.txt
+        sed -n '/^quarto_python_packages/,/^]/p' config/config.toml | grep -o '"[^"]*"' | tr -d '"' > temp/quarto-requirements.txt
+        if grep -q '"' temp/quarto-requirements.txt; then
+          echo "ERROR: temp/quarto-requirements.txt 不应包含 TOML 引号" >&2
+          exit 1
+        fi
         cat temp/quarto-requirements.txt
         echo "quarto=$(sed -n 's/^quarto_version *= *"\([^"]*\)".*/\1/p' config/config.toml)" >> "$GITHUB_OUTPUT"
     - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b  # v2.2.0
@@ -32,9 +36,11 @@ runs:
     - name: Install Quarto executable-cell dependencies
       shell: bash
       run: /usr/bin/python3 -m pip install -r temp/quarto-requirements.txt
-    # 内容检查器来自插件包。固定版本，避免 CI 结果随上游漂移。
+    # 内容检查器来自插件仓库的固定提交。直接取脚本，避免 CI 依赖 npm 上过期版本。
     - name: Install content checker
       shell: bash
       run: |
-        npm install --no-save --prefix temp/checker @chengzhao-dev/dsh-quarto-book@0.5.0
-        echo "BOARD_GAMES_CONTENT_CHECKER=$GITHUB_WORKSPACE/temp/checker/node_modules/@chengzhao-dev/dsh-quarto-book/skills/writing-quarto/scripts/verifying-content.py" >> "$GITHUB_ENV"
+        mkdir -p temp/checker
+        curl -fsSL "https://raw.githubusercontent.com/chengzhao-dev/dsh-quarto-book/c425d68493e2603e1efe250a55e1c8d93ce50fc7/skills/writing-quarto/scripts/verifying-content.py" -o temp/checker/verifying-content.py
+        /usr/bin/python3 -m py_compile temp/checker/verifying-content.py
+        echo "BOARD_GAMES_CONTENT_CHECKER=$GITHUB_WORKSPACE/temp/checker/verifying-content.py" >> "$GITHUB_ENV"
