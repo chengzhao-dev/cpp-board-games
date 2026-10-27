@@ -41,7 +41,7 @@ struct Move {
 
 /// 由对局玩家得到应写入的棋盘格子类型。
 ///
-/// Player 是“谁在下”，CellType 是“棋盘上是什么”；三个转换都是 constexpr 纯函数。
+/// Player 是“谁在下”，CellType 是“棋盘上是什么”；转换都是 constexpr 纯函数。
 ///
 /// Player::kCross 对应 CellType::kX。
 constexpr CellType PlayerToCellType(Player player) {
@@ -64,7 +64,8 @@ constexpr GameResult PlayerToWinResult(Player player) {
 
 /// 一局 X 先手、两名玩家轮流落子的井字棋对局，棋盘、轮次、结果与历史同步更新。
 ///
-/// 落子成功时 TryPlace 同时改写这四项；对局结束后轮次停在最后一名玩家，历史停在最后一步。
+/// 落子成功时 TryPlace 同时改写这四项；对局结束后轮次停在最后一名玩家。
+/// 历史停在最后一步。
 class Game {
  public:
   /// 默认构造函数：得到一局空棋盘对局，轮到 X 落子。
@@ -99,23 +100,25 @@ class Game {
 
   /// 尝试执行一次落子。
   ///
-  /// 只有本局仍在进行、且落子玩家正是当前玩家时才继续，棋盘、轮次、历史三者一起更新。
+  /// 只有对局进行中、且落子玩家正是当前玩家时才继续，棋盘、轮次、历史一起更新。
   ///
   /// @param move 待执行的落子，玩家必须等于 GetCurrentPlayer()。
-  /// @return 落子写入棋盘并换手时返回 kPlaced；对局已结束、玩家不符或棋盘拒绝落子时返回 kRejected，
-  ///         三种情况都不改变棋盘、轮次和历史。
+  /// @return 写入棋盘并换手时返回 kPlaced；
+  /// 终局、玩家不符或棋盘拒绝落子时返回 kRejected。
+  /// 三种情况都不改变棋盘、轮次和历史。
   [[nodiscard]] PlaceResult TryPlace(const Move& move);
 
  private:
   /// 判定落子后的对局结果。
   ///
   /// 只看刚落子的一方：它成线就判它胜，否则棋盘下满判平局，都没发生则对局继续。
-  /// 做成 static 因为它只依赖传进来的棋盘与玩家，不读 Game 的其他成员，测试可以单独驱动。
+  /// 做成 static 因为它只依赖传入的棋盘与玩家，测试可单独驱动。
   ///
   /// @param board 落子后的棋盘。
   /// @param player 刚落子的对局玩家。
   [[nodiscard]] static GameResult JudgeAfterPlace(const Board& board, Player player);
 
+  /// 本局棋盘：开局是空棋盘。
   Board board_;
   /// 当前玩家：开局由 X 先手。
   Player current_player_ = Player::kCross;

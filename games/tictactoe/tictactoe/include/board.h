@@ -47,15 +47,16 @@ class Board {
   /// @return 行和列都在区间内返回 true；任一越界返回 false。
   [[nodiscard]] static bool IsInRange(CellPosition position) noexcept;
 
-  /// 默认构造函数：得到空棋盘，每个棋盘格子都是 kEmpty。
+  /// 默认构造函数：初始化一个空棋盘，每个棋盘格子都是 kEmpty。
   Board() = default;
 
   /// 检查指定坐标上的棋盘格子是否为空。
   ///
-  /// 越界返回 false。不判断对局是否结束：终局后空格仍在，本函数只按格子上有没有棋子返回。
+  /// 越界返回 false。本函数只看格子上有没有棋子，不判断对局是否结束。
+  /// 终局后空格仍在。
   ///
   /// @param position 待检查的坐标。
-  /// @return 坐标在棋盘内且该棋盘格子为空时返回 true；越界或该棋盘格子已有棋子时返回 false。
+  /// @return 坐标在棋盘内且该格子为空时返回 true；越界或已有棋子时返回 false。
   [[nodiscard]] bool IsCellEmpty(CellPosition position) const;
 
   /// 检查棋盘是否已满。
@@ -78,7 +79,8 @@ class Board {
 
   /// 获取形成三连的棋盘格子类型。
   ///
-  /// 按 kX、kO 的次序检查，先手优先；同一棋盘不会让双方同时成线，次序一致只为结果可复现。
+  /// 按 kX、kO 的次序检查，先手优先；同一棋盘不会让双方同时成线。
+  /// 次序一致只为结果可复现。
   ///
   /// @return 有赢家时返回形成三连的棋盘格子类型；没有三连时返回 std::nullopt。
   [[nodiscard]] std::optional<CellType> GetWinner() const;
@@ -89,7 +91,7 @@ class Board {
   ///
   /// @param position 目标行列坐标。
   /// @param cell_type 要放置的棋盘格子类型，必须是 kX 或 kO。
-  /// @return 放置成功返回 true；坐标越界、要写的是空棋盘格子或目标已有棋子时返回 false，棋盘不变。
+  /// @return 放置成功返回 true；越界、写空或目标已有棋子时返回 false，棋盘不变。
   [[nodiscard]] bool PlaceCell(CellPosition position, CellType cell_type);
 
   /// 清空棋盘：每个棋盘格子恢复为 kEmpty。
@@ -111,7 +113,7 @@ class Board {
   /// @return 任一行、任一列或任一条对角线都是该类型时返回 true；否则返回 false。
   [[nodiscard]] bool HasLine(CellType cell_type) const;
 
-  /// 棋盘格子数组：外层下标是行，内层下标是列。
+  /// 棋盘格子数组：外层下标是行，内层下标是列，每个元素表示一个棋盘格子的类型。
   std::array<std::array<CellType, kBoardCols>, kBoardRows> cells_{};
 };
 

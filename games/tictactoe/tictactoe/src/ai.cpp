@@ -21,7 +21,7 @@ namespace tictactoe {
 
 std::vector<CellPosition> CollectEmptyCells(const Game& game) {
   std::vector<CellPosition> cells;
-  /// 返回顺序按行序；同一局面的候选格顺序一致，启发式与极小极大的平手规则才可复现。
+  /// 返回顺序按行序；同一局面的候选格顺序一致，启发式与极小极大的平手规则可复现。
   for (int row = 0; row < kBoardRows; ++row) {
     for (int col = 0; col < kBoardCols; ++col) {
       const CellPosition position = {.row = row, .col = col};
@@ -109,7 +109,7 @@ Move HeuristicAi::Choose(const Game& game) const {
       return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  /// 九格全被占满时对局已经结束，上面的检查会先拦下；这里只保留一条不会取空的返回路径。
+  /// 九格全占满时对局已经结束，上面的检查会先拦下；这里保留不会取空的路径。
   return {.position = cells.front(), .player = game.GetCurrentPlayer()};
 }
 

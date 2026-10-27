@@ -81,13 +81,13 @@ bool Board::PlaceCell(CellPosition position, CellType cell_type) {
     return false;
   }
 
-  /// 坐标已确认在界内；目标棋盘格子已有棋子时也不覆盖。
+  /// 已确认坐标在界内；目标棋盘格子已有棋子时同样不覆盖。
   CellType& cell = cells_.at(position.row).at(position.col);
   if (cell != CellType::kEmpty) {
     return false;
   }
 
-  /// 三种拒绝都在赋值前返回，棋盘保持原样。
+  /// 越界、空类型与已占都已在赋值前返回，走到这里棋盘保持原样。
   cell = cell_type;
   return true;
 }
@@ -106,7 +106,7 @@ bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
     return false;
   }
 
-  /// 候选坐标按已经放入该类型参与匹配，其余棋盘格子照常读取。
+  /// 候选坐标视为已放入该类型，其余棋盘格子照常读取。
   const auto matches = [&](CellPosition cell) {
     return cell == position || cells_.at(cell.row).at(cell.col) == cell_type;
   };

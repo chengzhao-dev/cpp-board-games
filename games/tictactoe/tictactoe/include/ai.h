@@ -1,7 +1,7 @@
 /// @file ai.h
 /// @brief 电脑落子的接口与三种强度实现。
 ///
-/// Ai 定义统一的选子接口，三种强度各是一个派生类；选子只读当前对局并返回一步 Move。
+/// Ai 定义统一的选子接口，三种强度各是一个派生类；选子只读对局并返回一步 Move。
 
 #ifndef TICTACTOE_INCLUDE_AI_H_
 #define TICTACTOE_INCLUDE_AI_H_
@@ -114,7 +114,7 @@ class MinimaxAi final : public Ai {
   /// @param result 对局结果。
   [[nodiscard]] static int ScoreTerminal(GameResult result);
 
-  /// 极小极大搜索：X 取更大分数，O 取更小分数，alpha、beta 剪掉不可能改变选择的分支。
+  /// 极小极大搜索：X 取更大分数，O 取更小分数，alpha、beta 剪掉不可能的分支。
   ///
   /// @param game 只读的当前对局。
   /// @param alpha 当前已知最好分数的下界。
