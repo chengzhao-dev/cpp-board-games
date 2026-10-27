@@ -16,6 +16,7 @@
     "消费", "谁消费", "CLI 打印", "课"
   ],
   "fragment_prefixes": ["games/", "content/", "theme/", "filters/"],
+  "lead_chars": [60, 140],
   "chapter_titles": {
     "content/tictactoe/01-rules.qmd": "对局规则",
     "content/tictactoe/02-mapping-layout.qmd": "工程结构",

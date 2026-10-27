@@ -119,7 +119,7 @@ bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
 }
 
 bool Board::HasLine(CellType cell_type) const {
-  // 线表按棋盘格子类型比较；编号求和在四枚棋子时会把没有连线的盘面误判成三连。
+  // 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。
   return std::ranges::any_of(kLines, [&](const auto& line) {
     return std::ranges::all_of(line, [&](CellPosition position) {
       return cells_.at(position.row).at(position.col) == cell_type;

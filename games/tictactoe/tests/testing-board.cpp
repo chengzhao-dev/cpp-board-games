@@ -83,7 +83,7 @@ TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
 }
 
 // 非法坐标抛出的异常文案带函数名和行列值。
-TEST(BoardTest, GetCellTypeWhatTextForInvalidPosition) {
+TEST(BoardTest, GetCellTypeErrorMessageIncludesPosition) {
   const Board board;
   try {
     (void)board.GetCellType({.row = -1, .col = 0});

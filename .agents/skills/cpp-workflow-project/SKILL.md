@@ -55,7 +55,7 @@ metadata:
 
 ## 完成判据
 
-- [ ] 对应章节代码可独立构建、运行 `app` 成功，构建无新警告，CTest 13 条全部通过。
+- [ ] 对应章节代码可独立构建、运行 `app` 成功，构建无新警告，CTest 14 条全部通过。
 - [ ] 源码按 `.clang-format` 排版，`clang-tidy` 无新警告；构建脚本不再代跑这两项，编辑时手动检查。
 - [ ] `stages/<game>.md` 的状态与正文实际进度一致。
 - [ ] `python .agents/scripts/checking-book.py` 通过；跨域改动同样跑这一条。
