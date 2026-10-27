@@ -21,6 +21,25 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompileSettings)
 
 #-------------------------------------------------------------------------------
+# 标准库依赖
+
+# 各目标都用 -stdlib=libc++。这里先确认编译器能同时找到 libc++ 的头文件与库：
+# 缺依赖时在配置阶段给出可执行的下一步，而不是让每个源文件报 'cstdint' 找不到。
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  include(CheckCXXSourceCompiles)
+  set(CMAKE_REQUIRED_FLAGS "-stdlib=libc++")
+  check_cxx_source_compiles("
+    #include <cstdint>
+    int main() { return 0; }
+  " TICTACTOE_HAS_LIBCXX)
+  unset(CMAKE_REQUIRED_FLAGS)
+  if(NOT TICTACTOE_HAS_LIBCXX)
+    message(FATAL_ERROR
+      "clang 找不到 libc++ 的头文件或库：安装 libc++-dev 与 libc++abi-dev 后重试")
+  endif()
+endif()
+
+#-------------------------------------------------------------------------------
 # 工程选项
 
 # 导出编译数据库。

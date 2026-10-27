@@ -27,6 +27,7 @@
 | `python .agents/scripts/checking-book.py` | 校验全部章节正文 |
 | `python .agents/scripts/building-wsl.py <game>` | 在 WSL（Windows）或本机 bash（CI）中运行 `games/<game>/running-build.sh` |
 | `python .agents/scripts/checking-plugins.py` | 检查已安装的 dsh-quarto-book 与 dsh-cpp-workflow 是否完整可用 |
+| `python .agents/scripts/checking-ci.py` | 本地复现 CI：章节检查与各游戏构建；加 `--render` 连整书渲染 |
 | `bash games/<game>/running-build.sh`（Linux CI 直接调用） | Debug 配置、编译、CTest 与最小入口运行 |
 | `quarto render` | 在仓库根渲染 Book |
 
@@ -36,7 +37,7 @@
 | --- | --- |
 | `content/`、`index.qmd`、`_quarto.yml` | Quarto Book 读者文档 |
 | `games/<game>/` | 单个游戏的一份工程，可独立配置、编译和运行；井字棋 `games/tictactoe/` 当前构建动态库、`app` 与棋盘测试，终端层保留源码 |
-| `.agents/scripts/` | `scope.py` 读取边界、`checking-book.py` 正文检查、`building-wsl.py` 构建入口、`checking-plugins.py` 插件体检 |
+| `.agents/scripts/` | `scope.py` 读取边界、`checking-book.py` 正文检查、`building-wsl.py` 构建入口、`checking-plugins.py` 插件体检、`checking-ci.py` 本地 CI |
 | `.agents/skills/cpp-workflow-project/` | 井字棋工程事实、阶段表与架构决定 |
 | `.agents/skills/quarto-book-project/` | 章节对照、术语表与内容检查配置 |
 | `theme/`、`filters/` | Quarto 消费的主题副本与过滤器；权威在插件 `designing-theme` 与 `writing-quarto` |

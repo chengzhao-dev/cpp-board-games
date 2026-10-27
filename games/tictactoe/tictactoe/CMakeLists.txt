@@ -15,9 +15,11 @@ add_library(tictactoe SHARED
 # 要求井字棋动态库使用 C++23，标准随公共接口传播。
 CompileSettings_SetCxxStandard(tictactoe PUBLIC c++23)
 
-# 井字棋动态库和链接它的程序都使用 libc++；选项只挂在 target 上，不污染其他目标。
-target_compile_options(tictactoe PUBLIC -stdlib=libc++)
-target_link_options(tictactoe PUBLIC -stdlib=libc++)
+# clang 下井字棋动态库和链接它的程序都使用 libc++；选项只挂在 target 上，不污染其他目标。
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(tictactoe PUBLIC -stdlib=libc++)
+  target_link_options(tictactoe PUBLIC -stdlib=libc++)
+endif()
 
 # 把头文件目录公开给链接井字棋动态库的目标。
 target_include_directories(tictactoe

@@ -5,6 +5,13 @@ description: 派生 pip 缓存键与 Quarto 版本，安装 Quarto、Python 与�
 runs:
   using: composite
   steps:
+    # 井字棋工程用 -stdlib=libc++ 编译。runner 自带 clang，但默认只有 libstdc++ 头文件；
+    # 缺少 libc++ 时 clang 会在每个源文件上报 'cstdint' file not found。先补依赖再编译。
+    - name: Install libc++ for the C++ builds
+      shell: bash
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq libc++-dev libc++abi-dev
     # 缓存键：pip 缓存键与 Quarto 版本都从 config/config.toml 派生。
     # 缓存只随依赖清单变化。本机 python 路径等无关字段的变化不进缓存键。
     - id: cfg
