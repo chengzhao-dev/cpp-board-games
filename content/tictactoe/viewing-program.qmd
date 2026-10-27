@@ -2,18 +2,14 @@
 title: "程序结构"
 ---
 
-[工程结构](02-mapping-layout.qmd) 已经把代码放进目录和文件。本章看这些文件里的类怎样连成一份程序。棋盘、对局、电脑落子和终端循环四块，通过函数调用与组成关系连接。
-
-::: {.callout-note title="当前构建范围"}
-当前 CMake 只构建 `tictactoe` 动态库与 `app`。入口 `main` 创建 `Game`、落一子并读回棋盘格子类型，不进入终端循环。总览图保留 `RunMatch`、`PlayToEnd` 与快照设计，作为终端程序的设计图。这些代码仍在 `apps/`，但没有接入当前构建。
-:::
+[工程结构](02-mapping-layout.qmd) 已经把代码放进目录和文件。本章看这些文件里的类怎样连成一份程序：棋盘、对局、电脑落子和终端循环四块，通过函数调用与组成关系连接。当前构建只收进动态库、`app` 与棋盘测试，总览图保留终端链的设计，入口 `main` 只创建 `Game`、落一子并读回棋盘格子类型。
 
 ## 结构总览
 
 `Board`、`Game`、`Ai`、`PlayToEnd` 和入口 `RunMatch` 之间的调用与组成关系画在一张图里。
 
 ::: {.class-diagram}
-```{mermaid}
+```{.mermaid role="img" aria-label="程序结构总览：Board、Game、Ai、PlayToEnd 与入口 RunMatch 之间的调用、组成与只读依赖。"}
 %%| fig-cap: "程序结构总览。实线箭头表示调用或依赖，菱形实线表示组成，虚线箭头表示只读依赖；箭头不表示运行顺序。"
 %%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
 classDiagram
@@ -42,7 +38,7 @@ classDiagram
 `Board` 保存九个棋盘格子，把查询、规则判定与写入分成三组公开操作。图里只画本章用到的代表性入口，完整列表见 `board.h`。
 
 ::: {.class-diagram}
-```{mermaid}
+```{.mermaid role="img" aria-label="棋盘类型与 Board 的代表性入口：cells_ 保存每个棋盘格子的 CellType，坐标与格子类型分别由 CellPosition、CellType 表示。"}
 %%| fig-cap: "棋盘类型与 Board 的代表性入口。cells_ 保存每个棋盘格子的 CellType，坐标与格子类型由 CellPosition、CellType 表示。"
 %%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
 classDiagram
@@ -78,7 +74,7 @@ classDiagram
 `Game` 拥有棋盘，记录当前玩家、结果与落子历史；`TryPlace` 接收 `Move`，返回 `PlaceResult`。
 
 ::: {.class-diagram}
-```{mermaid}
+```{.mermaid role="img" aria-label="对局类型与 Game 的状态：Game 拥有一个 Board，并用 Player、GameResult 记录当前玩家和结果。"}
 %%| fig-cap: "对局类型与 Game 的状态。Game 拥有一个 Board，并用 Player、GameResult 记录当前玩家和结果。"
 %%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
 classDiagram
@@ -118,7 +114,7 @@ classDiagram
 `Ai` 是电脑落子的接口，`Choose` 只读对局；三种强度各有一个派生类。
 
 ::: {.class-diagram}
-```{mermaid}
+```{.mermaid role="img" aria-label="电脑落子的接口与三种实现：Ai 的 Choose 只读对局，三个派生类分别实现一种强度。"}
 %%| fig-cap: "电脑落子的接口与三种实现。Ai 的 Choose 只读对局，三个派生类分别实现一种强度。"
 %%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
 classDiagram
@@ -142,10 +138,10 @@ classDiagram
 
 ### 终端程序
 
-完整设计里，`RunMatch` 读取对局类型和电脑强度，再调用 `PlayToEnd` 进入一局的循环；当前构建没有接入这两个函数。
+完整设计里，`RunMatch` 读取对局类型和电脑强度，再调用 `PlayToEnd` 进入一局的循环。
 
 ::: {.class-diagram}
-```{mermaid}
+```{.mermaid role="img" aria-label="一局终端循环的调用链：RunMatch 读设置后调用 PlayToEnd，后者打印棋盘、读入落子并写入对局。"}
 %%| fig-cap: "一局终端循环的调用链。RunMatch 读设置后调用 PlayToEnd，后者打印棋盘、读入落子并写入对局。"
 %%{init: {"fontFamily": "LXGW Bright Medium, system-ui, sans-serif", "class": {"hideEmptyMembersBox": true}}}%%
 classDiagram
@@ -173,7 +169,7 @@ classDiagram
 ```
 :::
 
-完整设计里，`PlayToEnd` 每一轮打印当前棋盘，然后读入人类落子，或让 `Ai` 选子；人类落子和电脑的一手都通过 `Game::TryPlace` 写入对局。`PrintGame` 在棋盘文本之后调用 `WriteSnapshot` 追加 JSON 行。当前构建不执行这条终端链，入口只走 `main → Game::TryPlace`。
+完整设计里，`PlayToEnd` 每一轮打印当前棋盘，然后读入人类落子，或让 `Ai` 选子；人类落子和电脑的一手都通过 `Game::TryPlace` 写入对局。`PrintGame` 在棋盘文本之后调用 `WriteSnapshot` 追加 JSON 行。
 
 ## 常见错误
 
@@ -199,4 +195,4 @@ classDiagram
 
 ## 本章回顾
 
-你已经能按总图定位四块并说明边的关系，也能分清当前构建（`Board`、`Game`、`Ai`、`main`）与保留的终端程序。下一章是棋盘，从 `Board` 的保存与读写开始。
+你已经能按总图定位四块并说明边的关系，也能分清当前构建与保留的终端程序的设计。下一章是棋盘，从 `Board` 的保存与读写开始。

@@ -4,7 +4,9 @@ number-sections: false
 body-classes: index-page
 ---
 
-这本书只做一件事：从对局规则开始，依次写出一个井字棋程序。当前构建收进 `tictactoe` 动态库、最小 `app` 与棋盘测试；终端程序与快照保留为后续目标。阅读顺序是先定规则，再写棋盘、对局与电脑落子，最后用最小入口和测试验收动态库。
+井字棋程序可供两名玩家进行一局对战。每位玩家轮流在同一个 3 行 3 列的棋盘上落子。下面每张卡片是这一局的一章，按章节读下去就能写出并验收一个可运行的井字棋程序。
+
+<h2 class="visually-hidden">章节目录</h2>
 
 ::: {.feature-grid}
 ::: {.landing-card}
@@ -41,11 +43,11 @@ body-classes: index-page
 :::
 ::: {.landing-card}
 ### [测试](08-tests.qmd)
-测试设计：核对棋盘、对局和落子选择（当前构建未接入）。
+测试 14 条棋盘用例：读取坐标、写入落子、拒绝与终局判定。
 :::
 ::: {.landing-card}
 ### [构建与运行](09-running-build.qmd)
-构建动态库与主程序，运行一次调用验收。
+构建动态库、主程序与测试，跑 CTest 再启动一次调用验收。
 :::
 ::: {.landing-card}
 ### [局面快照](10-defining-snapshot.qmd)

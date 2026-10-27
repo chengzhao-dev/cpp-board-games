@@ -77,7 +77,7 @@ build/
 CTest 的最后一行给出总数：
 
 ```{.text filename="终端输出"}
-100% tests passed, 0 tests failed out of 13
+100% tests passed, 0 tests failed out of 14
 ```
 
 失败时 CTest 打印用例名与断言位置；`--output-on-failure` 已经把失败输出带到终端。

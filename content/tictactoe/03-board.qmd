@@ -10,7 +10,7 @@ title: "棋盘"
 
 ### 棋盘格子坐标
 
-棋盘坐标由行数和列数确定，行向下、列向右，左上角是 `(0, 0)`。一对行列写成 `(row, col)`，先写行后写列。尺寸和坐标定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
+棋盘坐标由行数和列数确定，一对行列写成 `(row, col)`。尺寸和坐标定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
 
 ```{.cpp filename="board.h"}
 /// 棋盘行数。
@@ -30,7 +30,7 @@ struct CellPosition {
 }
 ```
 
-代码定义了行列上限、坐标成员和比较操作；下图标出每个棋盘格子的行列编号。
+代码定义了行列上限、坐标成员和比较操作；图里的行列编号与 `CellPosition` 的两个成员一一对应。
 
 ```{=html}
 <figure class="book-figure">
@@ -86,11 +86,11 @@ enum class CellType : std::uint8_t {
 };
 ```
 
-终端一行 `|   | X | O |` 从左到右依次是空棋盘格子、X 标记和 O 标记。对局进行到任何时刻，每个棋盘格子都取其中一种。这些取值保存在 `Board` 的二维数组里，行列坐标不单独存放。落子换掉目标棋盘格子的取值，其余棋盘格子保持原样。
+终端一行 `|   | X | O |` 从左到右依次是空格子、X 标记和 O 标记。
 
 ## 成员与接口
 
-`Board` 对内用二维数组存棋盘格子，对外提供带边界检查的读写入口。头文件里的类声明、构造函数与数据成员：
+`Board` 对内用二维数组存棋盘格子，对外提供带边界检查的读取入口。头文件里的类声明、构造函数与数据成员：
 
 ```{.cpp filename="board.h"}
 /// 井字棋棋盘。
@@ -105,9 +105,9 @@ class Board {
 };
 ```
 
-井字棋一局在这九个棋盘格子里落子，棋盘大小在对局进行中不变；`kBoardRows` 和 `kBoardCols` 是编译期常量，`cells_` 的长度由它们决定，编译时就能确定。
+井字棋一局在这九个棋盘格子里落子，棋盘大小在对局进行中不变。
 
-### 检查下标区间
+### 坐标下标
 
 `IsInRange` 检查一个棋盘格子坐标是否落在棋盘的下标区间里，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
 
@@ -117,7 +117,7 @@ class Board {
   /// 检查坐标是否落在棋盘下标区间内。
   ///
   /// 行的有效区间是 [0, kBoardRows)，列的有效区间是 [0, kBoardCols)。
-  /// 判断几何边界，不检查棋盘格子是否为空、对局是否已经结束。
+  /// 只判断几何边界，不检查格子是否为空、对局是否已经结束。
   ///
   /// @param position 待检查的坐标。
   /// @return 行和列都在区间内返回 true；任一越界返回 false。
@@ -136,7 +136,7 @@ class Board {
  public:
   /// 检查指定坐标上的棋盘格子是否为空。
   ///
-  /// 越界返回 false。不判断对局是否结束：终局后空棋盘格子仍在，本函数按棋盘格子上有没有棋子返回。
+  /// 越界返回 false。不判断对局是否结束：终局后空格仍在，本函数只按格子上有没有棋子返回。
   ///
   /// @param position 待检查的坐标。
   /// @return 坐标在棋盘内且该棋盘格子为空时返回 true；越界或该棋盘格子已有棋子时返回 false。
@@ -169,21 +169,27 @@ class Board {
 - 测试用 `GetCellType` 核对空棋盘格子、已有棋子与越界坐标；满盘局面由 `PlaceCell` 逐格摆出。
 - `IsFull` 用来判断是否满盘，测试里也用它确认未满或已满。
 
-### GetCellType 的越界处理
+### 越界读取
 
-`GetCellType` 越界时抛标准库的 `std::out_of_range`。相关异常如下：
+`GetCellType` 越界时抛标准库的 `std::out_of_range`，合法坐标直接返回数组里的取值：
 
 ```{.cpp filename="board.cpp"}
-if (!IsInRange(position)) {
-  throw std::out_of_range{std::format(
-      "Board::GetCellType: board position is out of range (row={}, col={}); board is {}x{}",
-      position.row, position.col, kBoardRows, kBoardCols)};
+CellType Board::GetCellType(CellPosition position) const {
+  if (!IsInRange(position)) {
+    throw std::out_of_range{std::format(
+        "Board::GetCellType: board position is out of range (row={}, col={}); board is {}x{}",
+        position.row, position.col, kBoardRows, kBoardCols)};
+  }
+
+  return cells_.at(position.row).at(position.col);
 }
 ```
 
-## 棋子写入
+## 写入与清空
 
-### 落子校验
+`Board` 用 `PlaceCell` 写入一枚棋子，用 `Clear` 把整盘恢复为空。
+
+### 写入棋子
 
 `PlaceCell` 在指定坐标放置棋子，写入前先检查坐标区间，再确认目标棋盘格子还没有棋子，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
 
@@ -234,13 +240,13 @@ class Board {
 };
 ```
 
-清空后 `GetWinner` 没有值，`IsFull` 与 `IsGameOver` 都为假，原先占过的棋盘格子可以再次 `PlaceCell`。
+清空后九个棋盘格子恢复为空，同一格可以再次 `PlaceCell`。
 
 ## 终局判定
 
-`Board` 也判定胜负与平局，落子写进棋盘之后从当前棋盘算出终局答案。
+`Board` 从当前棋盘算出赢家、平局与是否结束；电脑落子前还要判断一手尚未写入时会不会成线。
 
-### 三连类型
+### 赢家类型
 
 `GetWinner` 获取形成三连的棋盘格子类型，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
 
@@ -249,17 +255,12 @@ class Board {
  public:
   /// 获取形成三连的棋盘格子类型。
   ///
-  /// 按 kX、kO 的次序检查，先手优先；同一棋盘不会让双方同时成线，次序一致是为了让结果可复现。
+  /// 按 kX、kO 的次序检查，先手优先；同一棋盘不会让双方同时成线，次序一致只为结果可复现。
   ///
   /// @return 有赢家时返回形成三连的棋盘格子类型；没有三连时返回 std::nullopt。
   [[nodiscard]] std::optional<CellType> GetWinner() const;
 };
 ```
-
-`GetWinner` 的返回分两种情形：
-
-- **有三连**：返回形成三连的棋盘格子类型，`kX` 或 `kO`。
-- **没有三连**：返回 `std::nullopt`。
 
 ### 线坐标表
 
@@ -279,7 +280,7 @@ constexpr std::array<std::array<CellPosition, 3>, 8> kLines{{
 }};
 ```
 
-坐标都是常数，直接列出来比两层循环运行时推算更好查：新增一条线时改表即可，扫线代码不动。每个坐标都写 `.row` 与 `.col`，读者不用记住成员次序。
+坐标都是常数，直接列出来比两层循环运行时推算更好查：新增一条线时改表即可，扫线代码不动。
 
 ### 成线判断
 
@@ -287,6 +288,7 @@ constexpr std::array<std::array<CellPosition, 3>, 8> kLines{{
 
 ```{.cpp filename="board.cpp"}
 bool Board::HasLine(CellType cell_type) const {
+  // 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。
   return std::ranges::any_of(kLines, [&](const auto& line) {
     return std::ranges::all_of(line, [&](CellPosition position) {
       return cells_.at(position.row).at(position.col) == cell_type;
@@ -294,6 +296,8 @@ bool Board::HasLine(CellType cell_type) const {
   });
 }
 ```
+
+代码注释交代了为什么不改成“编号求和”：把 `kX`、`kO` 记成不同数字再相加，`X`、`O` 与一个空格相加的和，可能正好等于三个 `X` 的和，于是没有三连的盘面也被判成三连。逐格比较类型没有这个漏洞。
 
 ### 赢家判断
 
@@ -307,7 +311,7 @@ class Board {
 };
 ```
 
-`GetWinner` 有返回值，就说明已经有一方三连；`IsWin` 据此返回 `true`，否则返回 `false`。它复用 `GetWinner` 已经完成的三连判定，不再单独扫描棋盘。
+`IsWin` 复用 `GetWinner` 的三连判定，不再单独扫描棋盘。
 
 ### 平局判断
 
@@ -321,12 +325,7 @@ class Board {
 };
 ```
 
-`IsDraw` 用 `IsFull() && !IsWin()` 把两个条件合起来。满盘时有两种结果：
-
-- **已满且有三连**：算赢家获胜，不算平局。
-- **已满且没有三连**：算平局。
-
-棋盘未满时 `IsFull` 返回 `false`，`IsDraw` 因此为 `false`。
+`IsDraw` 用 `IsFull() && !IsWin()` 把两个条件合起来。棋盘未满时 `IsFull` 返回 `false`，`IsDraw` 因此为 `false`。
 
 ### 结束判断
 
@@ -340,9 +339,9 @@ class Board {
 };
 ```
 
-`IsWin` 或 `IsDraw` 成立，对局就结束；两个都不成立，则继续落子。`Board` 没有对局结束的状态位，`IsGameOver` 因此每次都从当前棋盘重新计算。同一盘面重复调用，答案不变；终局之后棋盘仍然保留，`GetWinner` 随时可以再读。
+`IsWin` 或 `IsDraw` 成立，对局就结束；两个都不成立，则继续落子。`Board` 没有对局结束的状态位，`IsGameOver` 因此每次都从当前棋盘重新计算。
 
-### 三连判定
+### 成线预判
 
 电脑落子前需要知道“在某个空棋盘格子落子会不会连成三个”，此时这一手还没有写进棋盘。`Board::IsLineComplete` 判断这一手会不会连成三个，定义在 [board.h](https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h) 里：
 

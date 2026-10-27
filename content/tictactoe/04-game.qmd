@@ -4,7 +4,7 @@ title: "对局"
 
 一局棋从空棋盘开始，落子、换手与终局都由 `Game` 记录。每次落子先交给 `Game`，通过后再写进 [棋盘](03-board.qmd) 里的 `Board`。接口写在头文件 [game.h][04-game-h]，实现放在 [game.cpp][04-game-cpp]。
 
-## 类型与玩家
+## 对局类型
 
 对局状态随落子变化，玩家、结果和落子记录分别用 `Player`、`GameResult` 与 `Move` 表示。
 

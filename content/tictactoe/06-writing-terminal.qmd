@@ -2,11 +2,7 @@
 title: "终端程序"
 ---
 
-终端程序由 `RunMatch` 驱动一局：先读入对局模式，人机对局再读入电脑强度，随后进入循环。每轮打印棋盘，轮到人类时读入坐标，轮到电脑时从 [电脑落子](05-ai.qmd) 取一步 `Move`。头文件在 `apps/include/` 下的 [cli.h][06-cli-h]，实现在 `apps/src/` 下的 [cli.cpp][06-cli-cpp]。
-
-::: {.callout-note title="当前构建范围"}
-`cli.h` 与 `cli.cpp` 仍在 `apps/`。当前 CMake 只构建 `tictactoe` 动态库和 `app`。终端程序没有接入构建。本章保留为终端程序的实现说明，接回构建时再按这里的接口恢复。
-:::
+终端程序由 `RunMatch` 驱动一局：读入对局模式与人机对局时的强度，进入循环后每轮打印棋盘、读入坐标或从 [电脑落子](05-ai.qmd) 取一步 `Move`。头文件与实现在 `apps/include/cli.h` 与 `apps/src/cli.cpp`，终端程序没有接入当前构建，本章保留为实现说明。
 
 ## 输入与输出
 

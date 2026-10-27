@@ -2,11 +2,7 @@
 title: "测试"
 ---
 
-[程序入口](07-main.qmd) 之后，棋盘已经写出。测试代码在 [tests 目录][08-tests-dir]，用来核对 `Board` 的公开行为。
-
-::: {.callout-note title="当前构建范围"}
-`tests/` 已接入构建。CMake 用 `FetchContent` 取 GoogleTest，`tictactoe_test` 链接动态库 `tictactoe`。CTest 注册 14 条 `BoardTest` 用例；本章只讲棋盘测试。
-:::
+[程序入口](07-main.qmd) 之后，棋盘已经写出。测试代码在 [tests 目录][08-tests-dir]，用来核对 `Board` 的公开行为。CMake 用 `FetchContent` 取 GoogleTest，`tictactoe_test` 链接动态库 `tictactoe`；本章只讲棋盘测试。
 
 ## 测试用例结构
 
@@ -91,7 +87,7 @@ TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
 - `ValidPositionIncludesBothCorners` 核对左上角与右下角都在坐标范围内。
 - `PlaceCellWritesEmptyCell` 核对成功写入后能读回同一个棋子。
 - `PlaceCellRejectsEmptyType` 核对 `kEmpty` 不是一次有效写入。
-- `GetCellTypeWhatTextForInvalidPosition` 核对越界异常的消息带函数名与行列值。
+- `GetCellTypeErrorMessageIncludesPosition` 核对越界异常的消息带函数名与行列值。
 - `IsFullOnlyAfterEveryCellPlaced` 核对九格放满才返回 `true`。
 - `GetWinnerHasNoValueOnNewBoard` 与 `GetWinnerReturnsXForTopRow` 核对空盘无赢家、顶行成三连判 X 胜。
 - `IsDrawWhenFullWithoutWinner` 核对满盘且无三连时判平局。

@@ -175,12 +175,12 @@ Move RandomAi::Choose(const Game& game) const {
 class Game {
  public:
   /// 检查在指定坐标放入给定棋子后，是否会形成三连。
-  [[nodiscard]] bool IsLineComplete(CellPosition position, CellType cell_type) const noexcept;
+  [[nodiscard]] bool IsLineComplete(CellPosition position, CellType cell_type) const;
 };
 ```
 
 ```{.cpp filename="game.cpp"}
-bool Game::IsLineComplete(CellPosition position, CellType cell_type) const noexcept {
+bool Game::IsLineComplete(CellPosition position, CellType cell_type) const {
   return board_.IsLineComplete(position, cell_type);
 }
 ```
