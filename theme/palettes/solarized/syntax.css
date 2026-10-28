@@ -1,0 +1,67 @@
+/* ============================================================
+   Palette: solarized · 语法高亮覆盖层
+   Quarto 只能按明暗编译一对 highlight-style，默认那对是 Flexoki；
+   Solarized 的语法色在这里按 html[data-palette="solarized"] 覆盖。
+   只写颜色，不改字号、字重与布局。
+   ============================================================ */
+
+/* 基础文字（无 token 类名的 span 与 sourceCode 容器） */
+html[data-palette="solarized"] code span:not([class]),
+html[data-palette="solarized"] div.sourceCode,
+html[data-palette="solarized"] div.sourceCode pre.sourceCode {
+  color: #526C74;
+}
+
+html[data-palette="solarized"] code span.al { color: #DC322F; font-weight: 600; }
+html[data-palette="solarized"] code span.an { color: #556C73; }
+html[data-palette="solarized"] code span.at { color: #B58900; }
+html[data-palette="solarized"] code span.bn { color: #6C71C4; }
+html[data-palette="solarized"] code span.bu { color: #1B6EA3; }
+html[data-palette="solarized"] code span.cf { color: #859900; }
+html[data-palette="solarized"] code span.ch { color: #2AA198; }
+html[data-palette="solarized"] code span.cn { color: #6C71C4; }
+html[data-palette="solarized"] code span.co { color: #556C73; }
+html[data-palette="solarized"] code span.cv { color: #556C73; }
+html[data-palette="solarized"] code span.do { color: #556C73; }
+html[data-palette="solarized"] code span.dt { color: #B58900; }
+html[data-palette="solarized"] code span.dv { color: #6C71C4; }
+html[data-palette="solarized"] code span.er { color: #DC322F; text-decoration: underline; }
+html[data-palette="solarized"] code span.ex { color: #DC322F; font-weight: 600; }
+html[data-palette="solarized"] code span.fl { color: #6C71C4; }
+html[data-palette="solarized"] code span.fu { color: #1B6EA3; }
+html[data-palette="solarized"] code span.im { color: #CB4B16; }
+html[data-palette="solarized"] code span.in { color: #556C73; }
+html[data-palette="solarized"] code span.kw { color: #859900; }
+html[data-palette="solarized"] code span.op { color: #859900; }
+html[data-palette="solarized"] code span.ot { color: #6C71C4; }
+html[data-palette="solarized"] code span.pp { color: #CB4B16; }
+html[data-palette="solarized"] code span.re { color: #556C73; }
+html[data-palette="solarized"] code span.sc { color: #DC322F; }
+html[data-palette="solarized"] code span.ss { color: #2AA198; }
+html[data-palette="solarized"] code span.st { color: #2AA198; }
+html[data-palette="solarized"] code span.va { color: #1B6EA3; }
+html[data-palette="solarized"] code span.vs { color: #2AA198; }
+html[data-palette="solarized"] code span.wa { color: #CB4B16; }
+
+/* 暗色：base03 页面上用 base0 / base1 保持官方明暗关系 */
+html[data-palette="solarized"] body.quarto-dark code span:not([class]),
+html[data-palette="solarized"] body.quarto-dark div.sourceCode,
+html[data-palette="solarized"] body.quarto-dark div.sourceCode pre.sourceCode {
+  color: #93A1A1;
+}
+
+html[data-palette="solarized"] body.quarto-dark code span.an,
+html[data-palette="solarized"] body.quarto-dark code span.co,
+html[data-palette="solarized"] body.quarto-dark code span.cv,
+html[data-palette="solarized"] body.quarto-dark code span.do,
+html[data-palette="solarized"] body.quarto-dark code span.in,
+html[data-palette="solarized"] body.quarto-dark code span.re {
+  color: #93A1A1;
+}
+
+/* 暗色语法蓝也要比 base03 上的官方 #268BD2 再亮一档 */
+html[data-palette="solarized"] body.quarto-dark code span.bu,
+html[data-palette="solarized"] body.quarto-dark code span.fu,
+html[data-palette="solarized"] body.quarto-dark code span.va {
+  color: #51A0D5;
+}

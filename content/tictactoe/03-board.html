@@ -1,0 +1,2231 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="从棋盘规则与类型开始，用井字棋逐步搭起可构建、可测试的 C++ 工程。">
+
+<title>棋盘 – C++ 棋盘游戏实践</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../content/tictactoe/04-game.html" rel="next">
+<link href="../../content/tictactoe/viewing-program.html" rel="prev">
+<link href="../../theme/palettes/flexoki/favicon-light.svg" rel="icon" type="image/svg+xml">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2a18d037a150b70c3729cea43dcd4f49.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-59f270692bca9c610a25ce72fad279f8.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2a18d037a150b70c3729cea43dcd4f49.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-34bba0d7dea041a226f9139a6f465e41.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-c3286d0fc7e5f9266d6b1b37ab638bcb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-34bba0d7dea041a226f9139a6f465e41.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<!-- 仅注入移动端浏览器地址栏主题色；自托管 @font-face 在 css/fonts.css。 -->
+<meta name="theme-color" id="meta-theme-color" content="#fffcf0">
+<!-- 色板与时辰选择：Flexoki 是编译默认；Solarized 与 Hill Light（hill-light）只切
+     html[data-palette]，Hill Light 另有 html[data-mode] 的四种时辰（晓雾/午荫/暮烟/夜月）。
+     首屏在 head 内恢复选择，避免先画 Flexoki 再跳色；控件在导航栏工具区末尾。
+     favicon 是外部 SVG，读不到 CSS 变量和 data-palette，所以按色板与明暗改 href。 -->
+<script>
+(function () {
+  var PALETTE_KEY = 'book-palette';
+  var MODE_KEY = 'book-hill-mode';
+  var PALETTES = ['flexoki', 'solarized', 'hill-light'];
+  var MODES = ['dawn', 'noon', 'dusk', 'night'];
+  var MODE_LABELS = {
+    dawn: ['晓雾', '溪山晓雾 · 清晨'],
+    noon: ['午荫', '溪山午荫 · 正午'],
+    dusk: ['暮烟', '溪山暮烟 · 黄昏'],
+    night: ['夜月', '溪山夜月 · 夜晚']
+  };
+  var PALETTE_LABELS = { flexoki: 'Flexoki', solarized: 'Solarized', 'hill-light': 'Hill Light' };
+  var root = document.documentElement;
+
+  function read(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
+  function write(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (e) {}
+  }
+  function isPalette(value) {
+    return PALETTES.indexOf(value) !== -1;
+  }
+  function isMode(value) {
+    return MODES.indexOf(value) !== -1;
+  }
+  // 山光的默认时辰按本地时间落点（与 hill-light 官方 head 脚本一致）：
+  // 06–11 晓雾、11–17 午荫、17–20 暮烟，其余夜月。
+  function byHour() {
+    var hour = new Date().getHours();
+    if (hour >= 6 && hour < 11) return 'dawn';
+    if (hour >= 11 && hour < 17) return 'noon';
+    if (hour >= 17 && hour < 20) return 'dusk';
+    return 'night';
+  }
+
+  var initialPalette = isPalette(read(PALETTE_KEY)) ? read(PALETTE_KEY) : 'flexoki';
+  var initialMode = isMode(read(MODE_KEY)) ? read(MODE_KEY) : byHour();
+  if (initialPalette !== 'flexoki') root.setAttribute('data-palette', initialPalette);
+  if (initialPalette === 'hill-light') root.setAttribute('data-mode', initialMode);
+
+  // 基座镜像：Quarto 只编译两套 Bootstrap（light/dark），靠 localStorage 的
+  // quarto-color-scheme 决定首帧用哪套。山光的明暗由时辰决定，所以 head 里先把
+  // 时辰翻成 sentinel（夜月 alternate，其余 default），Quarto 的 before-body 脚本
+  // 读到的就是山光要的基座；只镜像山光，Flexoki/Solarized 的明暗仍由读者与圆钮决定。
+  // file:// 下 Quarto 不写 localStorage，镜像也会被浏览器拒绝（write 已 try/catch），
+  // 此时由 mount 后的 syncBase 对账兜底，可能闪一帧。
+  function mirrorQuartoScheme() {
+    if (initialPalette !== 'hill-light') return;
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+    write('quarto-color-scheme', initialMode === 'night' ? 'alternate' : 'default');
+  }
+  mirrorQuartoScheme();
+
+  function palette() {
+    var value = root.getAttribute('data-palette');
+    return isPalette(value) ? value : 'flexoki';
+  }
+  function mode() {
+    var value = root.getAttribute('data-mode');
+    return isMode(value) ? value : initialMode;
+  }
+
+  // 明暗先看 Quarto 已写好的 body class，再看它存的偏好；都没有时退回系统偏好。
+  // file:// 下 Quarto 不写 localStorage，页脚观察器会在 body class 变化后再同步一次。
+  function quartoIsDark() {
+    if (document.body) {
+      if (document.body.classList.contains('quarto-dark')) return true;
+      if (document.body.classList.contains('quarto-light')) return false;
+    }
+    var scheme = read('quarto-color-scheme');
+    if (scheme === 'alternate' || scheme === 'dark') return true;
+    if (scheme === 'default' || scheme === 'light') return false;
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  // 山光的明暗由时辰决定：夜月是唯一的暗色时辰。
+  function isDark() {
+    return palette() === 'hill-light' ? mode() === 'night' : quartoIsDark();
+  }
+
+  // 只替换 Quarto 写好的相对路径里的色板与明暗两段，保留 ./ 或 ../../ 前缀。
+  function syncFavicon() {
+    var link = document.querySelector('link[rel~="icon"]');
+    if (!link) return;
+    var href = link.getAttribute('href') || '';
+    var next = href.replace(
+      /(palettes\/)(flexoki|solarized|hill-light)(\/favicon-)(light|dark)(\.svg)/,
+      '$1' + palette() + '$3' + (isDark() ? 'dark' : 'light') + '$5'
+    );
+    if (next !== href) link.setAttribute('href', next);
+  }
+  window.__bookSyncFavicon = syncFavicon;
+  syncFavicon();
+
+  // 基座对账：山光夜月必须落在 Quarto 的 dark 基座上（body.quarto-dark 的规则
+  // 才生效），其余时辰落在 light 基座。只在状态不一致时调用 QuartoToggleColorScheme，
+  // 避免把读者在其他色板的明暗偏好翻掉；切走山光时不动基座（保持读者当前的明暗）。
+  function syncBase() {
+    if (palette() !== 'hill-light') return;
+    if (typeof window.quartoToggleColorScheme !== 'function') return;
+    if (!document.body) return;
+    var cls = document.body.classList;
+    if (!cls.contains('quarto-dark') && !cls.contains('quarto-light')) return;
+    if ((mode() === 'night') !== cls.contains('quarto-dark')) {
+      window.quartoToggleColorScheme();
+    }
+  }
+  window.__bookSyncBase = syncBase;
+
+  function applyPalette(value) {
+    if (value === 'flexoki') root.removeAttribute('data-palette');
+    else root.setAttribute('data-palette', value);
+    // 山光需要 data-mode；切走时清掉，避免其他色板误吃四时令牌。
+    if (value === 'hill-light') root.setAttribute('data-mode', mode());
+    else root.removeAttribute('data-mode');
+    write(PALETTE_KEY, value);
+    syncFavicon();
+    syncBase();
+    document.dispatchEvent(new CustomEvent('book-palette-change', { detail: value }));
+  }
+  function applyMode(value) {
+    root.setAttribute('data-mode', value);
+    write(MODE_KEY, value);
+    syncFavicon();
+    syncBase();
+    document.dispatchEvent(new CustomEvent('book-palette-change', { detail: 'hill-light' }));
+  }
+
+  // 单选组键盘语义：方向键在段间移动并即时选中，Home/End 到两端；
+  // 只有选中段进 Tab 序列（roving tabindex），与原生 radio 一致。
+  function bindKeys(wrap, buttons, current, activate) {
+    wrap.addEventListener('keydown', function (event) {
+      var index = buttons.findIndex(function (button) {
+        return button.dataset.key === current();
+      });
+      if (index === -1) index = 0;
+      var next = null;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        next = (index + 1) % buttons.length;
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        next = (index - 1 + buttons.length) % buttons.length;
+      } else if (event.key === 'Home') {
+        next = 0;
+      } else if (event.key === 'End') {
+        next = buttons.length - 1;
+      }
+      if (next === null) return;
+      event.preventDefault();
+      activate(buttons[next].dataset.key);
+      buttons[next].focus();
+    });
+  }
+
+  function makeSegment(label) {
+    var wrap = document.createElement('div');
+    wrap.className = 'palette-picker';
+    wrap.setAttribute('role', 'radiogroup');
+    wrap.setAttribute('aria-label', label);
+    var segment = document.createElement('div');
+    segment.className = 'palette-segment';
+    wrap.appendChild(segment);
+    return { wrap: wrap, segment: segment };
+  }
+
+  // 色板下拉：三段文字胶囊在 Hill Light 出现后还要并排多一段四时辰，顶栏右端被挤到
+  // 近 190px，窄屏只能把名字全裁掉。改成「当前色板」按钮 + 列表：闭合态只占色点与名字，
+  // 展开后三套色板一次看全。
+  // 语义取 select-only combobox：按钮带着当前值（这是菜单按钮做不到的），面板是 listbox，
+  // 焦点留在按钮上、用 aria-activedescendant 指当前项——APG 的原生键位（方向键、Home/End、
+  // 首字母、Enter 提交、Esc 无提交关闭）就是照这个模型写的。
+  function makeMenu(label) {
+    var wrap = document.createElement('div');
+    wrap.className = 'palette-picker palette-menu';
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'palette-trigger';
+    trigger.setAttribute('role', 'combobox');
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-controls', 'book-palette-list');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-autocomplete', 'none');
+    trigger.title = label;
+    trigger.innerHTML =
+      '<span class="palette-swatch" aria-hidden="true"></span>' +
+      '<span class="palette-trigger-label"></span>' +
+      '<svg class="palette-caret" viewBox="0 0 10 10" aria-hidden="true">' +
+      '<path d="M2 3.6 5 6.6 8 3.6" fill="none" stroke="currentColor" stroke-width="1.4" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var list = document.createElement('div');
+    list.className = 'palette-menu-list';
+    list.id = 'book-palette-list';
+    list.setAttribute('role', 'listbox');
+    list.setAttribute('aria-label', label);
+    list.hidden = true;
+    wrap.appendChild(trigger);
+    wrap.appendChild(list);
+    return { wrap: wrap, trigger: trigger, list: list };
+  }
+
+  // 四时辰图标：12px 格内的极简线性图。晓雾/午荫/暮烟/夜月是气氛词，圆点或首字都
+  // 传达不了差别，所以缺口用图形补：破晓的日头、正午的烈日、擦山的低日、夜月的弯月。
+  // 颜色一律 currentColor，跟分段控件的选中态一起变。
+  var MODE_ICONS = {
+    dawn:
+      '<svg viewBox="0 0 12 12" aria-hidden="true">' +
+      '<path d="M1.6 8.6h8.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>' +
+      '<path d="M3.3 8.6a2.7 2.7 0 0 1 5.4 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
+      '<path d="M6 2.3v1.2M3.5 4.1l.85.85M8.5 4.1l-.85.85" stroke="currentColor" ' +
+      'stroke-width="1.2" stroke-linecap="round"/></svg>',
+    noon:
+      '<svg viewBox="0 0 12 12" aria-hidden="true">' +
+      '<circle cx="6" cy="6" r="2.1" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
+      '<path d="M6 1.4v1.1M6 9.5v1.1M1.4 6h1.1M9.5 6h1.1M2.75 2.75l.8.8M8.45 8.45l.8.8' +
+      'M9.25 2.75l-.8.8M3.55 8.45l-.8.8" stroke="currentColor" stroke-width="1.2" ' +
+      'stroke-linecap="round"/></svg>',
+    dusk:
+      '<svg viewBox="0 0 12 12" aria-hidden="true">' +
+      '<path d="M1.6 8.6h8.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>' +
+      '<path d="M3.3 8.6a2.7 2.7 0 0 1 5.4 0" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
+      '<path d="M2.4 4.9h1.7M7.9 4.9h1.7" stroke="currentColor" stroke-width="1.2" ' +
+      'stroke-linecap="round"/></svg>',
+    night:
+      '<svg viewBox="0 0 12 12" aria-hidden="true">' +
+      '<path d="M8.4 2.5a3.9 3.9 0 1 0 1.2 5.6 4.8 4.8 0 0 1-1.2-5.6Z" fill="currentColor"/></svg>'
+  };
+
+  function mount() {
+    var tools = document.querySelector('.quarto-navbar-tools.tools-end');
+    if (!tools || tools.querySelector('.palette-picker')) return;
+
+    var paletteGroup = makeMenu('选择色板');
+    var paletteButtons = PALETTES.map(function (key) {
+      var button = document.createElement('div');
+      button.className = 'palette-menu-item';
+      button.id = 'book-palette-opt-' + key;
+      button.setAttribute('role', 'option');
+      button.setAttribute('aria-selected', 'false');
+      button.dataset.key = key;
+      button.innerHTML =
+        '<span class="palette-swatch" aria-hidden="true"></span>' +
+        '<span class="palette-menu-label">' + PALETTE_LABELS[key] + '</span>' +
+        '<svg class="palette-check" viewBox="0 0 12 12" aria-hidden="true">' +
+        '<path d="M2.4 6.3 4.7 8.6 9.6 3.7" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+        'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      button.addEventListener('click', function () {
+        applyPalette(key);
+        setMenu(false, true);
+      });
+      paletteGroup.list.appendChild(button);
+      return button;
+    });
+
+    // 时辰仍用分段控件：四项是同一维度上的并列值，一眼看全比再开一层菜单快。
+    var modeGroup = makeSegment('选择时辰');
+    modeGroup.wrap.classList.add('mode-picker');
+    modeGroup.wrap.title = '选择时辰';
+    var modeButtons = MODES.map(function (key) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'palette-segment-option';
+      button.setAttribute('role', 'radio');
+      button.dataset.key = key;
+      button.innerHTML = MODE_ICONS[key] + '<span class="palette-mode-label">' + MODE_LABELS[key][0] + '</span>';
+      button.setAttribute('aria-label', MODE_LABELS[key][1]);
+      button.title = MODE_LABELS[key][1];
+      button.addEventListener('click', function () {
+        applyMode(key);
+      });
+      modeGroup.segment.appendChild(button);
+      return button;
+    });
+
+    var activeIndex = -1;
+
+    function menuOpen() {
+      return !paletteGroup.list.hidden;
+    }
+    function currentIndex() {
+      var value = palette();
+      for (var i = 0; i < paletteButtons.length; i++) {
+        if (paletteButtons[i].dataset.key === value) return i;
+      }
+      return 0;
+    }
+    function setActive(index) {
+      activeIndex = (index + paletteButtons.length) % paletteButtons.length;
+      paletteButtons.forEach(function (button, i) {
+        button.classList.toggle('is-active', i === activeIndex);
+      });
+      paletteGroup.trigger.setAttribute('aria-activedescendant', paletteButtons[activeIndex].id);
+    }
+    function clearActive() {
+      activeIndex = -1;
+      paletteButtons.forEach(function (button) {
+        button.classList.remove('is-active');
+      });
+      paletteGroup.trigger.removeAttribute('aria-activedescendant');
+    }
+    function setMenu(open, refocus) {
+      paletteGroup.list.hidden = !open;
+      paletteGroup.trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) {
+        setActive(currentIndex());
+      } else {
+        clearActive();
+        if (refocus) paletteGroup.trigger.focus();
+      }
+    }
+
+    paletteGroup.trigger.addEventListener('click', function () {
+      setMenu(!menuOpen(), false);
+    });
+    paletteGroup.trigger.addEventListener('keydown', function (event) {
+      var key = event.key;
+      if (!menuOpen()) {
+        if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ') {
+          event.preventDefault();
+          setMenu(true, false);
+        }
+        return;
+      }
+      if (key === 'ArrowDown') {
+        event.preventDefault();
+        setActive(activeIndex + 1);
+      } else if (key === 'ArrowUp') {
+        event.preventDefault();
+        setActive(activeIndex - 1);
+      } else if (key === 'Home') {
+        event.preventDefault();
+        setActive(0);
+      } else if (key === 'End') {
+        event.preventDefault();
+        setActive(paletteButtons.length - 1);
+      } else if (key === 'Enter' || key === ' ') {
+        event.preventDefault();
+        if (activeIndex >= 0) applyPalette(paletteButtons[activeIndex].dataset.key);
+        setMenu(false, true);
+      } else if (key === 'Escape') {
+        event.preventDefault();
+        setMenu(false, true);
+      } else if (key === 'Tab') {
+        setMenu(false, false);
+      } else if (key.length === 1) {
+        // 首字母跳转：三套色板的首字母正好是 f / s / h。
+        var letter = key.toLowerCase();
+        var hit = paletteButtons.filter(function (button) {
+          return PALETTE_LABELS[button.dataset.key].toLowerCase().charAt(0) === letter;
+        })[0];
+        if (hit) {
+          event.preventDefault();
+          setActive(paletteButtons.indexOf(hit));
+        }
+      }
+    });
+    document.addEventListener('click', function (event) {
+      if (menuOpen() && !paletteGroup.wrap.contains(event.target)) setMenu(false, false);
+    });
+
+    function syncPalette() {
+      var value = palette();
+      var name = PALETTE_LABELS[value];
+      paletteGroup.trigger.dataset.key = value;
+      paletteGroup.trigger.querySelector('.palette-trigger-label').textContent = name;
+      // 无障碍名带上可见的当前色板名，满足 2.5.3（Label in Name）。
+      paletteGroup.trigger.setAttribute('aria-label', '选择色板，当前 ' + name);
+      paletteButtons.forEach(function (button) {
+        button.setAttribute('aria-selected', button.dataset.key === value ? 'true' : 'false');
+      });
+      modeGroup.wrap.hidden = value !== 'hill-light';
+    }
+    function syncMode() {
+      var value = mode();
+      modeButtons.forEach(function (button) {
+        var checked = button.dataset.key === value;
+        button.setAttribute('aria-checked', checked ? 'true' : 'false');
+        button.tabIndex = checked ? 0 : -1;
+      });
+    }
+
+    bindKeys(modeGroup.wrap, modeButtons, mode, applyMode);
+
+    syncPalette();
+    syncMode();
+    tools.appendChild(paletteGroup.wrap);
+    tools.appendChild(modeGroup.wrap);
+
+    document.addEventListener('book-palette-change', function () {
+      syncPalette();
+      syncMode();
+      syncBase();
+    });
+    // 返回页（bfcache）时 body class 可能被 Quarto 复原，再对账一次。
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) syncBase();
+    });
+    syncBase();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      syncFavicon();
+      mount();
+    });
+  } else {
+    syncFavicon();
+    mount();
+  }
+})();
+</script>
+
+
+<link rel="stylesheet" href="../../theme/css/fonts.css">
+<link rel="stylesheet" href="../../theme/css/tokens.css">
+<link rel="stylesheet" href="../../theme/palettes/flexoki/tokens.css">
+<link rel="stylesheet" href="../../theme/palettes/solarized/tokens.css">
+<link rel="stylesheet" href="../../theme/palettes/solarized/syntax.css">
+<link rel="stylesheet" href="../../theme/palettes/hill-light/tokens.css">
+<link rel="stylesheet" href="../../theme/palettes/hill-light/syntax.css">
+<link rel="stylesheet" href="../../theme/css/base.css">
+<link rel="stylesheet" href="../../theme/css/code.css">
+<link rel="stylesheet" href="../../theme/css/content.css">
+<link rel="stylesheet" href="../../theme/css/mermaid.css">
+<link rel="stylesheet" href="../../theme/css/nav.css">
+<link rel="stylesheet" href="../../theme/css/sidebar.css">
+<link rel="stylesheet" href="../../theme/css/callouts.css">
+<link rel="stylesheet" href="../../theme/css/landing.css">
+<link rel="stylesheet" href="../../theme/css/terminal.css">
+<meta property="og:title" content="棋盘 – C++ 棋盘游戏实践">
+<meta property="og:description" content="从棋盘规则与类型开始，用井字棋逐步搭起可构建、可测试的 C++ 工程。">
+<meta property="og:site_name" content="C++ 棋盘游戏实践">
+<meta name="twitter:title" content="棋盘 – C++ 棋盘游戏实践">
+<meta name="twitter:description" content="从棋盘规则与类型开始，用井字棋逐步搭起可构建、可测试的 C++ 工程。">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">C++ 棋盘游戏实践</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+    <a href="https://github.com/chengzhao-dev/cpp-board-games" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+          <div id="quarto-search" class="" title="搜索"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../content/tictactoe/index.html">井字棋</a></li><li class="breadcrumb-item"><a href="../../content/tictactoe/03-board.html"><span class="chapter-title">棋盘</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">C++ 棋盘游戏实践</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../content/tictactoe/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">井字棋</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/01-rules.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">对局规则</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/02-mapping-layout.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">工程结构</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/viewing-program.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">程序结构</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/03-board.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">棋盘</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/04-game.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">对局</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/05-ai.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">电脑落子</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/06-writing-terminal.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">终端程序</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/07-main.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">程序入口</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/08-tests.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">测试</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/09-running-build.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">构建与运行</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/tictactoe/10-defining-snapshot.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">局面快照</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">附录</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../content/appendix/references.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">参考资料</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#类型与坐标" id="toc-类型与坐标" class="nav-link active" data-scroll-target="#类型与坐标">类型与坐标</a>
+  <ul class="collapse">
+  <li><a href="#棋盘格子坐标" id="toc-棋盘格子坐标" class="nav-link" data-scroll-target="#棋盘格子坐标">棋盘格子坐标</a></li>
+  <li><a href="#棋盘格子类型" id="toc-棋盘格子类型" class="nav-link" data-scroll-target="#棋盘格子类型">棋盘格子类型</a></li>
+  </ul></li>
+  <li><a href="#成员与接口" id="toc-成员与接口" class="nav-link" data-scroll-target="#成员与接口">成员与接口</a>
+  <ul class="collapse">
+  <li><a href="#坐标下标" id="toc-坐标下标" class="nav-link" data-scroll-target="#坐标下标">坐标下标</a></li>
+  <li><a href="#只读接口" id="toc-只读接口" class="nav-link" data-scroll-target="#只读接口">只读接口</a></li>
+  <li><a href="#越界读取" id="toc-越界读取" class="nav-link" data-scroll-target="#越界读取">越界读取</a></li>
+  </ul></li>
+  <li><a href="#写入与清空" id="toc-写入与清空" class="nav-link" data-scroll-target="#写入与清空">写入与清空</a>
+  <ul class="collapse">
+  <li><a href="#落子结果" id="toc-落子结果" class="nav-link" data-scroll-target="#落子结果">落子结果</a></li>
+  <li><a href="#落子校验" id="toc-落子校验" class="nav-link" data-scroll-target="#落子校验">落子校验</a></li>
+  <li><a href="#写入棋子" id="toc-写入棋子" class="nav-link" data-scroll-target="#写入棋子">写入棋子</a></li>
+  <li><a href="#构造与清空" id="toc-构造与清空" class="nav-link" data-scroll-target="#构造与清空">构造与清空</a></li>
+  </ul></li>
+  <li><a href="#终局判定" id="toc-终局判定" class="nav-link" data-scroll-target="#终局判定">终局判定</a>
+  <ul class="collapse">
+  <li><a href="#赢家类型" id="toc-赢家类型" class="nav-link" data-scroll-target="#赢家类型">赢家类型</a></li>
+  <li><a href="#线坐标表" id="toc-线坐标表" class="nav-link" data-scroll-target="#线坐标表">线坐标表</a></li>
+  <li><a href="#成线判断" id="toc-成线判断" class="nav-link" data-scroll-target="#成线判断">成线判断</a></li>
+  <li><a href="#赢家判定" id="toc-赢家判定" class="nav-link" data-scroll-target="#赢家判定">赢家判定</a></li>
+  <li><a href="#结束判定的归属" id="toc-结束判定的归属" class="nav-link" data-scroll-target="#结束判定的归属">结束判定的归属</a></li>
+  <li><a href="#成线预判" id="toc-成线预判" class="nav-link" data-scroll-target="#成线预判">成线预判</a></li>
+  </ul></li>
+  <li><a href="#常见错误" id="toc-常见错误" class="nav-link" data-scroll-target="#常见错误">常见错误</a>
+  <ul class="collapse">
+  <li><a href="#写入空棋盘格子" id="toc-写入空棋盘格子" class="nav-link" data-scroll-target="#写入空棋盘格子">写入空棋盘格子</a></li>
+  <li><a href="#误用越界坐标" id="toc-误用越界坐标" class="nav-link" data-scroll-target="#误用越界坐标">误用越界坐标</a></li>
+  </ul></li>
+  <li><a href="#自测问题" id="toc-自测问题" class="nav-link" data-scroll-target="#自测问题">自测问题</a></li>
+  <li><a href="#本章回顾" id="toc-本章回顾" class="nav-link" data-scroll-target="#本章回顾">本章回顾</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/content/tictactoe/03-board.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../content/tictactoe/index.html">井字棋</a></li><li class="breadcrumb-item"><a href="../../content/tictactoe/03-board.html"><span class="chapter-title">棋盘</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">棋盘</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>井字棋棋盘是 3 行 3 列。<code>Board</code> 保存这九个棋盘格子，并提供写入与读出的接口；声明在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a>，实现在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp">board.cpp</a>。</p>
+<section id="类型与坐标" class="level2">
+<h2 class="anchored" data-anchor-id="类型与坐标">类型与坐标</h2>
+<p>在 <a href="../../content/tictactoe/01-rules.html">对局规则</a> 里，棋盘格子用行列数字定位，每个棋盘格子的取值是 X、O 或空。<code>CellPosition</code> 表示一对行列，<code>CellType</code> 表示这个取值。</p>
+<p>每个手写源文件开头都有一段 Doxygen 文件头，<code>board.h</code> 的前四行是：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@file</span><span class="co"> </span><span class="cv">board.h</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">/// </span><span class="an">@brief</span><span class="co"> 定义井字棋棋盘、格子坐标与格子类型。</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">///</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘保存九个棋盘格子的状态，提供查询、落子与清空棋盘。</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>@file</code> 写文件名本身，<code>@brief</code> 用一句话说明这个文件定义什么，空一行后只写本文件自己的范围。</p>
+<section id="棋盘格子坐标" class="level3">
+<h3 class="anchored" data-anchor-id="棋盘格子坐标">棋盘格子坐标</h3>
+<p>棋盘坐标由行数和列数确定，一对行列写成 <code>(row, col)</code>。尺寸和坐标定义在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a> 里：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘行数。</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">int</span> kBoardRows <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘列数。</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">constexpr</span> <span class="dt">int</span> kBoardCols <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘格子坐标。</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> CellPosition <span class="op">{</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> row <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>  <span class="co">///&lt; 行坐标，0 表示最上面一行。</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> col <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>  <span class="co">///&lt; 列坐标，0 表示最左边一列。</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">/// 检查两个棋盘格子坐标的行与列是否都相同。</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">constexpr</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">==(</span>CellPosition lhs<span class="op">,</span> CellPosition rhs<span class="op">)</span> <span class="kw">noexcept</span> <span class="op">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> lhs<span class="op">.</span>row <span class="op">==</span> rhs<span class="op">.</span>row <span class="op">&amp;&amp;</span> lhs<span class="op">.</span>col <span class="op">==</span> rhs<span class="op">.</span>col<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>kBoardRows</code> 和 <code>kBoardCols</code> 定下 3 行 3 列，<code>CellPosition</code> 把一对行列打成一个值，<code>operator==</code> 让两个坐标可以直接比较。图里每个棋盘格子标出的就是这对行列值。</p>
+<figure class="book-figure figure">
+<svg class="coords-grid" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 258 258" width="258" height="258" role="img" aria-label="棋盘坐标：3 行 3 列，左上角为 (0,0)，行向下、列向右。" font-family="LXGW Bright Medium, system-ui, sans-serif" font-size="14">
+<style>.coords-grid{color:#1F2328}@media (prefers-color-scheme: dark){.coords-grid{color:#CDD9E5}}</style>
+<g stroke="currentColor" fill="none" stroke-width="1.25">
+<line x1="18" y1="18" x2="250" y2="18"></line>
+<polygon points="250,14 258,18 250,22" fill="currentColor" stroke="none"></polygon>
+<text x="144" y="12" text-anchor="middle" fill="currentColor" stroke="none">col</text>
+<line x1="18" y1="18" x2="18" y2="250"></line>
+<polygon points="14,250 18,258 22,250" fill="currentColor" stroke="none"></polygon>
+<text x="10" y="144" transform="rotate(-90 10 144)" text-anchor="middle" fill="currentColor" stroke="none">row</text>
+<text x="80" y="38" text-anchor="middle" fill="currentColor" stroke="none">0</text>
+<text x="144" y="38" text-anchor="middle" fill="currentColor" stroke="none">1</text>
+<text x="208" y="38" text-anchor="middle" fill="currentColor" stroke="none">2</text>
+<text x="38" y="80" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">0</text>
+<text x="38" y="144" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">1</text>
+<text x="38" y="208" text-anchor="end" dominant-baseline="middle" fill="currentColor" stroke="none">2</text>
+<rect x="48" y="48" width="64" height="64"></rect>
+<text x="80" y="80" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,0)</text>
+<rect x="112" y="48" width="64" height="64"></rect>
+<text x="144" y="80" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,1)</text>
+<rect x="176" y="48" width="64" height="64"></rect>
+<text x="208" y="80" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(0,2)</text>
+<rect x="48" y="112" width="64" height="64"></rect>
+<text x="80" y="144" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,0)</text>
+<rect x="112" y="112" width="64" height="64"></rect>
+<text x="144" y="144" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,1)</text>
+<rect x="176" y="112" width="64" height="64"></rect>
+<text x="208" y="144" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(1,2)</text>
+<rect x="48" y="176" width="64" height="64"></rect>
+<text x="80" y="208" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,0)</text>
+<rect x="112" y="176" width="64" height="64"></rect>
+<text x="144" y="208" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,1)</text>
+<rect x="176" y="176" width="64" height="64"></rect>
+<text x="208" y="208" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none">(2,2)</text>
+</g>
+</svg>
+<figcaption>棋盘坐标图：每格标出 <code>(row, col)</code>；行向下、列向右，左上角是 <code>(0, 0)</code>。</figcaption>
+</figure>
+</section>
+<section id="棋盘格子类型" class="level3">
+<h3 class="anchored" data-anchor-id="棋盘格子类型">棋盘格子类型</h3>
+<p>棋盘格子有三种类型：空格子、X 标记和 O 标记，代码用 <code>CellType</code> 表示：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 棋盘格子类型。</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> CellType <span class="op">:</span> <span class="bu">std::</span>uint8_t <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  kEmpty <span class="op">=</span> <span class="dv">0</span><span class="op">,</span>  <span class="co">///&lt; 空格子。</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  kX <span class="op">=</span> <span class="dv">1</span><span class="op">,</span>      <span class="co">///&lt; X 标记。</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  kO <span class="op">=</span> <span class="dv">2</span><span class="op">,</span>      <span class="co">///&lt; O 标记。</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>终端一行 <code>|   | X | O |</code> 从左到右依次是空格子、X 标记和 O 标记。</p>
+</section>
+</section>
+<section id="成员与接口" class="level2">
+<h2 class="anchored" data-anchor-id="成员与接口">成员与接口</h2>
+<p><code>Board</code> 对内用二维数组存棋盘格子，对外提供带边界检查的读取入口。头文件里的类声明、构造函数与数据成员：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 井字棋棋盘。</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Board <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 构造空棋盘：九个棋盘格子都是 kEmpty。</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  Board<span class="op">()</span> <span class="kw">noexcept</span><span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a> <span class="kw">private</span><span class="op">:</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 棋盘格子数组：外层下标是行，内层下标是列，每个元素表示一个棋盘格子的类型。</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">std::</span>array<span class="op">&lt;</span><span class="bu">std::</span>array<span class="op">&lt;</span>CellType<span class="op">,</span> kBoardCols<span class="op">&gt;,</span> kBoardRows<span class="op">&gt;</span> <span class="va">cells_</span><span class="op">{};</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>构造函数建立一局空棋盘：九个棋盘格子都是 <code>kEmpty</code>。棋盘大小在对局进行中不变，因此不需要单独的初始化入口。</p>
+<section id="坐标下标" class="level3">
+<h3 class="anchored" data-anchor-id="坐标下标">坐标下标</h3>
+<p><code>IsInRange</code> 检查一个棋盘格子坐标是否落在棋盘的下标区间里，定义在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a> 里：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Board <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a> <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 检查坐标是否落在棋盘下标区间内。</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 行的有效区间是 [0, kBoardRows)，列的有效区间是 [0, kBoardCols)。</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 只判断几何边界，不检查格子是否为空、对局是否已经结束。</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">position</span><span class="co"> 待检查的坐标。</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@return</span><span class="co"> 行和列都在区间内返回 true；任一越界返回 false。</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="at">static</span> <span class="dt">bool</span> IsInRange<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="kw">noexcept</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>IsInRange</code> 可以直接调用，不用先创建 <code>Board</code>。</p>
+</section>
+<section id="只读接口" class="level3">
+<h3 class="anchored" data-anchor-id="只读接口">只读接口</h3>
+<p><code>Board</code> 另外三个只读接口都定义在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a> 里：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Board <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a> <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 检查指定坐标上的棋盘格子是否为空。</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 越界返回 false。本函数只看格子上有没有棋子，不判断对局是否结束。</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 对局因一方成线而提前结束时，棋盘上尚未落满的空格仍是空的；</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 只有下满且没有赢家的平局才会没有空格。</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">position</span><span class="co"> 待检查的坐标。</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@return</span><span class="co"> 坐标在棋盘内且该格子为空时返回 true；越界或已有棋子时返回 false。</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> IsCellEmpty<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 检查棋盘是否已满。</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@return</span><span class="co"> 九个棋盘格子都不为空时返回 true；否则返回 false。</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> IsFull<span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span><span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 合法坐标返回该棋盘格子的类型；越界时抛出 std::out_of_range。</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">position</span><span class="co"> 行列坐标。</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@return</span><span class="co"> 该坐标上的棋盘格子类型。</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@throws</span><span class="co"> </span><span class="cv">std::out_of_range</span><span class="co"> 坐标不在棋盘范围内。</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> CellType GetCellType<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>GetCellType</code>、<code>IsCellEmpty</code> 和 <code>IsFull</code> 都只读棋盘，区别在返回什么、越界怎么处理：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 30%">
+<col style="width: 46%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>接口</th>
+<th>返回</th>
+<th>边界</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>GetCellType</code></td>
+<td>坐标处的 <code>CellType</code></td>
+<td>越界时抛出 <code>std::out_of_range</code></td>
+</tr>
+<tr class="even">
+<td><code>IsCellEmpty</code></td>
+<td>空棋盘格子为 <code>true</code></td>
+<td>坐标越界或该棋盘格子已有棋子时返回 <code>false</code></td>
+</tr>
+<tr class="odd">
+<td><code>IsFull</code></td>
+<td>九个棋盘格子都有棋子时为 <code>true</code></td>
+<td>不判断谁获胜</td>
+</tr>
+</tbody>
+</table>
+<p>调用方按场合选择：</p>
+<ul>
+<li>终端打印棋盘时逐格调用 <code>GetCellType</code>。</li>
+<li>判断单个棋盘格子是否为空时调用 <code>IsCellEmpty</code>。</li>
+<li>测试用 <code>GetCellType</code> 核对空棋盘格子、已有棋子与越界坐标；满盘局面由 <code>PlaceCell</code> 逐格摆出。</li>
+<li><code>IsFull</code> 用来判断是否满盘，测试里也用它确认未满或已满。</li>
+</ul>
+</section>
+<section id="越界读取" class="level3">
+<h3 class="anchored" data-anchor-id="越界读取">越界读取</h3>
+<p><code>GetCellType</code> 越界时抛标准库的 <code>std::out_of_range</code>，合法坐标直接返回数组里的取值：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>CellType Board<span class="op">::</span>GetCellType<span class="op">(</span>CellPosition position<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>IsInRange<span class="op">(</span>position<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">throw</span> <span class="bu">std::</span>out_of_range<span class="op">{</span><span class="bu">std::</span>format<span class="op">(</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Board::GetCellType: board position is out of range (row=</span><span class="sc">{}</span><span class="st">, col=</span><span class="sc">{}</span><span class="st">); board is </span><span class="sc">{}</span><span class="st">x</span><span class="sc">{}</span><span class="st">"</span><span class="op">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        position<span class="op">.</span>row<span class="op">,</span> position<span class="op">.</span>col<span class="op">,</span> kBoardRows<span class="op">,</span> kBoardCols<span class="op">)};</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="va">cells_</span><span class="op">.</span>at<span class="op">(</span>position<span class="op">.</span>row<span class="op">).</span>at<span class="op">(</span>position<span class="op">.</span>col<span class="op">);</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="写入与清空" class="level2">
+<h2 class="anchored" data-anchor-id="写入与清空">写入与清空</h2>
+<p><code>Board</code> 用 <code>PlaceCell</code> 写入一枚棋子，用 <code>Clear</code> 把整盘恢复为空。落子可能因坐标越界、棋子类型非法或目标格已有棋子而失败，返回值用 <code>PlaceCellResult</code> 区分这三种情况。</p>
+<section id="落子结果" class="level3">
+<h3 class="anchored" data-anchor-id="落子结果">落子结果</h3>
+<p><code>bool</code> 只能说明“成功或失败”，调用方想知道失败原因时还得再查一遍。<code>PlaceCellResult</code> 把结果收进一个枚举，定义在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a> 里：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 落子结果，用于区分落子时的情况。</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> PlaceCellResult <span class="op">:</span> <span class="bu">std::</span>uint8_t <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  kSuccess <span class="op">=</span> <span class="dv">0</span><span class="op">,</span>        <span class="co">///&lt; 落子成功。</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  kOutOfRange <span class="op">=</span> <span class="dv">1</span><span class="op">,</span>     <span class="co">///&lt; 坐标越界。</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  kEmptyCellType <span class="op">=</span> <span class="dv">2</span><span class="op">,</span>  <span class="co">///&lt; 传入空棋盘格子类型，非法参数。</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  kOccupied <span class="op">=</span> <span class="dv">3</span><span class="op">,</span>       <span class="co">///&lt; 目标已有棋子，落子失败。</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>四个取值各自对应一条拒绝路径；调用方用 <code>switch</code> 或比较就能知道该提示什么，不需要再调用别的查询。</p>
+</section>
+<section id="落子校验" class="level3">
+<h3 class="anchored" data-anchor-id="落子校验">落子校验</h3>
+<p><code>CheckPlaceable</code> 只做校验，不改棋盘；<code>PlaceCell</code> 先调用它，再执行写入。声明在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a> 里：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Board <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 检查一次落子是否合法，不修改棋盘。</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 依次检查坐标、棋子类型与目标格子占用情况；任一项不通过就返回对应结果。</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">position</span><span class="co"> 目标行列坐标。</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">cell_type</span><span class="co"> 要放置的棋盘格子类型。</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@return</span><span class="co"> 可以落子返回 kSuccess；否则返回对应的拒绝原因。</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> PlaceCellResult CheckPlaceable<span class="op">(</span>CellPosition position<span class="op">,</span> CellType <span class="dt">cell_type</span><span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>三项检查按从外到内的顺序排列，任何一项失败都直接返回：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>PlaceCellResult Board<span class="op">::</span>CheckPlaceable<span class="op">(</span>CellPosition position<span class="op">,</span> CellType <span class="dt">cell_type</span><span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 坐标越界时棋盘外没有格子可写，直接拒绝。</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>IsInRange<span class="op">(</span>position<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> PlaceCellResult<span class="op">::</span>kOutOfRange<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 空类型表示“没有棋子”，不能作为一次落子写进棋盘。</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span><span class="dt">cell_type</span> <span class="op">==</span> CellType<span class="op">::</span>kEmpty<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> PlaceCellResult<span class="op">::</span>kEmptyCellType<span class="op">;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 目标格已经有棋子时不能覆盖，否则会改掉已有对局。</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(!</span>IsCellEmpty<span class="op">(</span>position<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> PlaceCellResult<span class="op">::</span>kOccupied<span class="op">;</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> PlaceCellResult<span class="op">::</span>kSuccess<span class="op">;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="写入棋子" class="level3">
+<h3 class="anchored" data-anchor-id="写入棋子">写入棋子</h3>
+<p><code>PlaceCell</code> 在指定坐标放置棋子，声明在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a> 里：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Board <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 在指定坐标放置棋子。</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">position</span><span class="co"> 目标行列坐标。</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">cell_type</span><span class="co"> 要放置的棋盘格子类型，必须是 kX 或 kO。</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@return</span><span class="co"> 落子成功返回 kSuccess；越界、空类型或目标已有棋子时返回对应枚举，棋盘不变。</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> PlaceCellResult PlaceCell<span class="op">(</span>CellPosition position<span class="op">,</span> CellType <span class="dt">cell_type</span><span class="op">);</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>实现先校验、再写入，校验不通过时棋盘保持原样：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>PlaceCellResult Board<span class="op">::</span>PlaceCell<span class="op">(</span>CellPosition position<span class="op">,</span> CellType <span class="dt">cell_type</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 先只做校验，保证被拒的落子不会改动棋盘。</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">const</span> PlaceCellResult check <span class="op">=</span> CheckPlaceable<span class="op">(</span>position<span class="op">,</span> <span class="dt">cell_type</span><span class="op">);</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>check <span class="op">!=</span> PlaceCellResult<span class="op">::</span>kSuccess<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> check<span class="op">;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 校验已通过，写入不会失败。</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="va">cells_</span><span class="op">.</span>at<span class="op">(</span>position<span class="op">.</span>row<span class="op">).</span>at<span class="op">(</span>position<span class="op">.</span>col<span class="op">)</span> <span class="op">=</span> <span class="dt">cell_type</span><span class="op">;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> PlaceCellResult<span class="op">::</span>kSuccess<span class="op">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="构造与清空" class="level3">
+<h3 class="anchored" data-anchor-id="构造与清空">构造与清空</h3>
+<p>构造函数只得到一局空棋盘，实现写在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp">board.cpp</a> 里：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>Board<span class="op">::</span>Board<span class="op">()</span> <span class="kw">noexcept</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  Clear<span class="op">();</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>Clear</code> 把整盘恢复为空。这里不写 <code>cells_ = {}</code>，而是显式把九个格子填成 <code>kEmpty</code>：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> Board<span class="op">::</span>Clear<span class="op">()</span> <span class="kw">noexcept</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">std::</span>ranges::fill<span class="op">(</span><span class="va">cells_</span> <span class="op">|</span> <span class="bu">std::</span>views::join<span class="op">,</span> CellType<span class="op">::</span>kEmpty<span class="op">);</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>cells_ | std::views::join</code> 把二维数组摊平成一维序列，<code>std::ranges::fill</code> 一次写满九个格子。意图直接可读：把所有格子填成 <code>kEmpty</code>，不用猜整体赋值恢复成了什么。</p>
+<p>清空后九个格子都是 <code>kEmpty</code>，同一格可以再次落子。</p>
+</section>
+</section>
+<section id="终局判定" class="level2">
+<h2 class="anchored" data-anchor-id="终局判定">终局判定</h2>
+<p><code>Board</code> 从当前棋盘算出赢家、平局与是否结束；电脑落子前还要判断一手尚未写入时会不会成线。</p>
+<section id="赢家类型" class="level3">
+<h3 class="anchored" data-anchor-id="赢家类型">赢家类型</h3>
+<p><code>GetWinner</code> 获取形成三连的棋盘格子类型，定义在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a> 里：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Board <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a> <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 获取形成三连的棋盘格子类型。</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 按 kX、kO 的次序检查，先手优先；同一棋盘不会让双方同时成线。</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 次序一致只为结果可复现。</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@return</span><span class="co"> 有赢家时返回形成三连的棋盘格子类型；没有三连时返回 std::nullopt。</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>optional<span class="op">&lt;</span>CellType<span class="op">&gt;</span> GetWinner<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="线坐标表" class="level3">
+<h3 class="anchored" data-anchor-id="线坐标表">线坐标表</h3>
+<p>八条线的坐标写在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/board.cpp">board.cpp</a> 的 <code>namespace tictactoe</code> 里，存成一张 <code>constexpr</code> 常量表：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 八条线的坐标表：三行、三列、两条对角线。</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="bu">std::</span>array<span class="op">&lt;</span><span class="bu">std::</span>array<span class="op">&lt;</span>CellPosition<span class="op">,</span> <span class="dv">3</span><span class="op">&gt;,</span> <span class="dv">8</span><span class="op">&gt;</span> kLines<span class="op">{{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">{{{.</span>row <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">0</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">1</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">2</span><span class="op">}}},</span>  <span class="co">// 行 0</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{{{.</span>row <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">0</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">1</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">2</span><span class="op">}}},</span>  <span class="co">// 行 1</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">{{{.</span>row <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">0</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">1</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">2</span><span class="op">}}},</span>  <span class="co">// 行 2</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">{{{.</span>row <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">0</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">0</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">0</span><span class="op">}}},</span>  <span class="co">// 列 0</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">{{{.</span>row <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">1</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">1</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">1</span><span class="op">}}},</span>  <span class="co">// 列 1</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">{{{.</span>row <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">2</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">2</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">2</span><span class="op">}}},</span>  <span class="co">// 列 2</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">{{{.</span>row <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">0</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">1</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">2</span><span class="op">}}},</span>  <span class="co">// 对角线</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">{{{.</span>row <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">2</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">1</span><span class="op">},</span> <span class="op">{.</span>row <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> <span class="op">.</span>col <span class="op">=</span> <span class="dv">0</span><span class="op">}}},</span>  <span class="co">// 反对角线</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="op">}};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>坐标都是常数，直接列出来比两层循环运行时推算更好查：新增一条线时改表即可，扫线代码不动。</p>
+</section>
+<section id="成线判断" class="level3">
+<h3 class="anchored" data-anchor-id="成线判断">成线判断</h3>
+<p><code>HasLine</code> 扫这张表，判断有没有一条线全是同一种棋子：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> Board<span class="op">::</span>HasLine<span class="op">(</span>CellType <span class="dt">cell_type</span><span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">std::</span>ranges::any_of<span class="op">(</span>kLines<span class="op">,</span> <span class="op">[&amp;](</span><span class="at">const</span> <span class="kw">auto</span><span class="op">&amp;</span> line<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>ranges::all_of<span class="op">(</span>line<span class="op">,</span> <span class="op">[&amp;](</span>CellPosition position<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="va">cells_</span><span class="op">.</span>at<span class="op">(</span>position<span class="op">.</span>row<span class="op">).</span>at<span class="op">(</span>position<span class="op">.</span>col<span class="op">)</span> <span class="op">==</span> <span class="dt">cell_type</span><span class="op">;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">});</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>不要改写成编号求和。若把 <code>kX</code>、<code>kO</code> 记成 1 和 2，空格记 0，那么 <code>X + O + 空</code> 等于 3，与三个 <code>X</code> 的和相同。这样，没有三连的盘面会被判成三连；逐格比较类型没有这个漏洞。</p>
+</section>
+<section id="赢家判定" class="level3">
+<h3 class="anchored" data-anchor-id="赢家判定">赢家判定</h3>
+<p><code>GetWinner</code> 依次问 <code>HasLine(kX)</code> 与 <code>HasLine(kO)</code>，先命中先返回；两个都没有，就是平局或对局还没结束：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span>CellType<span class="op">&gt;</span> Board<span class="op">::</span>GetWinner<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>HasLine<span class="op">(</span>CellType<span class="op">::</span>kX<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> CellType<span class="op">::</span>kX<span class="op">;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>HasLine<span class="op">(</span>CellType<span class="op">::</span>kO<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> CellType<span class="op">::</span>kO<span class="op">;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="结束判定的归属" class="level3">
+<h3 class="anchored" data-anchor-id="结束判定的归属">结束判定的归属</h3>
+<p><code>Board</code> 不提供 <code>IsWin</code>、<code>IsDraw</code> 或 <code>IsGameOver</code> 这类组合查询。<code>GetWinner</code> 只报告三连，<code>IsFull</code> 只报告满盘；胜、负、和棋或继续由调用方组合这两个结果判断，具体见<a href="../../content/tictactoe/04-game.html">对局</a>。分开查询后，最后一子同时成线和填满棋盘仍会先判胜利。</p>
+</section>
+<section id="成线预判" class="level3">
+<h3 class="anchored" data-anchor-id="成线预判">成线预判</h3>
+<p>电脑落子前需要知道“在某个空棋盘格子落子会不会连成三个”，此时这一手还没有写进棋盘。<code>Board::PreviewWin</code> 推演这一手的结果，定义在 <a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/board.h">board.h</a> 里。</p>
+<p>推演有三种结果：会成线、合法但不成线、这个位置根本不能落子。前两种都是合法落子，第三种是非法输入，所以返回值不能再用 <code>bool</code>：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// 落子推演结果。</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> WinPreviewResult <span class="op">:</span> <span class="bu">std::</span>uint8_t <span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  kWouldWin <span class="op">=</span> <span class="dv">0</span><span class="op">,</span>     <span class="co">///&lt; 在候选位置落子会形成完整线。</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  kWouldNotWin <span class="op">=</span> <span class="dv">1</span><span class="op">,</span>  <span class="co">///&lt; 落子合法，但不会成线。</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  kInvalidPlace <span class="op">=</span> <span class="dv">2</span><span class="op">,</span>  <span class="co">///&lt; 该位置本身不可落子，见 CheckPlaceable。</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>kInvalidPlace</code> 的判定直接复用 <code>CheckPlaceable</code>，不再重复写一遍越界、空类型与占格检查：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.h</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20" data-filename="board.h"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Board <span class="op">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> <span class="kw">public</span><span class="op">:</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 推演在指定坐标放入给定棋子后是否会形成三连，不修改棋盘。</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 先按 CheckPlaceable 判断这一手能否落子：不能落子时返回 kInvalidPlace；</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// 能落子时只在推演中放下这一子，再检查它所在的线是否整条同色。</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">///</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">position</span><span class="co"> 假设落子的行列坐标。</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@param</span><span class="co"> </span><span class="cv">cell_type</span><span class="co"> 假设放入的棋盘格子类型。</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">/// </span><span class="an">@return</span><span class="co"> 不可落子返回 kInvalidPlace；落子后成线返回 kWouldWin；否则返回 kWouldNotWin。</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> WinPreviewResult PreviewWin<span class="op">(</span>CellPosition position<span class="op">,</span> CellType <span class="dt">cell_type</span><span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>实现不复制棋盘：候选落子先当成棋盘上已有的棋子，再用同一张 <code>kLines</code> 表扫线：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>board.cpp</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21" data-filename="board.cpp"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>WinPreviewResult Board<span class="op">::</span>PreviewWin<span class="op">(</span>CellPosition position<span class="op">,</span> CellType <span class="dt">cell_type</span><span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 先复用落子校验：不可落子的位置不进入成线推演。</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>CheckPlaceable<span class="op">(</span>position<span class="op">,</span> <span class="dt">cell_type</span><span class="op">)</span> <span class="op">!=</span> PlaceCellResult<span class="op">::</span>kSuccess<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> WinPreviewResult<span class="op">::</span>kInvalidPlace<span class="op">;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 候选坐标视为已放入该类型，其余棋盘格子照常读取。</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">const</span> <span class="kw">auto</span> matches <span class="op">=</span> <span class="op">[&amp;](</span>CellPosition cell<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> cell <span class="op">==</span> position <span class="op">||</span> <span class="va">cells_</span><span class="op">.</span>at<span class="op">(</span>cell<span class="op">.</span>row<span class="op">).</span>at<span class="op">(</span>cell<span class="op">.</span>col<span class="op">)</span> <span class="op">==</span> <span class="dt">cell_type</span><span class="op">;</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">};</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 只检查包含候选坐标的那条线：其他线不受这一手影响。</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">const</span> <span class="dt">bool</span> completes <span class="op">=</span> <span class="bu">std::</span>ranges::any_of<span class="op">(</span>kLines<span class="op">,</span> <span class="op">[&amp;](</span><span class="at">const</span> <span class="kw">auto</span><span class="op">&amp;</span> line<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>ranges::find<span class="op">(</span>line<span class="op">,</span> position<span class="op">)</span> <span class="op">!=</span> line<span class="op">.</span>end<span class="op">()</span> <span class="op">&amp;&amp;</span> <span class="bu">std::</span>ranges::all_of<span class="op">(</span>line<span class="op">,</span> matches<span class="op">);</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">});</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> completes <span class="op">?</span> WinPreviewResult<span class="op">::</span>kWouldWin <span class="op">:</span> WinPreviewResult<span class="op">::</span>kWouldNotWin<span class="op">;</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="常见错误" class="level2">
+<h2 class="anchored" data-anchor-id="常见错误">常见错误</h2>
+<section id="写入空棋盘格子" class="level3">
+<h3 class="anchored" data-anchor-id="写入空棋盘格子">写入空棋盘格子</h3>
+<p>给 <code>Board::PlaceCell</code> 传入 <code>CellType::kEmpty</code> 时，它返回 <code>PlaceCellResult::kEmptyCellType</code>，棋盘保持不变。</p>
+<p><code>kEmpty</code> 表示空棋盘格子而不是一枚棋子，<code>Board</code> 把它当作无效写入拒绝；写入时传 <code>kX</code> 或 <code>kO</code>。</p>
+</section>
+<section id="误用越界坐标" class="level3">
+<h3 class="anchored" data-anchor-id="误用越界坐标">误用越界坐标</h3>
+<p>把行号或列号写到 <code>0</code> 到 <code>2</code> 之外时，<code>PlaceCell</code> 返回 <code>PlaceCellResult::kOutOfRange</code>，棋盘保持不变。</p>
+<p><code>CheckPlaceable</code> 在写入前拦下越界坐标；调用前自己核对 <code>0</code> 到 <code>2</code> 更省事，也能用来禁用按钮。</p>
+</section>
+</section>
+<section id="自测问题" class="level2">
+<h2 class="anchored" data-anchor-id="自测问题">自测问题</h2>
+<p>先自己回答，再展开答案对照；答不上来就回到对应小节。</p>
+<ol type="1">
+<li><p>为什么行号 <code>-1</code> 和 <code>3</code> 都会被拒绝？</p>
+<details class="answer-disclosure">
+<summary>查看答案</summary>
+<p><code>Board::IsInRange</code> 要求行号从 <code>0</code> 到 <code>kBoardRows - 1</code>。<code>kBoardRows</code> 是 3，所以 <code>-1</code> 和 <code>3</code> 都不属于棋盘。</p>
+</details></li>
+<li><p>向已有 X 的棋盘格子再落一次 O，棋盘会变吗？</p>
+<details class="answer-disclosure">
+<summary>查看答案</summary>
+<p>不会。<code>Board::PlaceCell</code> 在棋盘格子已被占用时返回 <code>PlaceCellResult::kOccupied</code>，棋盘保持不变。</p>
+</details></li>
+<li><p><code>cells_[row][col]</code> 里的两个下标各是什么？</p>
+<details class="answer-disclosure">
+<summary>查看答案</summary>
+<p><code>row</code> 是行号，<code>col</code> 是列号。<code>cells_[row][col]</code> 就是 <code>(row, col)</code> 处的棋盘格子。</p>
+</details></li>
+</ol>
+</section>
+<section id="本章回顾" class="level2">
+<h2 class="anchored" data-anchor-id="本章回顾">本章回顾</h2>
+<p>棋盘用 3×3 的二维数组存九个格子，越界、空类型与占用都在写入前拒绝，结果由 <code>PlaceCellResult</code> 区分；判胜扫八条线，先看 X 再看 O，成线推演复用同一套落子校验。下一章看一次落子怎样改变棋盘，并决定谁继续下。</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<footer class="book-footer">
+  <p>© 2026 C++ 棋盘游戏实践 · 用 <a href="https://quarto.org">Quarto</a> 构建</p>
+</footer>
+<button id="back-to-top" type="button" title="返回顶部" aria-label="返回顶部">↑</button>
+<script>
+(function () {
+  var btn = document.getElementById('back-to-top');
+  if (!btn) return;
+  var onScroll = function () {
+    if (window.scrollY > 400) btn.classList.add('show');
+    else btn.classList.remove('show');
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  btn.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+</script>
+<script>
+(function () {
+  var meta = document.getElementById('meta-theme-color');
+  if (!meta) return;
+  // 地址栏主题色直接读 tokens.css 的 --page-bg 计算值（明暗与色板切换后自动重取），
+  // 避免与令牌双写漂移；取不到时按当前色板的纸色兜底。
+  // favicon 也在这里再同步一次：file:// 下 Quarto 不写 localStorage，只能靠 body class 变化触发。
+  var sync = function () {
+    var v = window.getComputedStyle(document.body).getPropertyValue('--page-bg').trim();
+    var solarized = document.documentElement.getAttribute('data-palette') === 'solarized';
+    var dark = document.body.classList.contains('quarto-dark');
+    if (!v) {
+      if (solarized) v = dark ? '#002B36' : '#FDF6E3';
+      else v = dark ? '#100F0F' : '#FFFCF0';
+    }
+    meta.setAttribute('content', v);
+    if (window.__bookSyncFavicon) window.__bookSyncFavicon();
+  };
+  sync();
+  if (window.MutationObserver) {
+    var observer = new MutationObserver(sync);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-palette'] });
+  }
+})();
+</script>
+<script>
+(function () {
+  // Quarto 只本地化搜索结果面板文案，导航栏搜索按钮与仓库图标仍带组件库的英文默认值。
+  // 这里按 zh 语言包的同义中文补齐，只在命中英文原文时替换，Quarto 自行本地化后本脚本自动失效。
+  var LABELS = { 'Search': '搜索', 'Source Code': '查看代码' };
+  var ATTRS = ['title', 'aria-label', 'placeholder'];
+  var sync = function () {
+    document
+      .querySelectorAll('a.quarto-navigation-tool, #quarto-search, #quarto-search *')
+      .forEach(function (el) {
+        ATTRS.forEach(function (attr) {
+          var text = el.getAttribute(attr);
+          if (text && LABELS[text]) {
+            el.setAttribute(attr, LABELS[text]);
+          }
+        });
+      });
+  };
+  sync();
+  window.addEventListener('load', sync);
+  var box = document.getElementById('quarto-search');
+  if (box && window.MutationObserver) {
+    new MutationObserver(sync).observe(box, { childList: true, subtree: true });
+  }
+})();
+</script>
+<script>
+/* 运行效果：可点的井字棋棋盘 + 与程序同步的终端画面。
+   棋盘负责「能玩」，details 里的 <pre> 负责「程序真的会打印什么」——两者共用同一份状态，
+   每一步同时更新，不另造一套假输出。无 JS 时保留 <noscript> 里的静态终局画面。 */
+(() => {
+  const labs = document.querySelectorAll("[data-terminal-lab]");
+  if (!labs.length) return;
+
+  const LINES = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6],
+  ];
+  const EMPTY = ["", "", "", "", "", "", "", "", ""];
+  const ROW_NAMES = ["第一行", "第二行", "第三行"];
+  const COL_NAMES = ["第一列", "第二列", "第三列"];
+
+  const boardText = (board, tail) => {
+    const cell = (i) => (board[i] ? ` ${board[i]} ` : "   ");
+    const lines = [
+      "    0   1   2",
+      "  +---+---+---+",
+      `0 |${cell(0)}|${cell(1)}|${cell(2)}|`,
+      "  +---+---+---+",
+      `1 |${cell(3)}|${cell(4)}|${cell(5)}|`,
+      "  +---+---+---+",
+      `2 |${cell(6)}|${cell(7)}|${cell(8)}|`,
+      "  +---+---+---+",
+    ];
+    if (tail) lines.push(tail);
+    return lines.join("\n");
+  };
+
+  labs.forEach((lab, index) => {
+    const boardEl = lab.querySelector("[data-tl-board]");
+    const turnText = lab.querySelector("[data-tl-turn]");
+    const countText = lab.querySelector("[data-tl-count]");
+    const feedback = lab.querySelector("[data-tl-feedback]");
+    const note = lab.querySelector("[data-terminal-note]");
+    const output = lab.querySelector("[data-terminal-output]");
+    const startButton = lab.querySelector("[data-terminal-start]");
+    const hintButton = lab.querySelector("[data-terminal-hint]");
+    const coordToggle = lab.querySelector("[data-terminal-coord-toggle]");
+    const coordForm = lab.querySelector("[data-terminal-coord]");
+    const coordInput = lab.querySelector(".tl-prompt-input");
+    const coordError = lab.querySelector("[data-tl-coord-error]");
+    if (!boardEl || !turnText || !startButton) return;
+
+    if (coordInput && !coordInput.id) coordInput.id = `tl-coord-input-${index}`;
+
+    const cells = [];
+    for (let row = 0; row < 3; row += 1) {
+      const rowEl = document.createElement("div");
+      rowEl.className = "tl-row";
+      rowEl.setAttribute("role", "row");
+      rowEl.dataset.rowIndex = String(row);
+      for (let col = 0; col < 3; col += 1) {
+        const i = row * 3 + col;
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "tl-cell";
+        cell.setAttribute("role", "gridcell");
+        cell.dataset.index = String(i);
+        cell.tabIndex = i === 0 ? 0 : -1;
+        cell.addEventListener("click", () => place(i));
+        cells.push(cell);
+        rowEl.appendChild(cell);
+      }
+      boardEl.appendChild(rowEl);
+    }
+
+    let board = EMPTY.slice();
+    let player = "X";
+    let moves = 0;
+    let over = false;
+    let result = "";
+    let focusIndex = 0;
+
+    const clearCoordError = () => {
+      if (!coordError) return;
+      coordError.hidden = true;
+      coordError.textContent = "";
+    };
+    const showCoordError = (text) => {
+      if (!coordError) return;
+      coordError.textContent = text;
+      coordError.hidden = false;
+    };
+    const say = (text, kind) => {
+      if (!feedback) return;
+      feedback.textContent = text;
+      feedback.dataset.kind = kind || "hint";
+    };
+
+    const winnerLine = () => {
+      for (const line of LINES) {
+        const [a, b, c] = line;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) return line;
+      }
+      return null;
+    };
+
+    const goalReached = () => board[0] === "X" && board[1] === "X" && board[2] === "X";
+
+    const setNote = (text, kind) => {
+      if (!note) return;
+      note.textContent = text;
+      note.classList.toggle("is-success", kind === "success");
+    };
+
+    const render = () => {
+      cells.forEach((cell, i) => {
+        const value = board[i];
+        cell.textContent = value;
+        cell.dataset.mark = value.toLowerCase() || "empty";
+        cell.setAttribute(
+          "aria-label",
+          `${ROW_NAMES[Math.floor(i / 3)]}${COL_NAMES[i % 3]}，${value || "空"}`,
+        );
+      });
+      const win = over ? winnerLine() : null;
+      cells.forEach((cell, i) => cell.classList.toggle("is-win", !!win && win.includes(i)));
+
+      if (turnText) {
+        turnText.textContent = over ? `对局结束` : `轮到 ${player}`;
+        turnText.dataset.player = over ? "none" : player;
+      }
+      if (countText) countText.textContent = over ? result || "已结束" : `第 ${moves + 1} 手`;
+      if (startButton) startButton.textContent = "再来一局";
+      if (output) {
+        const tail = over ? `对局结果：${result}` : `轮到 ${player}。请输入行和列（0 到 2）：`;
+        output.textContent = boardText(board, tail);
+      }
+    };
+
+    const finish = (text, message) => {
+      over = true;
+      result = text;
+      lab.classList.add("is-over");
+      render();
+      say(message, text === "平局" ? "warn" : "success");
+      if (goalReached()) {
+        setNote("目标达成：X 在第一行连成三子。点「再来一局」可以再走一遍。", "success");
+      }
+    };
+
+    const place = (i) => {
+      if (over) {
+        say("对局已经结束。点「再来一局」重新开始。", "warn");
+        return;
+      }
+      if (board[i]) {
+        say("这个格子已经有棋子，换一个格子。", "warn");
+        return;
+      }
+      clearCoordError();
+      board[i] = player;
+      moves += 1;
+      const line = winnerLine();
+      if (line) {
+        finish(`${player} 获胜`, `${player} 连成三子，对局结束。`);
+        return;
+      }
+      if (board.every(Boolean)) {
+        finish("平局", "九个格子下满，没有三连，平局。");
+        return;
+      }
+      const previous = player;
+      player = player === "X" ? "O" : "X";
+      render();
+      if (coordInput) coordInput.value = "";
+      say(`${previous} 在${ROW_NAMES[Math.floor(i / 3)]}${COL_NAMES[i % 3]}落子，轮到 ${player}。`);
+    };
+
+    const start = () => {
+      board = EMPTY.slice();
+      player = "X";
+      moves = 0;
+      over = false;
+      result = "";
+      clearCoordError();
+      if (coordInput) coordInput.value = "";
+      lab.classList.remove("is-over");
+      render();
+      setNote("目标：让 X 在第一行连成三子。", "");
+      say("X 先手。点任意格子，或在下面按「行 列」落子。");
+      setFocus(0, false);
+    };
+
+    const setFocus = (i, doFocus) => {
+      focusIndex = (i + 9) % 9;
+      cells.forEach((cell, n) => {
+        cell.tabIndex = n === focusIndex ? 0 : -1;
+      });
+      if (doFocus) cells[focusIndex].focus();
+    };
+
+    boardEl.addEventListener("keydown", (event) => {
+      const row = Math.floor(focusIndex / 3);
+      const col = focusIndex % 3;
+      let next = null;
+      if (event.key === "ArrowRight") next = row * 3 + Math.min(col + 1, 2);
+      else if (event.key === "ArrowLeft") next = row * 3 + Math.max(col - 1, 0);
+      else if (event.key === "ArrowDown") next = Math.min(row + 1, 2) * 3 + col;
+      else if (event.key === "ArrowUp") next = Math.max(row - 1, 0) * 3 + col;
+      else if (event.key === "Home") next = row * 3;
+      else if (event.key === "End") next = row * 3 + 2;
+      if (next === null) return;
+      event.preventDefault();
+      setFocus(next, true);
+    });
+    boardEl.addEventListener("focusin", (event) => {
+      const index = cells.indexOf(event.target);
+      if (index >= 0) setFocus(index, false);
+    });
+
+    const hint = () => {
+      if (over) {
+        say("对局已经结束。点「再来一局」重新开始。", "warn");
+        return;
+      }
+      if (player === "X") {
+        const target = [0, 1, 2].find((c) => !board[c]);
+        if (target !== undefined) {
+          say(`X 下第 0 行第 ${target} 列：输入「0 ${target}」或点对应格子。`);
+        } else {
+          say("第一行已经下满但没有三连。点「再来一局」重新走。");
+        }
+        return;
+      }
+      const empty = board.findIndex((value, i) => !value && i >= 3);
+      const cell = empty >= 0 ? empty : board.findIndex((value) => !value);
+      say(`O 随便下一格，例如「${Math.floor(cell / 3)} ${cell % 3}」。`);
+    };
+
+    startButton.addEventListener("click", start);
+    if (hintButton) hintButton.addEventListener("click", hint);
+
+    if (coordToggle && coordForm && coordInput) {
+      coordToggle.addEventListener("click", () => {
+        const open = coordForm.hidden;
+        coordForm.hidden = !open;
+        coordToggle.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open) coordInput.focus();
+      });
+      coordForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const raw = coordInput.value.trim();
+        const match = raw.match(/^(\d)(?:\s*[,，]\s*|\s+)(\d)$/);
+        if (!match) {
+          showCoordError("格式不对：输入两个 0–2 的数字，用空格分开，例如 0 0。");
+          return;
+        }
+        const row = Number(match[1]);
+        const col = Number(match[2]);
+        if (row > 2 || col > 2) {
+          showCoordError("坐标超出棋盘：行列都只能是 0、1 或 2。");
+          return;
+        }
+        clearCoordError();
+        place(row * 3 + col);
+      });
+    }
+
+    start();
+  });
+})();
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/chengzhao-dev\.github\.io\/cpp-board-games");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../content/tictactoe/viewing-program.html" class="pagination-link" aria-label="程序结构">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">程序结构</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../content/tictactoe/04-game.html" class="pagination-link" aria-label="对局">
+        <span class="nav-page-text"><span class="chapter-title">对局</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/chengzhao-dev/cpp-board-games/blob/main/content/tictactoe/03-board.qmd" class="toc-action"><i class="bi bi-github"></i>查看代码</a></li></ul></div></div></div></footer></body></html>

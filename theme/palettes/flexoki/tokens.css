@@ -1,0 +1,156 @@
+/* ============================================================
+   Palette: flexoki · Flexoki Light / Dark 色值
+   结构尺度见 css/tokens.css；本文件只提供语义颜色。
+   官方页面色：亮纸 #FFFCF0、暗底 #100F0F。
+   链接按官方映射取 cy（亮 accent-600 #24837B、暗 accent-400 #3AA99F），
+   常态与正文同墨色，hover 才转为 cy；bl 只留给变量/属性。
+   ============================================================ */
+
+body {
+  /* Flexoki Light 页面令牌 */
+  --body-color: #100F0F;
+  /* 正文强调（strong）：与正文同一墨色，靠字重区分；Flexoki 的墨色本就不是纯黑。 */
+  --emphasis-color: #100F0F;
+  /* Flexoki Light 代码块色板；语义 token 由 Pandoc/Quarto 提供。 */
+  --code-bg: #F2F0E5;
+  --code-border: #DAD8CE;
+  --code-fg: #100F0F;
+  --code-title-bg: #E6E4D9;
+  --code-title-fg: #575653;
+  --line-num-color: #575653;
+  --inline-code-bg: rgba(16, 15, 15, 0.06);
+  --inline-code-fg: #100F0F;
+  --text-secondary: #6F6E69;
+  /* 链接常态=墨色（Tufte / 官方站点）；hover 才用 cy。 */
+  --link-color: #100F0F;
+  --link-hover-color: #24837B;
+  --link-underline: rgba(16, 15, 15, 0.38);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #24837B;
+  --table-border: #B7B5AC;
+  /* callout：编辑注，无填充；note 用中性灰，tip/warning/important/caution 用官方语义 accent。 */
+  --callout-note-border: #6F6E69;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #66800B;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #BC5215;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #5E409D;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #AF3029;
+  --callout-caution-bg: transparent;
+  --copy-btn-bg: #FFFCF0;
+  --copy-btn-border: #DAD8CE;
+  --scrollbar-thumb: #B7B5AC;
+  --selection-bg: rgba(187, 220, 206, 0.30);
+  --mark-bg: rgba(208, 162, 21, 0.28);
+  --sidebar-hover-bg: rgba(16, 15, 15, 0.04);
+  --sidebar-active-bg: rgba(36, 131, 123, 0.10);
+  --sidebar-fg: #6F6E69;
+  --accent: var(--action-color);
+  --navbar-bg: #FFFCF0;
+  --navbar-fg: #100F0F;
+  --navbar-muted: #6F6E69;
+  --navbar-border: #DAD8CE;
+  --navbar-input-bg: #F2F0E5;
+  --navbar-hover-bg: rgba(16, 15, 15, 0.04);
+  --navbar-secondary-bg: rgba(255, 252, 240, 0.88);
+  --dot-accent: #24837B;
+  --card-bg: transparent;
+  --card-border: #DAD8CE;
+  --overlay-scrim: rgba(0, 0, 0, 0.42);
+  /* 右目录当前项与侧栏一致：正文色加色条，不涂链接色 */
+  --toc-active: var(--body-color);
+  --page-bg: #FFFCF0;
+  --surface-raised: #F2F0E5;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(16, 15, 15, 0.04);
+  --line-hover-bg: rgba(36, 131, 123, 0.06);
+}
+
+body.quarto-dark {
+  /* Flexoki Dark 页面令牌 */
+  --body-color: #CECDC3;
+  /* 正文强调（strong）：比正文更亮一档的纸白 */
+  --emphasis-color: #FFFCF0;
+  /* Flexoki Dark 代码块色板，与页面明暗模式同步。 */
+  --code-bg: #1C1B1A;
+  --code-border: #343331;
+  --code-fg: #CECDC3;
+  --code-title-bg: #282726;
+  --code-title-fg: #B7B5AC;
+  --line-num-color: #878580;
+  --inline-code-bg: rgba(206, 205, 195, 0.08);
+  --inline-code-fg: #CECDC3;
+  --text-secondary: #9F9D96;
+  /* 链接常态=正文纸色；hover 才用 cy-400。 */
+  --link-color: #CECDC3;
+  --link-hover-color: #3AA99F;
+  --link-underline: rgba(206, 205, 195, 0.35);
+  --text-link: var(--link-color);
+  --text-underline: var(--link-underline);
+  --action-color: #3AA99F;
+  --table-border: #575653;
+  --callout-note-border: #9F9D96;
+  --callout-note-bg: transparent;
+  --callout-tip-border: #879A39;
+  --callout-tip-bg: transparent;
+  --callout-warning-border: #DA702C;
+  --callout-warning-bg: transparent;
+  --callout-important-border: #8B7EC8;
+  --callout-important-bg: transparent;
+  --callout-caution-border: #D14D41;
+  --callout-caution-bg: transparent;
+  /* 复制按钮边框：半透明 --text-secondary——按钮底与代码块底同为 #1C1B1A */
+  --copy-btn-bg: #1C1B1A;
+  --copy-btn-border: rgba(183, 181, 172, 0.4);
+  --scrollbar-thumb: #575653;
+  --selection-bg: rgba(30, 95, 91, 0.30);
+  --mark-bg: rgba(208, 162, 21, 0.28);
+  --sidebar-hover-bg: rgba(206, 205, 195, 0.06);
+  --sidebar-active-bg: rgba(58, 169, 159, 0.16);
+  --sidebar-fg: #9F9D96;
+  --accent: var(--action-color);
+  --navbar-bg: #100F0F;
+  --navbar-fg: #CECDC3;
+  --navbar-muted: #9F9D96;
+  --navbar-border: #343331;
+  --navbar-input-bg: #1C1B1A;
+  --navbar-hover-bg: rgba(206, 205, 195, 0.07);
+  --navbar-secondary-bg: rgba(16, 15, 15, 0.90);
+  --dot-accent: #3AA99F;
+  --card-bg: transparent;
+  --card-border: #343331;
+  --overlay-scrim: rgba(0, 0, 0, 0.62);
+  /* 右目录当前项与侧栏一致：正文色加色条，不涂链接色 */
+  --toc-active: var(--body-color);
+  --page-bg: #100F0F;
+  --surface-raised: #1C1B1A;
+  --sidebar-bg: transparent;
+  --line-num-bg: rgba(206, 205, 195, 0.05);
+  --line-hover-bg: rgba(58, 169, 159, 0.08);
+  color-scheme: dark;
+}
+
+@media (prefers-contrast: more) {
+  body {
+    --body-color: #000000;
+    --emphasis-color: #000000;
+    --link-color: #000000;
+    --code-border: #878580;
+    --card-border: #878580;
+    --navbar-border: #878580;
+  }
+
+  body.quarto-dark {
+    --body-color: #FFFCF0;
+    --code-fg: #FFFCF0;
+    --inline-code-fg: #FFFCF0;
+    --emphasis-color: #FFFCF0;
+    --link-color: #FFFCF0;
+    --code-border: #6F6E69;
+    --card-border: #6F6E69;
+    --navbar-border: #6F6E69;
+  }
+}

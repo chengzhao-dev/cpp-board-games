@@ -1,0 +1,719 @@
+/* dsh-quarto-book Quarto 主题 · 顶部导航（navbar / 搜索 / 面包屑；自 common.css 拆分） */
+
+/* ---------- 顶部 navbar（品牌栏 + 次级导航） ---------- */
+/* Quarto 书籍启用 navbar 后，#quarto-header 内含两层：
+   nav.navbar（品牌 + 搜索 + 主题切换）与 nav.quarto-secondary-nav（侧栏开关 + 面包屑）。
+   两层共用底色，整体视为一个 header：只在 #quarto-header 的底边画唯一一条通栏发丝线，
+   让它横贯左栏、正文、右目录三栏；品牌行与面包屑行之间不加线。 */
+#quarto-header {
+  background-color: var(--navbar-bg);
+  /* 全站唯一的通栏分隔线：三栏共用同一条，栏与栏之间不再用竖线切开。
+     画在 header 上而不是次级导航上，侧栏列上方才不会断线，
+     也不会和窄屏侧栏自带的底边叠成两条。 */
+  border-bottom: 1px solid var(--card-border);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  /* 注入 Bootstrap 变量，使 navbar 内组件在明暗两态都改用我们的 token
+     （#quarto-header 为 ID 选择器，优先级高于 Quarto 的 [data-bs-theme="dark"]） */
+  --bs-body-bg: var(--navbar-bg);
+  --bs-body-color: var(--navbar-fg);
+  --bs-border-color: var(--navbar-border);
+  --bs-emphasis-color: var(--navbar-fg);
+  --bs-secondary-color: var(--navbar-muted);
+}
+nav.navbar.navbar-expand-lg {
+  background-color: var(--navbar-bg);
+  min-height: 4rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+/* 品牌左对齐（Quarto 默认 mx-auto 居中）；顶栏用 flex + order 固定顺序：品牌 | 弹性空隙 | 搜索框 | 主题切换（最右） */
+#quarto-header .navbar-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.navbar-brand-container {
+  order: 1;
+  margin-left: 0 !important;
+  margin-right: auto;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+#quarto-search {
+  position: relative;
+  order: 2;
+  margin-left: 0;
+  flex: 0 1 auto;
+}
+.quarto-navbar-tools.tools-end {
+  order: 3;
+  margin-left: 0 !important;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+/* 控件顺序：分段控件在明暗圆钮左侧（阅读顺序：先选色板、再切明暗）。
+   Quarto 默认把明暗钮排在分段控件前，这里只挪明暗钮，源码链接图标仍在前。 */
+.quarto-navbar-tools.tools-end .quarto-color-scheme-toggle {
+  order: 1;
+}
+/* ---------- 色板切换：下拉菜单 ----------
+   Flexoki / Solarized / Hill Light 三选一。早先是一枚三段胶囊，Hill Light 出现后
+   又要并排一段四时辰，顶栏右端被挤到近 190px，窄屏只能把名字全裁掉。改成
+   「当前色板 + 菜单」：闭合态一个色点加名字，展开后三套一次看全、选中项带勾。
+   色点是三套色板各自的强调色，必须写死——菜单要同时显示三套，而激活态令牌互斥。 */
+.palette-picker {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.25rem;
+}
+.palette-menu {
+  position: relative;
+}
+.palette-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2rem;
+  padding: 0 0.45rem 0 0.55rem;
+  background-color: var(--navbar-input-bg);
+  color: var(--navbar-muted);
+  border: 1px solid var(--navbar-border);
+  border-radius: 999px;
+  font-family: var(--ui-font);
+  font-size: 0.75rem;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+.palette-trigger:hover,
+.palette-trigger[aria-expanded="true"] {
+  color: var(--navbar-fg);
+}
+.palette-trigger:focus-visible {
+  /* 用强调色而不是 --link-color：Flexoki 的链接是墨色下划线文本，2px 墨环压在胶囊上
+     像误触的浏览器默认框；强调色与同排控件、选中态同一套语言。 */
+  outline: 2px solid var(--action-color);
+  outline-offset: 2px;
+}
+.palette-swatch {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background-color: var(--swatch, var(--navbar-muted));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+}
+.palette-caret {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  opacity: 0.65;
+  transition: transform 0.15s ease;
+}
+.palette-trigger[aria-expanded="true"] .palette-caret {
+  transform: rotate(180deg);
+}
+.palette-menu-list {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 1060;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 10.5rem;
+  padding: 0.3rem;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14);
+}
+.palette-menu-list[hidden] {
+  display: none;
+}
+.palette-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background-color: transparent;
+  color: var(--body-color);
+  font-family: var(--ui-font);
+  font-size: 0.8125rem;
+  line-height: 1;
+  text-align: left;
+  cursor: pointer;
+}
+.palette-menu-item.is-active,
+.palette-menu-item:hover {
+  background-color: var(--navbar-hover-bg);
+}
+.palette-check {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
+  color: var(--action-color);
+  opacity: 0;
+}
+.palette-menu-item[aria-selected="true"] .palette-check {
+  opacity: 1;
+}
+.palette-trigger[data-key="flexoki"],
+.palette-menu-item[data-key="flexoki"] {
+  --swatch: #24837b;
+}
+.palette-trigger[data-key="solarized"],
+.palette-menu-item[data-key="solarized"] {
+  --swatch: #268bd2;
+}
+.palette-trigger[data-key="hill-light"],
+.palette-menu-item[data-key="hill-light"] {
+  --swatch: #2d6a66;
+}
+/* ---------- 时辰切换（Hill Light）：与色板同一胶囊，只在 Hill Light 下出现 ----------
+   Hill Light 的明暗由时辰决定（夜月是唯一暗色时辰），所以这种色板下让 Quarto 的
+   明暗圆钮让位，避免两套开关同时出现、互相看不出谁生效。 */
+.palette-picker[hidden] {
+  display: none;
+}
+.mode-picker .palette-segment {
+  display: inline-flex;
+  align-items: stretch;
+  height: 2rem;
+  padding: 2px;
+  gap: 2px;
+  background-color: var(--navbar-input-bg);
+  border: 1px solid var(--navbar-border);
+  border-radius: 999px;
+}
+.mode-picker .palette-segment-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 999px;
+  background-color: transparent;
+  color: var(--navbar-muted);
+  font-family: var(--ui-font);
+  font-size: 0.75rem;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.12s ease, background-color 0.12s ease;
+}
+.mode-picker .palette-segment-option svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+.mode-picker .palette-segment-option:hover {
+  color: var(--navbar-fg);
+}
+.mode-picker .palette-segment-option[aria-checked="true"] {
+  background-color: var(--navbar-hover-bg);
+  color: var(--navbar-fg);
+}
+.mode-picker .palette-segment-option:focus-visible {
+  outline: 2px solid var(--action-color);
+  outline-offset: 2px;
+}
+html[data-palette="hill-light"] #quarto-header .quarto-navbar-tools .quarto-color-scheme-toggle {
+  display: none;
+}
+/* 窄屏先收控件本身：色板只留色点与箭头、四时只留图标，选中态仍是填色胶囊。 */
+@media (max-width: 575.98px) {
+  .palette-picker {
+    margin: 0 0.05rem;
+  }
+  .palette-trigger {
+    padding: 0 0.4rem;
+  }
+  .palette-trigger-label {
+    display: none;
+  }
+  .mode-picker .palette-segment-option {
+    /* 图标态是触摸目标：低于 24×24 就不合 WCAG 2.5.8 */
+    min-width: 1.5rem;
+    min-height: 1.75rem;
+    padding: 0 0.35rem;
+  }
+  .palette-menu-item {
+    /* 手机上菜单项就是触摸目标，抬到 36px 一行 */
+    min-height: 2.25rem;
+    padding: 0.55rem 0.5rem;
+  }
+  .mode-picker .palette-mode-label {
+    display: none;
+  }
+}
+/* 420 以下标题已隐藏，再收掉仓库源图标：手机上没有「看源文件」的使用场景，
+   腾出的宽度留给色板与四时，让搜索留在同一行而不是掉到第二行。 */
+@media (max-width: 419.98px) {
+  .quarto-navbar-tools.tools-end > .quarto-navigation-tool {
+    display: none;
+  }
+}
+.navbar-brand,
+.navbar-title {
+  color: var(--navbar-fg);
+  /* 与内容标题同一套黑体：顶栏书名是「站点标题」，不是正文，走 --heading-font */
+  font-family: var(--heading-font);
+  font-weight: 600;
+  font-size: 1.125rem;
+  letter-spacing: 0;
+}
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 2rem;
+  /* 图标与标题之间留出一枚字距的呼吸，避免书标贴着“C” */
+  gap: 0.5rem;
+}
+/* 品牌图标：顶部栏使用与 favicon 同一枚「打开的书」，纯黑剪影由 mask 取 --navbar-fg。
+   图形墨迹占画布约四分之三，尺寸取标题字号的 1.11 倍，让墨迹略高于汉字字面高度；
+   CJK 字形的墨迹中心比行框中心高约 0.17rem，用 margin-bottom 把图标抬到同一视觉基线，
+   使图标底边与标题基线对齐，避免图标看上去比标题“坐得更低”。
+   色板切换只换 mask 源，轮廓本身两套相同。 */
+.navbar-brand::before {
+  content: "";
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 auto;
+  margin-right: 0;
+  margin-bottom: 0.2rem;
+  background-color: var(--navbar-fg);
+  -webkit-mask: url("../palettes/flexoki/brand-mark.svg") center / contain no-repeat;
+  mask: url("../palettes/flexoki/brand-mark.svg") center / contain no-repeat;
+}
+html[data-palette="solarized"] .navbar-brand::before {
+  -webkit-mask: url("../palettes/solarized/brand-mark.svg") center / contain no-repeat;
+  mask: url("../palettes/solarized/brand-mark.svg") center / contain no-repeat;
+}
+.navbar-brand:hover {
+  color: var(--navbar-fg);
+  opacity: 0.85;
+}
+.navbar-brand:focus-visible {
+  color: var(--navbar-fg);
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+/* 顶栏导航文本：紧凑 14px / 500，hover 下划线（offset 4px，docs 风） */
+.navbar-expand-lg .navbar-nav .nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--ui-font);
+}
+.navbar-expand-lg .navbar-nav .nav-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+  text-decoration-thickness: 1px;
+}
+/* 搜索：Quarto 1.10 的 overlay 搜索由 Algolia 在运行时生成
+   #quarto-search > .aa-Autocomplete > button.aa-DetachedSearchButton，
+   按钮内部已有一枚 svg.aa-SubmitIcon。不要再给 #quarto-search 画伪元素，
+   否则同一位置会出现两个放大镜。这里只把内置按钮改成顶栏里的安静图标键。 */
+#quarto-search .aa-Autocomplete {
+  display: inline-flex;
+  align-items: center;
+}
+#quarto-search .aa-DetachedSearchButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--navbar-muted);
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+}
+#quarto-search .aa-DetachedSearchButton:hover {
+  background-color: var(--navbar-hover-bg);
+  color: var(--navbar-fg);
+}
+#quarto-search .aa-DetachedSearchButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#quarto-search .aa-DetachedSearchButtonIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+#quarto-search .aa-SubmitIcon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+/* Quarto 的 `.navbar #quarto-search.type-overlay .aa-Autocomplete svg.aa-SubmitIcon`
+   带 3 个类名 + 2 个类型选择器，特异性高于上面的单类规则，会把图标钉回 26px
+   并染成 darkly 的浅色。用同等特异性、后加载的规则覆盖成 18px 的顶栏静音色。 */
+.navbar #quarto-search.type-overlay .aa-Autocomplete svg.aa-SubmitIcon {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  color: var(--navbar-muted) !important;
+  fill: currentColor;
+}
+/* 搜索浮层：scrim + 纸面容器，输入与结果全部走令牌，暗色下不再是白底黑字 */
+.aa-DetachedOverlay {
+  background: var(--overlay-scrim);
+}
+.aa-DetachedContainer {
+  background: var(--page-bg);
+  color: var(--body-color);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+.aa-DetachedContainer--modal {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  max-width: 46rem;
+}
+/* 手机搜索条贴顶：Quarto 的桌面 top:100px 在窄屏会把搜索条压在正文中部；
+   这里收掉左右圆角，做成一条通栏搜索栏。 */
+@media (max-width: 575.98px) {
+  .aa-DetachedContainer--modal {
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+}
+/* Quarto 按 darkly 编译了浮层：容器 #222、表单 #222、输入 #2B2B2A。
+   这里用 `.aa-DetachedContainer` 作用域把表单、面板、结果全部拉回纸面令牌。 */
+.aa-DetachedContainer .aa-DetachedFormContainer {
+  background-color: var(--page-bg);
+  border-bottom: 1px solid var(--card-border);
+}
+.aa-DetachedContainer .aa-Form {
+  background: transparent;
+  border: 0;
+}
+.aa-DetachedContainer .aa-Input {
+  background: transparent;
+  color: var(--body-color);
+  font-family: var(--ui-font);
+  font-size: 1rem;
+}
+/* Quarto 的输入框规则是 4 个类名（.aa-DetachedFormContainer .aa-Form
+   .aa-InputWrapper .aa-Input），暗色版把文字钉成 #2B2B2A、背景钉成浅灰。
+   用同等长度的选择器把输入框拉回纸面。 */
+.aa-DetachedContainer .aa-DetachedFormContainer .aa-Form .aa-InputWrapper .aa-Input {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--body-color) !important;
+  box-shadow: none;
+  border: 0;
+}
+.aa-DetachedContainer .aa-DetachedFormContainer .aa-Form .aa-InputWrapper .aa-Input::placeholder {
+  color: var(--text-secondary) !important;
+  opacity: 1;
+}
+/* 去掉浏览器默认的蓝色焦点环，改由表单底边变动作色表示焦点。 */
+.aa-DetachedContainer .aa-DetachedFormContainer .aa-Form .aa-InputWrapper .aa-Input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.aa-DetachedContainer .aa-DetachedFormContainer {
+  transition: border-color var(--transition);
+}
+.aa-DetachedContainer .aa-DetachedFormContainer:focus-within {
+  border-bottom-color: var(--action-color);
+}
+.aa-DetachedContainer .aa-DetachedCancelButton {
+  flex: 0 0 auto;
+  padding: 0 0.25em;
+  margin-left: 0.4em;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+}
+.aa-DetachedContainer .aa-SubmitButton,
+.aa-DetachedContainer .aa-ClearButton,
+.aa-DetachedContainer .aa-DetachedCancelButton {
+  color: var(--text-secondary);
+  font-family: var(--ui-font);
+}
+.aa-DetachedContainer .aa-SubmitButton:hover,
+.aa-DetachedContainer .aa-ClearButton:hover,
+.aa-DetachedContainer .aa-DetachedCancelButton:hover {
+  color: var(--body-color);
+}
+.aa-DetachedContainer .aa-Panel,
+.aa-DetachedContainer .aa-PanelLayout,
+.aa-DetachedContainer .aa-List {
+  background: var(--page-bg);
+  color: var(--body-color);
+}
+.aa-DetachedContainer .aa-Panel {
+  border: 0;
+  box-shadow: none;
+}
+.aa-DetachedContainer .aa-Item .search-result-doc {
+  border-top-color: var(--card-border);
+}
+.aa-DetachedContainer .aa-Item {
+  border-radius: 0;
+}
+.aa-DetachedContainer .aa-Item .search-item {
+  background-color: transparent;
+  border-color: var(--card-border);
+  color: var(--body-color);
+}
+.aa-DetachedContainer li.aa-Item[aria-selected="true"] .search-item,
+.aa-DetachedContainer li.aa-Item[aria-selected="true"] .search-item .search-result-section,
+.aa-DetachedContainer li.aa-Item[aria-selected="true"] .search-item .search-result-text,
+.aa-DetachedContainer li.aa-Item[aria-selected="true"] .search-item .search-result-title-container,
+.aa-DetachedContainer li.aa-Item[aria-selected="true"] .search-item .search-result-text-container {
+  background-color: var(--surface-raised);
+  color: var(--body-color);
+}
+.aa-DetachedContainer li.aa-Item[aria-selected="false"] .search-item,
+.aa-DetachedContainer li.aa-Item[aria-selected="false"] .search-item .search-result-section,
+.aa-DetachedContainer li.aa-Item[aria-selected="false"] .search-item .search-result-text,
+.aa-DetachedContainer li.aa-Item[aria-selected="false"] .search-item .search-result-title-container,
+.aa-DetachedContainer li.aa-Item[aria-selected="false"] .search-item .search-result-text-container {
+  background-color: transparent;
+  color: var(--body-color);
+}
+.aa-DetachedContainer .aa-Item .search-item mark.search-match {
+  background-color: var(--mark-bg);
+  color: inherit;
+}
+.aa-DetachedContainer .aa-SourceHeader .search-result-header {
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
+}
+.aa-DetachedContainer .aa-ItemContentTitle {
+  color: var(--body-color);
+}
+.aa-DetachedContainer .aa-ItemContentDescription {
+  color: var(--text-secondary);
+}
+/* 旧版搜索输入（非 overlay）若被启用，同样走令牌 */
+#quarto-search input,
+.quarto-navbar-search input {
+  background-color: var(--navbar-input-bg);
+  border: 1px solid var(--navbar-border);
+  border-radius: var(--radius-sm);
+  color: var(--navbar-fg);
+  height: 1.875rem;
+  padding: 0 0.6rem;
+  font-size: 0.8125rem;
+}
+#quarto-search input:focus,
+.quarto-navbar-search input:focus {
+  border-color: var(--accent);
+  box-shadow: none;
+}
+#quarto-search input::placeholder,
+.quarto-navbar-search input::placeholder {
+  color: var(--navbar-muted);
+  opacity: 1;
+}
+/* Quarto 会在 body 顶部插入一个空的结果容器；没有结果时不要它画出 1px 边框 */
+#quarto-search-results {
+  background-color: transparent;
+  border: 0;
+  color: var(--body-color);
+}
+#quarto-search-results .aa-Panel {
+  background-color: var(--page-bg);
+  border: 1px solid var(--card-border);
+}
+#quarto-search-results a {
+  color: var(--text-link);
+}
+@media (max-width: 767.98px) {
+  #quarto-search input,
+  .quarto-navbar-search input {
+    width: clamp(6rem, 28vw, 8rem);
+    font-size: 0.75rem;
+  }
+
+  .navbar-brand-container {
+    overflow: hidden;
+  }
+
+  .navbar-brand,
+  .navbar-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 420px) {
+  #quarto-search input,
+  .quarto-navbar-search input {
+    width: 6rem;
+  }
+
+  /* 只剩书标：书标放到 1.375rem 补回丢掉标题后的视觉重量，并撤掉桌面端那条
+     0.2rem 抬升——它原本用来对齐汉字基线，没有标题时反而把图标顶高。 */
+  .navbar-brand {
+    position: relative;
+  }
+  .navbar-brand::before {
+    width: 1.375rem;
+    height: 1.375rem;
+    margin-bottom: 0;
+  }
+
+  /* 书名改成视觉隐藏而不是 display:none：这枚链接仍是「回到首页」，
+     屏幕阅读器要能读出书名，否则书标就是一个没有名字的链接。 */
+  .navbar-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+/* 主题切换：可点区域 44px，图标仍是 16px */
+#quarto-header .quarto-color-scheme-toggle {
+  color: var(--navbar-fg);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.125rem;
+}
+#quarto-header .quarto-color-scheme-toggle:hover {
+  color: var(--navbar-fg);
+  background-color: var(--navbar-hover-bg);
+}
+/* 换了 Quarto 自带的图标：它塞的是一枚「开关」位图（bi-toggle-off/on 的
+   data-URI background-image），填充色写死在 SVG 里，和我们这套描边图标不是
+   一味，紧挨着色板胶囊时两枚圆角疙瘩还容易看混。改画一枚对比圆盘：
+   ::before 只做遮罩，颜色吃 currentColor，明暗两种顶栏都自动适配；
+   夜间（.alternate）旋转半圈，实心那半换边，点一下能看出翻面了。 */
+#quarto-header .quarto-color-scheme-toggle .bi::before {
+  content: "";
+  width: 1rem;
+  height: 1rem;
+  background-image: none;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.2' fill='none' stroke='%23000' stroke-width='1.2'/%3E%3Cpath d='M8 2.4a5.6 5.6 0 0 0 0 11.2z' fill='%23000'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.2' fill='none' stroke='%23000' stroke-width='1.2'/%3E%3Cpath d='M8 2.4a5.6 5.6 0 0 0 0 11.2z' fill='%23000'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform 0.18s ease;
+}
+#quarto-header .quarto-color-scheme-toggle.alternate .bi::before {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  #quarto-header .quarto-color-scheme-toggle .bi::before {
+    transition: none;
+  }
+}
+/* 次级导航：gitcn 风半透明毛玻璃（sticky 由 headroom 提供）。
+   底边线不画在这里：它只跟着面包屑行走，会在侧栏列上方断开，
+   并可能与窄屏侧栏的底边叠成两条；唯一那条线归 #quarto-header 所有。 */
+nav.quarto-secondary-nav {
+  background-color: var(--navbar-secondary-bg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-bottom: 0;
+  min-height: 2.75rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+/* 次级导航叠在正文底色上：汉堡按钮用正文色令牌，明暗自动适配 */
+nav.quarto-secondary-nav .quarto-btn-toggle {
+  color: var(--body-color);
+}
+/* 滚动后不另加阴影：顶栏/次级导航仅靠 1px 发丝线分隔（docs 风） */
+.quarto-page-breadcrumbs .breadcrumb,
+.quarto-page-breadcrumbs .breadcrumb-item,
+.quarto-page-breadcrumbs .breadcrumb-item a {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+.quarto-page-breadcrumbs .breadcrumb-item a:hover {
+  color: var(--body-color);
+  text-decoration: none;
+}
+/* 修「>」与前后文字不在一条水平线：条目做成 flex 行（清掉 Quarto 的 .33em padding）；
+   分隔符不用 ">" 字符——Segoe UI 的 ">" 在字框内光学偏高（盒居中≠光学居中，CJK 字形
+   偏满放大观感），改用 SVG chevron（mask + currentColor，与常见文档站一致）几何居中、
+   与字体度量彻底解耦；箭头左右等距：左距 = 本元素 margin-left，右距 = li 的 flex gap；
+   ol 自身 margin 清零，标题块 nav→标题的间距由 .quarto-title-breadcrumbs 统一控制 */
+.quarto-page-breadcrumbs .breadcrumb {
+  align-items: center;
+  margin-bottom: 0;
+}
+.quarto-page-breadcrumbs .breadcrumb-item,
+.quarto-page-breadcrumbs .breadcrumb-item + .breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0;
+  line-height: 1.5;
+}
+.quarto-page-breadcrumbs .breadcrumb-item + .breadcrumb-item::before {
+  content: "";
+  float: none;
+  display: block;
+  flex: 0 0 auto;
+  width: 0.5em;
+  height: 0.5em;
+  margin: 0 0 0 0.4em; /* 左右对称：左距 = 本 margin，右距 = li 的 flex gap 0.4em，箭头光学居中 */
+  padding: 0;
+  background-color: currentColor;
+  opacity: 0.55;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+/* 窄屏顶栏：汉堡按钮与面包屑垂直居中 */
+nav.quarto-secondary-nav .container-fluid.d-flex {
+  align-items: center;
+}
+/* 豁免正文列表节奏（真凶修复）：面包屑本质是 li 列表，会被下方
+   #quarto-document-content li + li 的 0.625rem 上边距垫低，导致第二项
+   整体下沉约 10px、「不在一条水平线上」；此处清零（ID+class 特异性必胜） */
+#quarto-document-content .breadcrumb li + li {
+  margin-top: 0;
+}
+/* 次级导航里的重复搜索按钮隐藏（品牌栏已含搜索框） */
+nav.quarto-secondary-nav .quarto-search-button {
+  display: none;
+}
+/* 首页与部首页在次级导航里只有一项（书名或部名），紧挨顶栏品牌又说一遍；
+   它也说不出“书内位置”，故只留侧栏开关，让次级导航只承担章节轨迹。 */
+nav.quarto-secondary-nav .quarto-page-breadcrumbs ol.breadcrumb:has(> li:only-child) {
+  display: none;
+}
+/* 宽屏只隐藏次级导航里的面包屑（仅留汉堡）；标题块面包屑桌面端显示、与标题同栏左对齐，
+   窄屏由 Quarto 生成的 d-none 自动隐藏（改显次级导航实例） */
+@media (min-width: 992px) {
+  nav.quarto-secondary-nav .quarto-page-breadcrumbs {
+    display: none;
+  }
+}
