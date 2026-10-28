@@ -1,7 +1,7 @@
 /// @file board.cpp
 /// @brief 棋盘格子的读写与三连、平局判定。
 ///
-/// 写入只改目标棋盘格子；胜负判定与三连推演共用一张八条线表。
+/// 写入只改目标棋盘格子；胜负判定与推演共用一张八条线表。
 
 #include "board.h"
 
@@ -25,6 +25,10 @@ constexpr std::array<std::array<CellPosition, 3>, 8> kLines{{
     {{{.row = 0, .col = 2}, {.row = 1, .col = 1}, {.row = 2, .col = 0}}},  // 反对角线
 }};
 
+Board::Board() noexcept {
+  Clear();
+}
+
 bool Board::IsInRange(CellPosition position) noexcept {
   return (position.row >= 0 && position.row < kBoardRows) &&
          (position.col >= 0 && position.col < kBoardCols);
@@ -43,18 +47,6 @@ bool Board::IsFull() const noexcept {
                               [](CellType cell_type) { return cell_type == CellType::kEmpty; });
 }
 
-bool Board::IsGameOver() const {
-  return IsWin() || IsDraw();
-}
-
-bool Board::IsWin() const {
-  return GetWinner().has_value();
-}
-
-bool Board::IsDraw() const {
-  return IsFull() && !IsWin();
-}
-
 CellType Board::GetCellType(CellPosition position) const {
   if (!IsInRange(position)) {
     throw std::out_of_range{std::format(
@@ -66,59 +58,74 @@ CellType Board::GetCellType(CellPosition position) const {
 }
 
 std::optional<CellType> Board::GetWinner() const {
+  // 先查 X：X 先手，双方不可能同时成线，命中即可返回。
   if (HasLine(CellType::kX)) {
     return CellType::kX;
   }
+
+  // X 没有成线时再查 O，此时 O 成线也不可能是双方同时成线。
   if (HasLine(CellType::kO)) {
     return CellType::kO;
   }
+
   return std::nullopt;
 }
 
-bool Board::PlaceCell(CellPosition position, CellType cell_type) {
-  /// 越界或写入空类型时直接拒绝，不碰数组。
-  if (!IsInRange(position) || cell_type == CellType::kEmpty) {
-    return false;
+PlaceCellResult Board::CheckPlaceable(CellPosition position, CellType cell_type) const {
+  // 坐标越界时棋盘外没有格子可写，直接拒绝。
+  if (!IsInRange(position)) {
+    return PlaceCellResult::kOutOfRange;
   }
 
-  /// 已确认坐标在界内；目标棋盘格子已有棋子时同样不覆盖。
-  CellType& cell = cells_.at(position.row).at(position.col);
-  if (cell != CellType::kEmpty) {
-    return false;
+  // 空类型表示“没有棋子”，不能作为一次落子写进棋盘。
+  if (cell_type == CellType::kEmpty) {
+    return PlaceCellResult::kEmptyCellType;
   }
 
-  /// 越界、空类型与已占都已在赋值前返回，走到这里棋盘保持原样。
-  cell = cell_type;
-  return true;
+  // 目标格已经有棋子时不能覆盖，否则会改掉已有对局。
+  if (!IsCellEmpty(position)) {
+    return PlaceCellResult::kOccupied;
+  }
+
+  return PlaceCellResult::kSuccess;
+}
+
+PlaceCellResult Board::PlaceCell(CellPosition position, CellType cell_type) {
+  // 先只做校验，保证被拒的落子不会改动棋盘。
+  const PlaceCellResult check = CheckPlaceable(position, cell_type);
+  if (check != PlaceCellResult::kSuccess) {
+    return check;
+  }
+
+  // 校验已通过，写入不会失败。
+  cells_.at(position.row).at(position.col) = cell_type;
+  return PlaceCellResult::kSuccess;
 }
 
 void Board::Clear() noexcept {
-  /// 整体赋回默认值，九个棋盘格子一起恢复为空。
-  cells_ = {};
+  std::ranges::fill(cells_ | std::views::join, CellType::kEmpty);
 }
 
-bool Board::IsLineComplete(CellPosition position, CellType cell_type) const {
-  /// 拒绝条件与 PlaceCell 相同：越界、空类型、目标棋盘格子已有棋子。
-  if (!IsInRange(position) || cell_type == CellType::kEmpty) {
-    return false;
-  }
-  if (cells_.at(position.row).at(position.col) != CellType::kEmpty) {
-    return false;
+WinPreviewResult Board::PreviewWin(CellPosition position, CellType cell_type) const {
+  // 先复用落子校验：不可落子的位置不进入成线推演。
+  if (CheckPlaceable(position, cell_type) != PlaceCellResult::kSuccess) {
+    return WinPreviewResult::kInvalidPlace;
   }
 
-  /// 候选坐标视为已放入该类型，其余棋盘格子照常读取。
+  // 候选坐标视为已放入该类型，其余棋盘格子照常读取。
   const auto matches = [&](CellPosition cell) {
     return cell == position || cells_.at(cell.row).at(cell.col) == cell_type;
   };
 
-  /// 先找包含候选坐标的那条线，再确认整条线都匹配。
-  return std::ranges::any_of(kLines, [&](const auto& line) {
+  // 只检查包含候选坐标的那条线：其他线不受这一手影响。
+  const bool completes = std::ranges::any_of(kLines, [&](const auto& line) {
     return std::ranges::find(line, position) != line.end() && std::ranges::all_of(line, matches);
   });
+  return completes ? WinPreviewResult::kWouldWin : WinPreviewResult::kWouldNotWin;
 }
 
 bool Board::HasLine(CellType cell_type) const {
-  /// 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。
+  // 逐格比较棋盘格子类型；不用编号求和，和相等不代表整条线都是同一种棋子。
   return std::ranges::any_of(kLines, [&](const auto& line) {
     return std::ranges::all_of(line, [&](CellPosition position) {
       return cells_.at(position.row).at(position.col) == cell_type;

@@ -2,11 +2,11 @@
 title: "对局"
 ---
 
-一局棋从空棋盘开始，落子、换手与终局都由 `Game` 记录。`Game` 不判断胜负：它先检查这一手能不能下，再写进 [棋盘](03-board.qmd) 的 `Board`，最后按棋盘返回的结果更新自己。接口在 [game.h][04-game-h]，实现在 [game.cpp][04-game-cpp]。
+一局棋从空棋盘开始，落子、换手与终局都由 `Game` 记录。`Game` 不自己扫描三连：它检查这一手能不能下，写进 [棋盘](03-board.qmd) 的 `Board`，再按棋盘返回的胜负与满盘状态更新自己。接口在 [game.h][04-game-h]，实现在 [game.cpp][04-game-cpp]。
 
 ## 对局类型
 
-对局状态随落子变化，玩家、结果和落子记录分别用 `Player`、`GameResult` 与 `Move` 表示。
+对局状态随落子变化，玩家、落子记录和结果分别用 `Player`、`Move` 与 `GameResult` 表示。
 
 ### 对局玩家
 
@@ -20,8 +20,7 @@ enum class Player : std::uint8_t {
 };
 ```
 
-棋盘接收格子类型，写入前要把玩家转换为对应的格子类型。`PlayerToCellType` 由对局玩家得到应写入的格子类型：
-
+棋盘接收格子类型，写入前要把玩家转换为格子类型。落子时，`TryPlace` 用它决定写入哪类棋子；判胜时，`JudgeAfterPlace` 用它把刚落子的玩家与棋盘上的棋子类型对上：
 ```{.cpp filename="game.h"}
 /// 由对局玩家得到应写入的棋盘格子类型。
 ///
@@ -33,9 +32,7 @@ constexpr CellType PlayerToCellType(Player player) {
 }
 ```
 
-三个转换各回答一个问题：落子写什么、下一步轮到谁、谁获胜记成什么。它们都写成 `constexpr`，编译期就能求值。
-
-落子成功后轮到对手。`PlayerToOpponent` 由当前玩家得到对手：
+落子成功后轮到对手。`TryPlace` 换手时用它取得对手：
 
 ```{.cpp filename="game.h"}
 /// 由对局玩家得到对手。
@@ -46,7 +43,7 @@ constexpr Player PlayerToOpponent(Player player) {
 }
 ```
 
-获胜时要把玩家转换为对局结果。`PlayerToWinResult` 由对局玩家得到该玩家获胜时的对局结果：
+获胜时要把玩家转换为对局结果。`JudgeAfterPlace` 用它填上胜方：
 
 ```{.cpp filename="game.h"}
 /// 由对局玩家得到该玩家获胜时的对局结果。
@@ -56,6 +53,8 @@ constexpr GameResult PlayerToWinResult(Player player) {
   return player == Player::kCross ? GameResult::kCrossWin : GameResult::kNoughtWin;
 }
 ```
+
+三个转换各回答一个问题：落子写什么、下一步轮到谁、谁获胜记成什么。它们都写成 `constexpr`，编译期就能求值。
 
 ### 落子与成败
 
@@ -97,9 +96,9 @@ enum class GameResult : std::uint8_t {
 };
 ```
 
-还没落子时，结果是进行中。任一名玩家达成三连，对局分出胜负；棋盘下满而没有人达成三连，是平局。
+任一名玩家达成三连，对局分出胜负；棋盘下满而没有人达成三连，是平局。
 
-`GameResult` 的四个值覆盖进行中、X 胜、O 胜和平局。胜负名沿用 `Player::kCross`、`Player::kNought`，不再另造 `kXWin`、`kOWin`，避免对局层和棋盘层各用一套玩家名。
+胜负名沿用 `Player::kCross`、`Player::kNought`，不再另造 `kXWin`、`kOWin`，避免对局层和棋盘层各用一套玩家名。
 
 ## 成员与接口
 
@@ -134,7 +133,7 @@ class Game {
 
 `history_` 的每个元素是前面定义的 `Move`，坐标与玩家一起保存；四个成员随落子变化，外部通过 `Game` 的公开成员函数读取。
 
-`Game` 对外提供五个只读接口和一个落子入口，声明都在 `game.h` 里：
+`Game` 的公开接口都声明在 `game.h` 里，落子入口是 `TryPlace`：
 
 ```{.cpp filename="game.h"}
 class Game {
@@ -151,14 +150,15 @@ class Game {
   /// @throws std::out_of_range 坐标不在棋盘范围内。
   [[nodiscard]] CellType GetCellType(CellPosition position) const;
 
-  /// 检查在指定坐标放入给定棋子后，是否会形成三连。
+  /// 推演在指定坐标放入给定棋子后是否会形成三连。
   ///
   /// 只做推演，不改变对局；电脑落子用它判断“这一步能不能赢”。
+  /// 具体规则见 Board::PreviewWin：不可落子的位置返回 kInvalidPlace。
   ///
   /// @param position 假设落子的行列坐标。
   /// @param cell_type 假设放入的棋盘格子类型。
-  /// @return 放入后能形成三连返回 true；否则返回 false。
-  [[nodiscard]] bool IsLineComplete(CellPosition position, CellType cell_type) const;
+  /// @return 不可落子返回 kInvalidPlace；落子后成线返回 kWouldWin；否则返回 kWouldNotWin。
+  [[nodiscard]] WinPreviewResult PreviewWin(CellPosition position, CellType cell_type) const;
 
   /// 获取本局落子历史。
   ///
@@ -168,14 +168,14 @@ class Game {
 };
 ```
 
-下表按用途列出这五个接口：
+这五个接口按用途列出：
 
 | 接口 | 返回 | 说明 |
 | --- | --- | --- |
 | `GetCurrentPlayer` | 当前轮到的玩家 | 开局是 X；落子成功后换成对手，终局后停在最后一名玩家 |
 | `GetResult` | 当前对局结果 | 开局为进行中；分出胜负时记录胜方，满盘无三连时记录平局 |
 | `GetCellType` | 指定坐标处的 `CellType` | 转发 `Board::GetCellType`；坐标越界时抛出 `std::out_of_range` |
-| `IsLineComplete` | 假设落子后能否成线 | 转发 `Board::IsLineComplete`；只读推演，不改本局 |
+| `PreviewWin` | 假设落子后的推演结果 | 转发 `Board::PreviewWin`；只读推演，返回 `WinPreviewResult` |
 | `GetHistory` | 落子列表 | 按落子先后排列；被拒绝的落子不追加 |
 : {tbl-colwidths="[22,24,54]"}
 
@@ -189,7 +189,7 @@ class Game {
 
 ### 落子结果判定
 
-棋盘给出胜负与平局。`JudgeAfterPlace` 判定落子后的对局结果，定义在 `game.h` 里：
+棋盘给出胜负与平局。`JudgeAfterPlace` 是 `Game` 的私有成员，声明与定义分在 `game.h`、`game.cpp` 两个文件：
 
 ```{.cpp filename="game.h"}
 class Game {
@@ -209,7 +209,7 @@ class Game {
 
 ```{.cpp filename="game.cpp"}
 GameResult Game::JudgeAfterPlace(const Board& board, Player player) {
-  /// 次序不能反：先判胜再判满，否则最后一子同时成线和填满棋盘时会被误判成平局。
+  // 次序不能反：先判胜再判满，否则最后一子同时成线和填满棋盘时会被误判成平局。
   const auto winner = board.GetWinner();
   if (winner.has_value() && *winner == PlayerToCellType(player)) {
     return PlayerToWinResult(player);
@@ -221,7 +221,7 @@ GameResult Game::JudgeAfterPlace(const Board& board, Player player) {
 }
 ```
 
-`Board::GetWinner` 返回 `std::optional<CellType>`：有三连时带赢家，没有时为空；`Board::IsFull` 判断棋盘是否下满。先判胜再判满，最后一子同时成线和填满棋盘时才不会误判成平局。分出胜负时，胜方是刚落子的玩家。
+`Board::GetWinner` 返回 `std::optional<CellType>`：有三连时带赢家，没有时为空；`Board::IsFull` 判断棋盘是否下满。分出胜负时，胜方是刚落子的玩家。
 
 ### 落子执行
 
@@ -248,36 +248,38 @@ class Game {
 
 ```{.cpp filename="game.cpp"}
 PlaceResult Game::TryPlace(const Move& move) {
-  /// 先看对局状态和轮次，再碰棋盘：被拒的落子不应改写任何成员。
+  // 先看对局状态和轮次，再碰棋盘：被拒的落子不应改写任何成员。
   if (result_ != GameResult::kInProgress || move.player != current_player_) {
     return PlaceResult::kRejected;
   }
 
   const CellType cell_type = PlayerToCellType(move.player);
-  /// 历史最多九手；在改棋盘前一次留够容量，push_back 不会在棋盘已改后分配失败。
+  // 历史最多九手；在改棋盘前一次留够容量，push_back 不会在棋盘已改后分配失败。
   history_.reserve(static_cast<std::size_t>(kBoardRows) * static_cast<std::size_t>(kBoardCols));
-  if (!board_.PlaceCell(move.position, cell_type)) {
+  // 落子失败的具体原因由棋盘区分，对局层统一转成 kRejected。
+  const PlaceCellResult placed = board_.PlaceCell(move.position, cell_type);
+  if (placed != PlaceCellResult::kSuccess) {
     return PlaceResult::kRejected;
   }
 
-  /// 棋盘已经写好，后面三步按依赖顺序更新：先判结果，再记历史，最后换手。
+  // 棋盘已经写好，后面三步按依赖顺序更新：先判结果，再记历史，最后换手。
   result_ = JudgeAfterPlace(board_, move.player);
   history_.push_back(move);
   if (result_ == GameResult::kInProgress) {
-    /// 终局后不换手：current_player_ 停在落最后一子的人，界面靠它显示胜负归属。
+    // 终局后不换手：current_player_ 停在落最后一子的人，界面靠它显示胜负归属。
     current_player_ = PlayerToOpponent(current_player_);
   }
   return PlaceResult::kPlaced;
 }
 ```
 
-`TryPlace` 把拒绝当成普通返回值：检查全在写入之前，被拒时不需要撤销。写入前按九手容量预留 `history_`，`push_back` 不再分配，棋盘、历史和结果不会只改一半。写入后依次判结果、记历史、换手。终局不换手，`current_player_` 停在落最后一子的人，`GetCurrentPlayer` 因此能显示“X 赢了”。
+`TryPlace` 把拒绝当成普通返回值：检查全在写入之前，被拒时不需要撤销。写入前预留 `history_` 的容量，避免落子过程中再分配。写入后依次判结果、记历史、换手。终局不换手，`current_player_` 停在落最后一子的人，界面因此知道刚刚落子的是哪一方。
 
 ## 常见错误
 
 ### 重复落子
 
-再次写入同一个格子时，`Board::PlaceCell` 返回 `false`。原有类型保留，已有棋子不会被后来的落子覆盖。
+再次写入同一个格子时，`Board::PlaceCell` 返回 `PlaceCellResult::kOccupied`。`TryPlace` 再把它转成 `PlaceResult::kRejected`，原有类型保留；已有棋子不会被后来的落子覆盖。
 
 ### 误判平局
 
@@ -285,7 +287,7 @@ PlaceResult Game::TryPlace(const Move& move) {
 
 ## 自测问题
 
-先自己回答，再展开对照；答不出的地方回到对应小节。
+不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
 
 1. 空棋盘开局，轮到 X。没轮到的一方落子时，棋盘会改变吗？
 
@@ -307,7 +309,7 @@ PlaceResult Game::TryPlace(const Move& move) {
 
 ## 本章回顾
 
-你已经能用 `Game` 处理一次落子，并得到对局结果。下一章电脑落子，替后手选每一步。
+你已经能用 `Game` 处理一次落子，并得到对局结果。下一章电脑落子，把选格交给三种强度。
 
 [04-game-h]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/include/game.h
 [04-game-cpp]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tictactoe/src/game.cpp

@@ -18,4 +18,4 @@
 | `09-running-build` | `content/tictactoe/09-running-build.qmd` | `games/tictactoe` | `SKILL.md` | done |
 | `10-defining-snapshot` | `content/tictactoe/10-defining-snapshot.qmd` | `games/tictactoe` | `SKILL.md` | done |
 
-当前构建只接入 01–05 与 07 的代码；06、08、10 三章保留终端层、测试与快照设计，接回构建后再恢复对应运行状态。
+当前构建接入 01–05、07 与 08 的代码；06、10 两章保留终端层与快照设计，接回构建后再恢复对应运行状态。08 的棋盘测试已由 CTest 接管，共 15 条。

@@ -21,7 +21,7 @@ namespace tictactoe {
 
 std::vector<CellPosition> CollectEmptyCells(const Game& game) {
   std::vector<CellPosition> cells;
-  /// 返回顺序按行序；同一局面的候选格顺序一致，启发式与极小极大的平手规则可复现。
+  // 返回顺序按行序；同一局面的候选格顺序一致，启发式与极小极大的平手规则可复现。
   for (int row = 0; row < kBoardRows; ++row) {
     for (int col = 0; col < kBoardCols; ++col) {
       const CellPosition position = {.row = row, .col = col};
@@ -55,7 +55,7 @@ std::unique_ptr<Ai> MakeAi(AiStrength strength) {
     case AiStrength::kMinimax:
       return std::make_unique<MinimaxAi>();
   }
-  /// 枚举已覆盖全部取值；这一行让编译器看到所有路径都有返回值。
+  // 枚举已覆盖全部取值；这一行让编译器看到所有路径都有返回值。
   return std::make_unique<MinimaxAi>();
 }
 
@@ -66,7 +66,7 @@ Move RandomAi::Choose(const Game& game) const {
     throw std::logic_error{"Ai::Choose: game is already over"};
   }
   const std::vector<CellPosition> cells = EmptyCellsOrThrow(game);
-  /// thread_local：每个线程各自推进随机序列。
+  // thread_local：每个线程各自推进随机序列。
   static thread_local std::mt19937 generator{std::random_device{}()};
   std::uniform_int_distribution<std::size_t> distribution(0, cells.size() - 1);
   return {.position = cells[distribution(generator)], .player = game.GetCurrentPlayer()};
@@ -80,19 +80,19 @@ Move HeuristicAi::Choose(const Game& game) const {
   const CellType mine = PlayerToCellType(current);
   const CellType theirs = PlayerToCellType(PlayerToOpponent(current));
   const std::vector<CellPosition> cells = EmptyCellsOrThrow(game);
-  /// 先找自己的胜手：错过必胜会让对方多走一步，后面的“挡”再准也没用。
+  // 先找自己的胜手：错过必胜会让对方多走一步，后面的“挡”再准也没用。
   for (const CellPosition position : cells) {
-    if (game.IsLineComplete(position, mine)) {
+    if (game.PreviewWin(position, mine) == WinPreviewResult::kWouldWin) {
       return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  /// 再看对手的胜手：自己不赢时必须挡，否则下一回合就输。
+  // 再看对手的胜手：自己不赢时必须挡，否则下一回合就输。
   for (const CellPosition position : cells) {
-    if (game.IsLineComplete(position, theirs)) {
+    if (game.PreviewWin(position, theirs) == WinPreviewResult::kWouldWin) {
       return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  /// 选格顺序：中心、四角、四边；空白格按这个次序取第一格。
+  // 选格顺序：中心、四角、四边；空白格按这个次序取第一格。
   const std::array<CellPosition, 9> order = {{
       {.row = 1, .col = 1},
       {.row = 0, .col = 0},
@@ -109,7 +109,7 @@ Move HeuristicAi::Choose(const Game& game) const {
       return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  /// 九格全占满时对局已经结束，上面的检查会先拦下；这里保留不会取空的路径。
+  // 九格全占满时对局已经结束，上面的检查会先拦下；这里保留不会取空的路径。
   return {.position = cells.front(), .player = game.GetCurrentPlayer()};
 }
 
@@ -117,7 +117,7 @@ Move MinimaxAi::Choose(const Game& game) const {
   if (game.GetResult() != GameResult::kInProgress) {
     throw std::logic_error{"Ai::Choose: game is already over"};
   }
-  /// X 是最大化方，O 是最小化方；分数只从 X 的视角定义（见 ScoreTerminal）。
+  // X 是最大化方，O 是最小化方；分数只从 X 的视角定义（见 ScoreTerminal）。
   const bool maximize = game.GetCurrentPlayer() == Player::kCross;
   int best = maximize ? -2 : 2;
   const std::vector<CellPosition> cells = EmptyCellsOrThrow(game);
@@ -133,7 +133,7 @@ Move MinimaxAi::Choose(const Game& game) const {
     const bool better = maximize ? score > best : score < best;
     if (better) {
       best = score;
-      chosen = position;  // 严格更优才换格，同分保留先出现的格子。
+      chosen = position;  ///< 严格更优才换格，同分保留先出现的格子。
     }
   }
   return {.position = chosen, .player = game.GetCurrentPlayer()};
@@ -154,7 +154,7 @@ int MinimaxAi::ScoreTerminal(GameResult result) {
 
 // NOLINTNEXTLINE(misc-no-recursion)
 int MinimaxAi::Search(const Game& game, int alpha, int beta) {
-  /// 终局直接返回分数：搜索到叶子才算完成，不在中途估算局面。
+  // 终局直接返回分数：搜索到叶子才算完成，不在中途估算局面。
   if (game.GetResult() != GameResult::kInProgress) {
     return ScoreTerminal(game.GetResult());
   }
@@ -164,15 +164,15 @@ int MinimaxAi::Search(const Game& game, int alpha, int beta) {
   const CellType theirs = PlayerToCellType(PlayerToOpponent(current));
   const std::vector<CellPosition> cells = CollectEmptyCells(game);
 
-  /// 着法序：先试马上能赢的一步，再试必须挡住对方的一步，其余按行序。
-  /// 把好棋排在前面，让 beta <= alpha 剪枝更早发生。
+  // 着法序：先试马上能赢的一步，再试必须挡住对方的一步，其余按行序。
+  // 把好棋排在前面，让 beta <= alpha 剪枝更早发生。
   std::vector<CellPosition> winning;
   std::vector<CellPosition> blocking;
   std::vector<CellPosition> rest;
   for (const CellPosition position : cells) {
-    if (game.IsLineComplete(position, mine)) {
+    if (game.PreviewWin(position, mine) == WinPreviewResult::kWouldWin) {
       winning.push_back(position);
-    } else if (game.IsLineComplete(position, theirs)) {
+    } else if (game.PreviewWin(position, theirs) == WinPreviewResult::kWouldWin) {
       blocking.push_back(position);
     } else {
       rest.push_back(position);
@@ -201,7 +201,7 @@ int MinimaxAi::Search(const Game& game, int alpha, int beta) {
       beta = std::min(best, beta);
     }
     if (beta <= alpha) {
-      break;  // 剪枝：这一支后续再搜也不会改变上层选择。
+      break;  ///< 剪枝：这一支后续再搜也不会改变上层选择。
     }
   }
   return best;

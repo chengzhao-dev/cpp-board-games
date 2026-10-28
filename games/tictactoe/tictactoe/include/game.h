@@ -83,14 +83,15 @@ class Game {
   /// @throws std::out_of_range 坐标不在棋盘范围内。
   [[nodiscard]] CellType GetCellType(CellPosition position) const;
 
-  /// 检查在指定坐标放入给定棋子后，是否会形成三连。
+  /// 推演在指定坐标放入给定棋子后是否会形成三连。
   ///
   /// 只做推演，不改变对局；电脑落子用它判断“这一步能不能赢”。
+  /// 具体规则见 Board::PreviewWin：不可落子的位置返回 kInvalidPlace。
   ///
   /// @param position 假设落子的行列坐标。
   /// @param cell_type 假设放入的棋盘格子类型。
-  /// @return 放入后能形成三连返回 true；否则返回 false。
-  [[nodiscard]] bool IsLineComplete(CellPosition position, CellType cell_type) const;
+  /// @return 不可落子返回 kInvalidPlace；落子后成线返回 kWouldWin；否则返回 kWouldNotWin。
+  [[nodiscard]] WinPreviewResult PreviewWin(CellPosition position, CellType cell_type) const;
 
   /// 获取本局落子历史。
   ///

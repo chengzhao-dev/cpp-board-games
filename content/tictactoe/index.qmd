@@ -43,7 +43,7 @@ body-classes: index-page
 :::
 ::: {.landing-card}
 ### [测试](08-tests.qmd)
-测试 14 条棋盘用例：读取坐标、写入落子、拒绝与终局判定。
+测试 15 条棋盘用例：读取坐标、写入落子、拒绝与终局判定。
 :::
 ::: {.landing-card}
 ### [构建与运行](09-running-build.qmd)

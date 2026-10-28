@@ -9,7 +9,7 @@ execute:
 
 book:
   title: "C++ 棋盘游戏实践"
-  description: "用一局可下完的终端井字棋学习 C++ 工程和测试。"
+  description: "从棋盘规则与类型开始，用井字棋逐步搭起可构建、可测试的 C++ 工程。"
   site-url: "https://chengzhao-dev.github.io/cpp-board-games"
   repo-url: "https://github.com/chengzhao-dev/cpp-board-games"
   # 读者侧只留「查看源码」入口：不提供编辑此页与议题按钮（定案见 bg-publish-surface-v1）。

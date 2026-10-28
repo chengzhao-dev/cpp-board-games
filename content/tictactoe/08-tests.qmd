@@ -6,7 +6,7 @@ title: "测试"
 
 ## 测试用例结构
 
-`tests/` 只有一个测试文件 [testing-board.cpp][08-testing-board]，共 14 条用例，覆盖初始状态、坐标范围、成功写入、拒绝、清空与终局判定。本章给出其中四条完整用例，其余只列用例名。
+`tests/` 只有一个测试文件 [testing-board.cpp][08-testing-board]，共 15 条用例，覆盖初始状态、坐标范围、成功写入、拒绝、清空与终局判定。本章给出其中四条完整用例，其余只列用例名。
 
 ### 初始状态
 
@@ -37,25 +37,27 @@ TEST(BoardTest, InitialBoardIsEmpty) {
 TEST(BoardTest, PlaceCellRejectsOccupiedCell) {
   Board board;
   const CellPosition origin{.row = 0, .col = 0};
-  ASSERT_TRUE(board.PlaceCell(origin, CellType::kX));
-  EXPECT_FALSE(board.PlaceCell(origin, CellType::kO));
+  ASSERT_EQ(board.PlaceCell(origin, CellType::kX), PlaceCellResult::kSuccess);
+  EXPECT_EQ(board.PlaceCell(origin, CellType::kO), PlaceCellResult::kOccupied);
   EXPECT_EQ(board.GetCellType(origin), CellType::kX);
 }
 
 /// 负坐标和上界坐标都不能写入。
 TEST(BoardTest, PlaceCellRejectsInvalidPosition) {
   Board board;
-  EXPECT_FALSE(board.PlaceCell({.row = -1, .col = 0}, CellType::kX));
-  EXPECT_FALSE(board.PlaceCell({.row = 0, .col = -1}, CellType::kO));
-  EXPECT_FALSE(board.PlaceCell({.row = tictactoe::kBoardRows, .col = 0}, CellType::kX));
-  EXPECT_FALSE(board.PlaceCell({.row = 0, .col = tictactoe::kBoardCols}, CellType::kO));
+  EXPECT_EQ(board.PlaceCell({.row = -1, .col = 0}, CellType::kX), PlaceCellResult::kOutOfRange);
+  EXPECT_EQ(board.PlaceCell({.row = 0, .col = -1}, CellType::kO), PlaceCellResult::kOutOfRange);
+  EXPECT_EQ(board.PlaceCell({.row = tictactoe::kBoardRows, .col = 0}, CellType::kX),
+            PlaceCellResult::kOutOfRange);
+  EXPECT_EQ(board.PlaceCell({.row = 0, .col = tictactoe::kBoardCols}, CellType::kO),
+            PlaceCellResult::kOutOfRange);
   EXPECT_EQ(board.GetCellType({.row = 0, .col = 0}), CellType::kEmpty);
 }
 ```
 
-第一条用例先用 `ASSERT_TRUE` 铺好前提：写入 X 必须成功，否则后面的断言没有意义。`ASSERT_*` 失败会立即结束当前用例。随后两次 `EXPECT_FALSE` 与 `EXPECT_EQ` 核对写不进去、原值也没被改掉。
+第一条用例先用 `ASSERT_EQ` 铺好前提：写入 X 必须返回 `kSuccess`，否则后面的断言没有意义。`ASSERT_*` 失败会立即结束当前用例。随后两次 `EXPECT_EQ` 核对拒绝原因是 `kOccupied`、原值也没被改掉。
 
-第二条用例覆盖四个方向：行坐标取 −1 与上界，列坐标取 −1 与上界。四条 `EXPECT_FALSE` 核对拒绝结果，末尾一条 `EXPECT_EQ` 确认棋盘没有被这些写入改动。
+第二条用例覆盖四个方向：行坐标取 −1 与上界，列坐标取 −1 与上界。四条 `EXPECT_EQ` 都要求返回 `kOutOfRange`，末尾一条再确认棋盘没有被这些写入改动。
 
 ### 异常路径
 
@@ -74,7 +76,7 @@ TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
 }
 ```
 
-`GetCellType` 在 `(3, 0)` 这类坐标上没有对应的棋盘格子。它的边界判断与 [`std::array::at`][08-array-at] 相同，越界时抛标准库的 `std::out_of_range`。消息先写来源，再写失败条件与实际值；测试核对 `Board::GetCellType:`、`row=-1` 与 `col=0` 这些稳定片段，测试文件直接包含 `<stdexcept>`。
+`GetCellType` 在 `(3, 0)` 这类坐标上没有对应的棋盘格子。它的边界判断与 [`std::array::at`][08-array-at] 相同，越界时抛标准库的 `std::out_of_range`。消息先写来源，再写失败条件与实际值。另一条用例 `GetCellTypeErrorMessageIncludesPosition` 核对 `Board::GetCellType:`、`row=-1` 与 `col=0`。测试文件直接包含 `<stdexcept>`，才能写出 `std::out_of_range`。
 
 `GetCellType` 带 `[[nodiscard]]`。测试不关心返回值，只关心异常，所以显式写成 `(void)`，让编译器知道这次丢弃是有意的。
 
@@ -82,17 +84,18 @@ TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
 
 ### 其余用例
 
-其余十条用例各核对一条行为：
+其余十一条用例各核对一条行为：
 
 - `ValidPositionIncludesBothCorners` 核对左上角与右下角都在坐标范围内。
 - `PlaceCellWritesEmptyCell` 核对成功写入后能读回同一个棋子。
 - `PlaceCellRejectsEmptyType` 核对 `kEmpty` 不是一次有效写入。
+- `CheckPlaceableReportsReasonWithoutPlacing` 核对落子校验给出拒绝原因且不改棋盘。
 - `GetCellTypeErrorMessageIncludesPosition` 核对越界异常的消息带函数名与行列值。
 - `IsFullOnlyAfterEveryCellPlaced` 核对九格放满才返回 `true`。
 - `GetWinnerHasNoValueOnNewBoard` 与 `GetWinnerReturnsXForTopRow` 核对空盘无赢家、顶行成三连判 X 胜。
-- `IsDrawWhenFullWithoutWinner` 核对满盘且无三连时判平局。
-- `IsLineCompleteProbesWithoutPlacing` 核对只读推演，不改原棋盘。
-- `ClearRestoresEmptyBoard` 核对清空后九格皆空、终局查询回到开局，同一格可以再次写入。
+- `FullBoardWithoutWinnerHasNoWinner` 核对满盘且无三连时棋盘已满、没有赢家；平局由对局层判定。
+- `PreviewWinProbesWithoutPlacing` 核对只读推演，不改原棋盘。
+- `ClearRestoresEmptyBoard` 核对清空后九格皆空、赢家与满盘查询回到开局，同一格可以再次写入。
 
 ## 测试运行
 
@@ -102,7 +105,7 @@ TEST(BoardTest, GetCellTypeThrowsForInvalidPosition) {
 ctest --test-dir build --output-on-failure
 ```
 
-CMake 用 `gtest_discover_tests` 把 14 条用例注册给 CTest。每条用例独立运行，失败一条就停住。测试是启动程序前的最后一道检查。
+CMake 用 `gtest_discover_tests` 把 15 条用例注册给 CTest。每条用例独立运行；某一条失败不会挡住其余用例，CTest 跑完再汇总失败项。测试是启动程序前的最后一道检查。
 
 ::: {.callout-note title="术语：CTest"}
 CTest 是 CMake 自带的测试运行工具。它统一运行 `add_test` 注册的用例。
@@ -135,7 +138,7 @@ CTest 是 CMake 自带的测试运行工具。它统一运行 `add_test` 注册�
 
 ## 本章回顾
 
-你已经能读出一条测试的结构，并说出 14 条棋盘用例覆盖什么。下一章构建与运行，配置、编译、跑 CTest 并启动程序。
+你已经能读出一条测试的结构，并说出 15 条棋盘用例覆盖什么。下一章构建与运行，配置、编译、跑 CTest 并启动程序。
 
 [08-tests-dir]: https://github.com/chengzhao-dev/cpp-board-games/tree/main/games/tictactoe/tests
 [08-testing-board]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/tests/testing-board.cpp

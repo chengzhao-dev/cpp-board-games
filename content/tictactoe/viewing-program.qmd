@@ -2,7 +2,7 @@
 title: "程序结构"
 ---
 
-[工程结构](02-mapping-layout.qmd) 已经把代码放进目录和文件。本章看这些文件里的类怎样连成一份程序：棋盘、对局、电脑落子和终端循环四块，通过函数调用与组成关系连接。当前构建只收进动态库、`app` 与棋盘测试，总览图保留终端链的设计，入口 `main` 只创建 `Game`、落一子并读回棋盘格子类型。
+[工程结构](02-mapping-layout.qmd) 已经把代码放进目录和文件。本章看这些文件里的类怎样连成一份程序。棋盘、对局、电脑落子和终端循环四块，靠函数调用与组成关系连接。当前构建只收进动态库、`app` 与棋盘测试，总览图保留终端链的设计。入口 `main` 只创建 `Game`、落一子并检查返回值。
 
 ## 结构总览
 
@@ -57,7 +57,7 @@ classDiagram
   class Game
   class Board {
     -cells_
-    +bool PlaceCell(position, cell_type)
+    +PlaceCellResult PlaceCell(pos, type)
     +CellType GetCellType(position)
     +optional~CellType~ GetWinner()
   }
@@ -67,7 +67,7 @@ classDiagram
 ```
 :::
 
-规则判断做成只读成员函数，所以 `GetWinner`、`IsLineComplete` 这些查询不修改棋盘。写入入口是 `PlaceCell` 与 `Clear`；`PlaceCell` 越界或目标棋盘格子已被占用时返回 `false`，`Clear` 把整盘恢复为空。这样分的原因见[棋盘](03-board.qmd)一章。
+规则判断做成只读成员函数，所以 `GetWinner`、`PreviewWin` 这些查询不修改棋盘。写入入口是 `PlaceCell` 与 `Clear`；`PlaceCell` 用 `PlaceCellResult` 区分成功、越界、空类型与目标格已占用，`Clear` 把整盘恢复为空。这样分的原因见[棋盘](03-board.qmd)一章。
 
 ### 对局
 
@@ -187,10 +187,10 @@ classDiagram
    `Game` 持有一个 `Board` 作为组成部分。棋盘随对局对象一起创建和销毁，对局通过这个成员读写棋盘。
    :::
 
-2. `PlayToEnd` 每一轮把落子交给哪两个对象？
+2. 人机模式下，`PlayToEnd` 每一轮把落子交给哪两个对象？
 
    ::: {.answer}
-   `PlayToEnd` 调用 `Ai::Choose` 取得一步落子，再调用 `Game::TryPlace` 写进对局。
+   人机模式下，O 的回合调用 `Ai::Choose` 取得一步落子；X 的回合由 `ReadHumanMove` 读入。两条路径都调用 `Game::TryPlace` 写进对局。
    :::
 
 ## 本章回顾

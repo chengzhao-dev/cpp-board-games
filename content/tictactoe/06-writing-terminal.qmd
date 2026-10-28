@@ -2,7 +2,7 @@
 title: "终端程序"
 ---
 
-终端程序由 `RunMatch` 驱动一局：读入对局模式与人机对局时的强度，进入循环后每轮打印棋盘、读入坐标或从 [电脑落子](05-ai.qmd) 取一步 `Move`。头文件与实现在 `apps/include/cli.h` 与 `apps/src/cli.cpp`。终端层没有接入当前构建，这一章只说明它的实现。
+终端程序由 `RunMatch` 驱动一局。开局读入对局模式与人机对局强度，再进入循环：每轮打印棋盘、读入坐标，或从 [电脑落子](05-ai.qmd) 取一步 `Move`。头文件与实现在 `apps/include/cli.h` 与 `apps/src/cli.cpp`。终端层没有接入当前构建，这一章只说明它的实现。
 
 ## 输入与输出
 
@@ -45,8 +45,8 @@ enum class HumanMove : std::uint8_t {
 
 ```{.cpp filename="cli.cpp"}
 std::string BoardToString(const Game& game) {
-  /// 列号写在表头、行号写在最左：玩家按“先看行号再看列号”的顺序数格子，
-  /// 与落子提示里的“行和列”同序，不必在脑子里交换。
+  // 列号写在表头、行号写在最左：玩家按“先看行号再看列号”的顺序数格子，
+  // 与落子提示里的“行和列”同序，不必在脑子里交换。
   std::string board = "    0   1   2\n";
   const std::string rule = "  +---+---+---+\n";
   board += rule;
@@ -101,7 +101,7 @@ std::expected<RowAndCol, ReadError> ReadRowAndCol(std::istream& in, std::ostream
   if (in.eof()) {
     return std::unexpected(ReadError::kEof);
   }
-  /// 清掉失败位再丢整行：不丢的话下一次读会立刻再失败，同一行会被反复报告。
+  // 清掉失败位再丢整行：不丢的话下一次读会立刻再失败，同一行会被反复报告。
   in.clear();
   in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   Report(err, "请输入两个整数");
@@ -139,7 +139,7 @@ HumanMove ReadHumanMove(std::istream& in, std::ostream& err, Game& game) {
 
 ### 提示与读入分开
 
-读入函数只返回结果，不打印落子提示：同一段读入既服务双人模式也服务人机模式，提示文案留在一处。
+读入函数只返回结果，不打印落子提示。同一段读入既服务双人模式，也服务人机模式，提示文案只留在一处。
 
 `cli.cpp` 的两条 `PlayToEnd` 各打印自己的提示，`ReadHumanMove` 只管把一行输入变成落子。提示文案因此只出现在调用方，两段循环都调用同一个 `ReadHumanMove`，读入代码只有一份。
 
@@ -168,7 +168,7 @@ int RunMatch(std::istream& in, std::ostream& out, std::ostream& err) {
 }
 ```
 
-`ReadMatchKind` 提示输入 1 或 2，整行比较后写回 `against_cpu`。`ReadAiStrength` 同样整行读入，把 1、2、3 换成三种强度。两个读入器对无效输入的处理一致：丢掉本行，写一条诊断，重新提示，直到读到有效选择或输入结束。输入结束时 `RunMatch` 返回 1。对局没有开始，进程以这个退出码结束。
+`ReadMatchKind` 提示输入 1 或 2，整行比较后写回 `against_cpu`。`ReadAiStrength` 同样整行读入，把 1、2、3 换成三种强度。两个读入器对无效输入的处理一致：丢掉本行，写一条诊断，再重新提示。这个过程持续到读到有效选择，或输入结束。输入结束时 `RunMatch` 返回 1。对局没有开始，进程以这个退出码结束。
 
 ### 双人下到结束
 

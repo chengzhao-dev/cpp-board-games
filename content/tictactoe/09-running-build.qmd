@@ -2,7 +2,7 @@
 title: "构建与运行"
 ---
 
-[程序入口](07-main.qmd) 已经能最小调用动态库。这一章配置、编译、测试并运行这个工程，确认 14 条棋盘用例全部通过，`app` 也链接到同一次构建产出的 `tictactoe` 动态库。构建入口是 [running-build.sh][09-build-script]。
+[程序入口](07-main.qmd) 已经能最小调用动态库。这一章配置、编译、测试并运行这个工程。做完后，15 条棋盘用例全部通过，`app` 也链接到同一次构建产出的 `tictactoe` 动态库。构建入口是 [running-build.sh][09-build-script]。
 
 ## 构建脚本
 
@@ -17,7 +17,7 @@ bash running-build.sh
 | 步 | 做什么 | 由谁执行 |
 | --- | --- | --- |
 | 配置与编译 | 读取 CMake 规则，取 GoogleTest v1.15.2，在 `build/` 下生成 Ninja 文件并编译 | CMake、Ninja |
-| 测试 | 运行 CTest 注册的 14 条棋盘用例 | CTest |
+| 测试 | 运行 CTest 注册的 15 条棋盘用例 | CTest |
 | 运行 | 启动 `app`，检查动态库调用结果 | 构建脚本 |
 : {tbl-colwidths="[22,50,28]"}
 
@@ -55,9 +55,9 @@ FetchContent_Declare(
 )
 ```
 
-`FetchContent_MakeAvailable(googletest)` 只构建测试需要的那一部分。`tictactoe_test` 链接动态库 `tictactoe` 与 `GTest::gtest_main`，`BUILD_RPATH` 设为 `$ORIGIN/../lib`。这样从 `build/bin` 启动时能找到同次构建的动态库。`gtest_discover_tests` 在构建后把 14 条用例注册给 CTest。
+`FetchContent_MakeAvailable(googletest)` 只构建测试需要的那一部分。`tictactoe_test` 链接动态库 `tictactoe` 与 `GTest::gtest_main`，`BUILD_RPATH` 设为 `$ORIGIN/../lib`。这样从 `build/bin` 启动时能找到同次构建的动态库。`gtest_discover_tests` 在构建后把 15 条用例注册给 CTest。
 
-GoogleTest 必须和测试目标使用同一套标准库。`tests/CMakeLists.txt` 在 Clang 下给这个子目录加 `-stdlib=libc++`。否则 gtest 按 libstdc++ 编译、测试按 libc++ 链接，会出现一批 `std::` 符号未定义。
+GoogleTest 必须和测试目标使用同一套标准库。在 Clang 下，`tests/CMakeLists.txt` 只给四个 GoogleTest 目标加 `-stdlib=libc++`。否则 gtest 按 libstdc++ 编译、测试按 libc++ 链接，会出现一批 `std::` 符号未定义。
 
 产物落在 `build/` 下：
 
@@ -70,14 +70,14 @@ build/
 
 ## 验收结果
 
-脚本退出码为 `0`、CTest 报告 14 条全部通过、`app` 打印成功行时，这次构建通过。
+脚本退出码为 `0`、CTest 报告 15 条全部通过、`app` 打印成功行时，这次构建通过。
 
 ### 核对测试输出
 
 CTest 的最后一行给出总数：
 
 ```{.text filename="终端输出"}
-100% tests passed, 0 tests failed out of 14
+100% tests passed, 0 tests failed out of 15
 ```
 
 失败时 CTest 打印用例名与断言位置；`--output-on-failure` 已经把失败输出带到终端。
@@ -145,7 +145,7 @@ CTest 返回非零，并打印某个用例的断言。
 2. 为什么测试要排在启动程序之前？
 
    ::: {.answer}
-   14 条棋盘用例直接检查库行为，失败能定位到函数；先跑测试，失败时不必再启动程序。
+   15 条棋盘用例直接检查库行为，失败能定位到函数；先跑测试，失败时不必再启动程序。
    :::
 
 3. 为什么 GoogleTest 要和测试目标用同一套标准库？
@@ -157,12 +157,12 @@ CTest 返回非零，并打印某个用例的断言。
 4. CTest 里注册了多少条用例？
 
    ::: {.answer}
-   14 条，全部来自 `testing-board.cpp`，由 `gtest_discover_tests` 注册。
+   15 条，全部来自 `testing-board.cpp`，由 `gtest_discover_tests` 注册。
    :::
 
 ## 本章回顾
 
-你已经能配置、编译、跑 14 条棋盘测试并启动 `app`，确认它链接到了正确的 `libtictactoe.so`。下一章局面快照；它属于终端程序，当前构建未接入，先按设计保留。
+你已经能配置、编译、跑 15 条棋盘测试并启动 `app`，确认它链接到了正确的 `libtictactoe.so`。下一章局面快照；它属于终端程序，当前构建未接入，先按设计保留。
 
 [09-build-script]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/running-build.sh
 [09-root-cmake]: https://github.com/chengzhao-dev/cpp-board-games/blob/main/games/tictactoe/CMakeLists.txt

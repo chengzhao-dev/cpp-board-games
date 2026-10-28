@@ -2,15 +2,11 @@
 title: "电脑落子"
 ---
 
-电脑落子时，从空格子里按强度选一个位置，三种强度各对应一个派生类。选出的 `Move` 仍交给 [对局](04-game.qmd) 里的 `Game::TryPlace`。`Ai` 的接口在 [ai.h][ai-h]，实现在 [ai.cpp][ai-cpp]。
+`Ai` 是电脑落子的接口：三种强度各有一个派生类，从空格子里按强度选一个位置。选出的 `Move` 仍交给 [对局](04-game.qmd) 里的 `Game::TryPlace`。`Ai` 的接口在 [ai.h][ai-h]，实现在 [ai.cpp][ai-cpp]。
 
 ## 落子强度
 
-电脑落子先要定强度。强度用枚举 `AiStrength` 表示，三个值对应三种选法：
-
-- `kRandom` 在空格子里随机选一格。
-- `kHeuristic` 优先取胜或封堵，其余情况按中心、四角、四边选格子。
-- `kMinimax` 比较终局结果，选择更有利的一步。
+电脑落子先要定强度。强度用枚举 `AiStrength` 表示，三个值分别对应随机、启发式和极小极大三种选法。
 
 ```{.cpp filename="ai.h"}
 /// 电脑落子的强度。
@@ -21,11 +17,11 @@ enum class AiStrength : std::uint8_t {
 };
 ```
 
-强度是枚举值，本身不选择落子；`kRandom`、`kHeuristic` 与 `kMinimax` 在创建对象时各对应一个派生类。三个类把各自的选法写在 `ai.cpp` 里；强度一经选定，一局之内的选法不再更换。
+强度是枚举值，本身不含选法；三种强度在 `MakeAi` 里各对应一个派生类。强度一经选定，一局之内的选法不再更换。
 
-三种强度的区别在判断依据：随机版只确认候选合法，启发式版多判断一步胜负，极小极大版把每种走法推到终局再比较得分。
+三种强度的区别在判断依据。随机版只确认候选合法；启发式版多判断一步胜负；极小极大版把每种走法推到终局，再比较得分。
 
-三种强度改变的是选择方式，返回的落子仍写进空格子，玩家仍是当前玩家。各自的选法都有测试核对；双方都用极小极大自对弈时，对局判平局。
+三种强度只改变选择方式；返回的落子仍写进空格子，玩家仍是当前玩家。各自的选法都有测试核对；双方都用极小极大自对弈时，对局判平局。
 
 ::: {.callout-tip title="强度怎么选"}
 `kRandom` 适合试走一局，`kHeuristic` 适合有攻防的对局，`kMinimax` 让双方都不出错。
@@ -68,7 +64,7 @@ class Ai {
 
 三种强度创建的对象都作为 `Ai` 交给调用方，一套构造与析构约定覆盖三个派生类。`virtual ~Ai()` 让接口层的删除也能到达派生类析构函数；调用方把手上的对象当作 `Ai` 使用即可。
 
-删除拷贝与移动，等于在类型上声明同一时间只有一个 `unique_ptr` 持有电脑落子对象；调用方不必关心具体是哪种强度，也不持有第二份。
+删除拷贝与移动，让对象只能由 `unique_ptr` 独占持有；调用方不必关心具体强度，也不持有第二份。
 
 `Choose` 收到的是整个对局：从格子状态到落子历史都能读。三种强度的实现共享这一个入口，选法不同，返回给调用方的都是同一种 `Move`。返回值同时给出坐标与玩家，下一步交给 `Game::TryPlace`。对局仍在进行时，这一步总能写进空格子。
 
@@ -87,7 +83,7 @@ class Ai {
 ```{.cpp filename="ai.cpp"}
 std::vector<CellPosition> CollectEmptyCells(const Game& game) {
   std::vector<CellPosition> cells;
-  /// 返回顺序按行序；同一局面的候选格顺序一致，启发式与极小极大的平手规则可复现。
+  // 返回顺序按行序；同一局面的候选格顺序一致，启发式与极小极大的平手规则可复现。
   for (int row = 0; row < kBoardRows; ++row) {
     for (int col = 0; col < kBoardCols; ++col) {
       const CellPosition position = {.row = row, .col = col};
@@ -100,7 +96,7 @@ std::vector<CellPosition> CollectEmptyCells(const Game& game) {
 }
 ```
 
-外层按行、内层按列，列表顺序因此是 `(0,0)`、`(0,1)`、`(0,2)`、`(1,0)`……`CollectEmptyCells` 只读棋盘，不改动对局。三种强度的 `Choose` 都从这份候选列表起步。
+`CollectEmptyCells` 按行优先遍历棋盘，只读棋盘，不改动对局；三种强度的 `Choose` 都从这份候选列表起步。
 
 `Choose` 还要把“候选为空”挡在取下标之前。三种强度共用一个小函数：
 
@@ -119,9 +115,9 @@ std::vector<CellPosition> EmptyCellsOrThrow(const Game& game) {
 }  // namespace
 ```
 
-它先收集，再确认列表非空；为空说明 `GetResult` 与棋盘状态不一致，直接抛异常，而不是让 `cells.front()` 或 `size() - 1` 读到列表外。
+它先收集，再确认列表非空；为空说明 `GetResult` 与棋盘状态不一致，直接抛异常，而不是让 `cells.front()` 或 `size() - 1` 在空列表上取到非法位置。
 
-顺序在这里不只是排得整齐。启发式和极小极大都靠“先出现的格子优先”决策，同一盘面得到同一步，否则测试结果不稳定。
+顺序还决定平手规则：启发式与极小极大都优先取先出现的格子，同一盘面得到同一步，测试才稳定。
 
 ## 派生选择
 
@@ -132,7 +128,7 @@ std::vector<CellPosition> EmptyCellsOrThrow(const Game& game) {
 ```{.cpp filename="ai.h"}
 /// 随机强度的电脑落子。
 ///
-/// 只保证合法，用来对照另外两种强度：它下满一局就能验证对局流程和终局判定。
+/// 只保证合法：在空格中任选一步，用来验证对局流程与终局判定。
 class RandomAi final : public Ai {
  public:
   /// 在空棋盘格子里等概率选一格。
@@ -152,7 +148,7 @@ Move RandomAi::Choose(const Game& game) const {
     throw std::logic_error{"Ai::Choose: game is already over"};
   }
   const std::vector<CellPosition> cells = EmptyCellsOrThrow(game);
-  /// thread_local：每个线程各自推进随机序列。
+  // thread_local：每个线程各自推进随机序列。
   static thread_local std::mt19937 generator{std::random_device{}()};
   std::uniform_int_distribution<std::size_t> distribution(0, cells.size() - 1);
   return {.position = cells[distribution(generator)], .player = game.GetCurrentPlayer()};
@@ -163,37 +159,41 @@ Move RandomAi::Choose(const Game& game) const {
 
 随机引擎声明成 `static thread_local`，每个线程只构造一次。`uniform_int_distribution` 两端都包含，`cells.size() - 1` 能取到末尾一格。
 
-`thread_local` 让每个线程拿到自己的随机序列。不用它，两个对局同在一个进程里会争同一台引擎，要么加锁，要么互相拖慢；用了它，同一线程内多局仍共用序列，代价是每个线程各存一份状态。
+`thread_local` 让每个线程拿到自己的随机序列。不用它，两个线程同时选格会争同一台引擎，要么加锁，要么互相拖慢；用了它，同一线程内多局仍共用序列，代价是每个线程各存一份状态。
 
 选中的一格来自 `CollectEmptyCells` 的候选列表，坐标与玩家都由返回值给出；两次运行可能走出不同的对局，这一步能不能写进棋盘，仍由 `Game::TryPlace` 决定。
 
 ### 启发式选法
 
-启发式按取胜、封堵、中心、四角、四边的顺序尝试。前两步都要判断同一件事：在某个空格子落下一枚棋子后，是否形成三连。判断由 `Board::IsLineComplete` 完成，[棋盘](03-board.qmd) 一章讲过它怎样只读推演。`Game::IsLineComplete` 把判断转发给棋盘：
+启发式按取胜、封堵、中心、四角、四边的顺序尝试。前两步都要判断同一件事：在某个空格子落下一枚棋子后，是否形成三连。判断由 `Board::PreviewWin` 完成，[棋盘](03-board.qmd) 一章讲过它如何在不落子的情况下推演三连。`Game::PreviewWin` 把判断转发给棋盘：
 
 ```{.cpp filename="game.h"}
 class Game {
  public:
-  /// 检查在指定坐标放入给定棋子后，是否会形成三连。
-  [[nodiscard]] bool IsLineComplete(CellPosition position, CellType cell_type) const;
+  /// 推演在指定坐标放入给定棋子后是否会形成三连。
+  ///
+  /// @param position 假设落子的行列坐标。
+  /// @param cell_type 假设放入的棋盘格子类型。
+  /// @return 不可落子返回 kInvalidPlace；落子后成线返回 kWouldWin；否则返回 kWouldNotWin。
+  [[nodiscard]] WinPreviewResult PreviewWin(CellPosition position, CellType cell_type) const;
 };
 ```
 
 ```{.cpp filename="game.cpp"}
-bool Game::IsLineComplete(CellPosition position, CellType cell_type) const {
-  return board_.IsLineComplete(position, cell_type);
+WinPreviewResult Game::PreviewWin(CellPosition position, CellType cell_type) const {
+  return board_.PreviewWin(position, cell_type);
 }
 ```
 
-`Ai` 不直接访问 `Board`。启发式通过 `Game::IsLineComplete` 判断这一步会不会连成三个，取得的 `Move` 交回 `Game::TryPlace`，落子仍由 `Game` 执行。
+`Ai` 不直接访问 `Board`。启发式通过 `Game::PreviewWin` 判断这一步会不会连成三个，取得的 `Move` 交回 `Game::TryPlace`，落子仍由 `Game` 执行。
 
-`HeuristicAi::Choose` 用两轮 `game.IsLineComplete` 找出胜着与封堵的一步，其余空格子按同一顺序挑选：
+`HeuristicAi::Choose` 先用一轮 `game.PreviewWin` 找胜着，再用一轮找对方必须封堵的一步，其余空格子按同一顺序挑选：
 
 ```{.cpp filename="ai.h"}
 /// 启发式强度的电脑落子。
 ///
 /// 只看一步：先赢、再挡，然后按中心、四角、四边的次序选格。
-/// 它是对照组，用来显示“不搜索整棵树也能下得像样”。
+/// 只看一步，不搜索整棵树。
 class HeuristicAi final : public Ai {
  public:
   /// 能立刻取胜就取胜，否则挡住对方马上能赢的一步，再按中心、四角、四边选格。
@@ -216,19 +216,19 @@ Move HeuristicAi::Choose(const Game& game) const {
   const CellType mine = PlayerToCellType(current);
   const CellType theirs = PlayerToCellType(PlayerToOpponent(current));
   const std::vector<CellPosition> cells = EmptyCellsOrThrow(game);
-  /// 先找自己的胜手：错过必胜会让对方多走一步，后面的“挡”再准也没用。
+  // 先找自己的胜手：错过必胜会让对方多走一步，后面的“挡”再准也没用。
   for (const CellPosition position : cells) {
-    if (game.IsLineComplete(position, mine)) {
+    if (game.PreviewWin(position, mine) == WinPreviewResult::kWouldWin) {
       return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  /// 再看对手的胜手：自己不赢时必须挡，否则下一回合就输。
+  // 再看对手的胜手：自己不赢时必须挡，否则下一回合就输。
   for (const CellPosition position : cells) {
-    if (game.IsLineComplete(position, theirs)) {
+    if (game.PreviewWin(position, theirs) == WinPreviewResult::kWouldWin) {
       return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  /// 选格顺序：中心、四角、四边；空白格按这个次序取第一格。
+  // 选格顺序：中心、四角、四边；空白格按这个次序取第一格。
   const std::array<CellPosition, 9> order = {{
       {.row = 1, .col = 1},
       {.row = 0, .col = 0},
@@ -245,7 +245,7 @@ Move HeuristicAi::Choose(const Game& game) const {
       return {.position = position, .player = game.GetCurrentPlayer()};
     }
   }
-  /// 九格全占满时对局已经结束，上面的检查会先拦下；这里保留不会取空的路径。
+  // 九格全占满时对局已经结束，上面的检查会先拦下；这里保留不会取空的路径。
   return {.position = cells.front(), .player = game.GetCurrentPlayer()};
 }
 ```
@@ -295,7 +295,7 @@ Move MinimaxAi::Choose(const Game& game) const {
   if (game.GetResult() != GameResult::kInProgress) {
     throw std::logic_error{"Ai::Choose: game is already over"};
   }
-  /// X 是最大化方，O 是最小化方；分数只从 X 的视角定义（见 ScoreTerminal）。
+  // X 是最大化方，O 是最小化方；分数只从 X 的视角定义（见 ScoreTerminal）。
   const bool maximize = game.GetCurrentPlayer() == Player::kCross;
   int best = maximize ? -2 : 2;
   const std::vector<CellPosition> cells = EmptyCellsOrThrow(game);
@@ -311,7 +311,7 @@ Move MinimaxAi::Choose(const Game& game) const {
     const bool better = maximize ? score > best : score < best;
     if (better) {
       best = score;
-      chosen = position;  // 严格更优才换格，同分保留先出现的格子。
+      chosen = position;  ///< 严格更优才换格，同分保留先出现的格子。
     }
   }
   return {.position = chosen, .player = game.GetCurrentPlayer()};
@@ -337,14 +337,14 @@ int MinimaxAi::ScoreTerminal(GameResult result) {
 }
 ```
 
-X 胜记 `1`，O 胜记 `-1`，平局记 `0`；`kInProgress` 不应该传给 `ScoreTerminal`，实现里仍返回 `0`。
+X 胜记 `1`，O 胜记 `-1`，平局记 `0`；`kInProgress` 不会传给 `ScoreTerminal`，实现里仍返回 `0`。
 
 `Search` 是递归主体，先处理终局，再按“能赢、须挡、其余”排候选，最后逐个递归并用 `alpha`、`beta` 剪枝：
 
 ```{.cpp filename="ai.cpp"}
 // NOLINTNEXTLINE(misc-no-recursion)
 int MinimaxAi::Search(const Game& game, int alpha, int beta) {
-  /// 终局直接返回分数：搜索到叶子才算完成，不在中途估算局面。
+  // 终局直接返回分数：搜索到叶子才算完成，不在中途估算局面。
   if (game.GetResult() != GameResult::kInProgress) {
     return ScoreTerminal(game.GetResult());
   }
@@ -354,15 +354,15 @@ int MinimaxAi::Search(const Game& game, int alpha, int beta) {
   const CellType theirs = PlayerToCellType(PlayerToOpponent(current));
   const std::vector<CellPosition> cells = CollectEmptyCells(game);
 
-  /// 着法序：先试马上能赢的一步，再试必须挡住对方的一步，其余按行序。
-  /// 把好棋排在前面，让 beta <= alpha 剪枝更早发生。
+  // 着法序：先试马上能赢的一步，再试必须挡住对方的一步，其余按行序。
+  // 把好棋排在前面，让 beta <= alpha 剪枝更早发生。
   std::vector<CellPosition> winning;
   std::vector<CellPosition> blocking;
   std::vector<CellPosition> rest;
   for (const CellPosition position : cells) {
-    if (game.IsLineComplete(position, mine)) {
+    if (game.PreviewWin(position, mine) == WinPreviewResult::kWouldWin) {
       winning.push_back(position);
-    } else if (game.IsLineComplete(position, theirs)) {
+    } else if (game.PreviewWin(position, theirs) == WinPreviewResult::kWouldWin) {
       blocking.push_back(position);
     } else {
       rest.push_back(position);
@@ -391,14 +391,14 @@ int MinimaxAi::Search(const Game& game, int alpha, int beta) {
       beta = std::min(best, beta);
     }
     if (beta <= alpha) {
-      break;  // 剪枝：这一支后续再搜也不会改变上层选择。
+      break;  ///< 剪枝：这一支后续再搜也不会改变上层选择。
     }
   }
   return best;
 }
 ```
 
-`current` 是这一步轮到的玩家，`mine` 与 `theirs` 分别是双方要写入的格子类型。着法序把能赢的排最前、必须挡的其次，好棋先搜，剪枝更早发生。轮到 X 取最大值，轮到 O 取最小值；`alpha`、`beta` 是上下界，`beta <= alpha` 时这一支不再展开。九格棋盘最多递归九层。
+`current` 是这一步轮到的玩家；`mine` 与 `theirs` 表示双方要写入的格子类型。着法序把能赢的排最前、必须挡的其次，好棋先搜，剪枝更早发生。轮到 X 取最大值，轮到 O 取最小值；`alpha`、`beta` 是上下界，`beta <= alpha` 时这一支不再展开。九格棋盘最多递归九层。
 
 ## 创建选择对象
 
@@ -421,12 +421,12 @@ std::unique_ptr<Ai> MakeAi(AiStrength strength) {
     case AiStrength::kMinimax:
       return std::make_unique<MinimaxAi>();
   }
-  /// 枚举已覆盖全部取值；这一行让编译器看到所有路径都有返回值。
+  // 枚举已覆盖全部取值；这一行让编译器看到所有路径都有返回值。
   return std::make_unique<MinimaxAi>();
 }
 ```
 
-终端程序在开局读入强度之后调用 `MakeAi`，同一局创建一次，用哪种选法在这一步定下，对象一直用到对局结束。
+终端程序在开局读入强度之后调用 `MakeAi`。同一局只创建一次，用哪种选法在这一步定下，对象一直用到对局结束。
 
 `MakeAi` 用 `switch` 而不是映射表：新增强度时编译器会提醒哪个分支没处理，映射表只会静默落到默认项。末尾那一行不是可选分支，是让编译器看见 `switch` 之外仍有返回。
 
@@ -438,7 +438,7 @@ std::unique_ptr<Ai> MakeAi(AiStrength strength) {
 
 ### 评分视角反向
 
-`ScoreTerminal` 按 X 胜 `1`、O 胜 `-1` 打分。如果改成“当前玩家胜为正”，`Choose` 的分支就会反向。X 取最大、O 取最小的规则一反过来，极小极大开始主动选坏棋。评分视角与取极值方向必须成对设计。
+`ScoreTerminal` 按 X 胜 `1`、O 胜 `-1` 打分。如果改成“当前玩家胜为正”，X 仍取最大、O 仍取最小，就会把“自己胜”当成最差分。评分视角与取极值方向必须成对设计，否则极小极大开始主动选坏棋。
 
 ### 库内打印
 
@@ -451,7 +451,7 @@ std::unique_ptr<Ai> MakeAi(AiStrength strength) {
 1. 构造一个 O 必须封堵的盘面：X 已占 `(0,0)` 与 `(0,1)`，O 占 `(1,1)`，轮到 O。调用 `HeuristicAi::Choose`，这次调用应返回哪一格？
 
    ::: {.answer}
-   应返回 `(0, 2)`。X 若占 `(0, 2)` 就完成第一行三连，`game.IsLineComplete({0,2}, CellType::kX)` 返回 `true`。启发式第二轮会选中 `(0, 2)` 封堵。可以手算核对坐标。
+   应返回 `(0, 2)`。X 若占 `(0, 2)` 就完成第一行三连，`game.PreviewWin({0,2}, CellType::kX)` 返回 `kWouldWin`。启发式第二轮会选中 `(0, 2)` 封堵。可以手算核对坐标。
    :::
 
 2. 把 `ScoreTerminal` 中 X 胜与 O 胜的返回值对调，`MinimaxAi` 会怎样选？
