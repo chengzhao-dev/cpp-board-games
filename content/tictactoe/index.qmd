@@ -1,12 +1,11 @@
 ---
 title: "井字棋"
-number-sections: false
 body-classes: index-page
 ---
 
 井字棋程序可供两名玩家进行一局对战。每位玩家轮流在同一个 3 行 3 列的棋盘上落子。下面每张卡片是这一局的一章，按章节读下去就能写出并验收一个可运行的井字棋程序。
 
-<h2 class="visually-hidden">章节目录</h2>
+## 章节目录 {.visually-hidden}
 
 ::: {.feature-grid}
 ::: {.landing-card}

@@ -7,7 +7,7 @@ tags: [terminology, vocabulary, consistency]
 level_range: [0, 5]
 dependencies: ["bg-chapter-skeleton-v1", "bg-heading-hierarchy-v1", "bg-sentence-craft-frame-v1"]
 created: "2026-09-27"
-updated: "2026-10-15"
+updated: "2026-10-28"
 chunk_strategy: "semantic_heading"
 estimated_tokens: 2300
 ---
@@ -36,6 +36,9 @@ estimated_tokens: 2300
 | 井字棋动态库 | `tictactoe/` 目录源码编译成的动态库（`add_library(tictactoe SHARED)`，产物在 `build/lib`），供终端程序与测试链接 | 组件称谓写「井字棋动态库」；首次出现用一句可观察行为带出（如「整个目录编译成一个动态库，供终端程序调用」）；其它工程按实际形态写明动态库或静态库 |
 | Ai 落子 | `ai.h` 的 `Ai::Choose` 产生的一次 `Move` | 读者正文称「Ai 落子」，不叫「对手模块」；电脑的一步由 `Ai::Choose` 产生后交给 `Game::TryPlace` |
 | 对手 | `PlayerToOpponent` 换到的另一名玩家（先手对后手、后手对先手） | 对手只指另一名玩家；不写座位；电脑一侧写电脑，其落子称「Ai 落子」 |
+| 用例 | 测试框架注册并单独运行的一次测试 | 正文统一写「用例」，不写「测试项」「测试案例」；数量写「15 条用例」 |
+| 棋盘用例 | `testing-board.cpp` 中针对棋盘的一条用例 | 单条称「棋盘用例」；「棋盘测试」指文件与 CTest 目标，不指单条 |
+| 测试套件 | 同一个测试可执行文件注册的一组用例（`tictactoe_test`） | 只在讲组织方式时用；读者正文直接点名 `tictactoe_test`，不写「套件名」 |
 | 声明 | 只引入名字、不提供实体的写法（如 board.h 里只写函数名与参数表的成员函数行） | 辨析仅用于编辑与评审；content 正文不贴「声明」标签，位置与实现写具体事实（见易混概念一节） |
 | 定义 | 提供实体的写法：常量给出值、类型给出全部成员、函数给出函数体 | 「定义在 board.h / game.h」作位置动词保留；.cpp 侧沿用「实现写在 board.cpp」描述行为层；正文不与「声明」成对使用（见易混概念一节） |
 

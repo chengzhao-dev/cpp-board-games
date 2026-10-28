@@ -177,7 +177,7 @@ class Game {
 | `GetCellType` | 指定坐标处的 `CellType` | 转发 `Board::GetCellType`；坐标越界时抛出 `std::out_of_range` |
 | `PreviewWin` | 假设落子后的推演结果 | 转发 `Board::PreviewWin`；只读推演，返回 `WinPreviewResult` |
 | `GetHistory` | 落子列表 | 按落子先后排列；被拒绝的落子不追加 |
-: {tbl-colwidths="[22,24,54]"}
+: 对局查询接口 {#tbl-game-interfaces tbl-colwidths="[22,24,54]"}
 
 五个接口都不改动棋盘、轮次或结果。终端程序用它们提示轮次、打印结果、逐格取格子、试算下一步，以及给局面快照编号。
 
@@ -229,7 +229,7 @@ GameResult Game::JudgeAfterPlace(const Board& board, Player player) {
 
 `TryPlace` 定义在 `game.h` 里：
 
-```{.cpp filename="game.h"}
+```{.cpp filename="game.h" #lst-tryplace-decl lst-cap="TryPlace 的接口"}
 class Game {
  public:
   /// 尝试执行一次落子。
@@ -246,7 +246,7 @@ class Game {
 
 实现写在 `game.cpp` 里，把校验、写入和判定放在同一次调用里：
 
-```{.cpp filename="game.cpp"}
+```{.cpp filename="game.cpp" #lst-tryplace-impl lst-cap="TryPlace 的实现"}
 PlaceResult Game::TryPlace(const Move& move) {
   // 先看对局状态和轮次，再碰棋盘：被拒的落子不应改写任何成员。
   if (result_ != GameResult::kInProgress || move.player != current_player_) {
@@ -281,13 +281,17 @@ PlaceResult Game::TryPlace(const Move& move) {
 
 再次写入同一个格子时，`Board::PlaceCell` 返回 `PlaceCellResult::kOccupied`。`TryPlace` 再把它转成 `PlaceResult::kRejected`，原有类型保留；已有棋子不会被后来的落子覆盖。
 
+- **出错的原因**：调用方没有检查 `TryPlace` 的返回值，把拒绝当成成功继续换手。
+- **正确的做法**：按返回值分支，`kRejected` 时不换手、不记历史。
+
 ### 误判平局
 
-落下一子同时形成三连时，获胜优先，满盘其次。顺序颠倒会把获胜记成平局。
+落下一子同时形成三连时，获胜优先，满盘其次。
+
+- **出错的原因**：先判满盘再判三连，顺序颠倒会把获胜记成平局。
+- **正确的做法**：先判三连，再判是否下满；`JudgeAfterPlace` 的判定顺序与这里一致。
 
 ## 自测问题
-
-不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
 
 1. 空棋盘开局，轮到 X。没轮到的一方落子时，棋盘会改变吗？
 

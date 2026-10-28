@@ -446,8 +446,6 @@ std::unique_ptr<Ai> MakeAi(AiStrength strength) {
 
 ## 自测问题
 
-不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
-
 1. 构造一个 O 必须封堵的盘面：X 已占 `(0,0)` 与 `(0,1)`，O 占 `(1,1)`，轮到 O。调用 `HeuristicAi::Choose`，这次调用应返回哪一格？
 
    ::: {.answer}

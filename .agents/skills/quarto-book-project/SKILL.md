@@ -17,6 +17,7 @@ description: 记录《C++ 棋盘游戏实践》的项目级约定：书名、读
 ## 章节对照
 
 - 章节顺序的唯一来源：根 `_quarto.yml` 的 `book.chapters`；每章的类章或能力章、关键对象、`title` 与二级标题在 `writing/chapter-map.md`。
+- 本书关闭小节编号，互引一律用 `.qmd` 相对路径链接，不写 `@sec-`；书名里的「第 N 章」编号指称也不使用。格式选项只写在根 `_quarto.yml`，章节 YAML 只放 `title` 与页面 class。
 - 目录布局：`content/tictactoe/<NN>-<chapter>.qmd`；读者侧入口 `content/tictactoe/index.qmd`（散文页，不是第十一章），根首页是 `index.qmd`。
 - 改文件名时同轮同步 `_quarto.yml`、`writing/chapter-map.md`、正文 YAML 的 `title`、已有链接，以及 `checks.json` 的 `chapter_titles`。
 

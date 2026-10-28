@@ -8,7 +8,7 @@ title: "程序入口"
 
 `main.cpp` 的代码如下：
 
-```{.cpp filename="main.cpp"}
+```{.cpp filename="main.cpp" #lst-main lst-cap="main 的入口代码"}
 int main() {
   try {
     tictactoe::Game game;
@@ -74,8 +74,6 @@ int main() {
 
 ## 自测问题
 
-不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
-
 1. `main` 创建对局后调用的是哪个库接口？
 
    ::: {.answer}
@@ -85,7 +83,7 @@ int main() {
 2. 为什么入口不直接打印棋盘？
 
    ::: {.answer}
-   当前构建只验证动态库能被链接和调用。
+   打印属于终端层（[终端程序](06-writing-terminal.qmd)）；入口只做装配与错误传递，当前构建只验证动态库能被链接和调用。
    :::
 
 3. 落子失败时进程退出码是多少？

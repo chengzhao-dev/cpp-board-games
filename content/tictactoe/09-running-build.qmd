@@ -19,7 +19,7 @@ bash running-build.sh
 | 配置与编译 | 读取 CMake 规则，取 GoogleTest v1.15.2，在 `build/` 下生成 Ninja 文件并编译 | CMake、Ninja |
 | 测试 | 运行 CTest 注册的 15 条棋盘用例 | CTest |
 | 运行 | 启动 `app`，检查动态库调用结果 | 构建脚本 |
-: {tbl-colwidths="[22,50,28]"}
+: 构建脚本的三个步骤 {#tbl-build-steps tbl-colwidths="[22,50,28]"}
 
 首次运行生成 `build/`，后续运行复用；这个目录由仓库根的 `.gitignore` 排除。脚本不跑 Release，也不跑 clang-format 与 clang-tidy；编译器警告仍然按工程设置开启。
 
@@ -133,8 +133,6 @@ CTest 返回非零，并打印某个用例的断言。
 - **正确的做法**：先读失败用例名与断言行；确认 `build/lib/libtictactoe.so` 与测试来自同一次构建，再修改代码或用例。
 
 ## 自测问题
-
-不要展开答案，试着自己把回答完整说出来，写完之后展开对照；说不出来的部分，回到对应小节对照正文。
 
 1. 构建脚本按什么顺序执行？
 

@@ -17,8 +17,6 @@ body-classes: homepage
 ### [井字棋](content/tictactoe/index.qmd)
 
 十一章从对局规则读到局面快照，章节入口在游戏首页。
-
-[进入井字棋 →](content/tictactoe/index.qmd){.cta tabindex="-1" aria-hidden="true"}
 :::
 :::
 

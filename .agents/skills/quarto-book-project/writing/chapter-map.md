@@ -6,8 +6,8 @@
 
 | 路径 | 类章 / 能力章 | 关键（类或交付物） | `title` | 二级标题（按顺序） | 视角 |
 | --- | --- | --- | --- | --- | --- |
-| `content/tictactoe/index.qmd` | 散文页 | 井字棋这一部分的阅读顺序 | 井字棋 | — | 总览 |
-| `content/tictactoe/01-rules.qmd` | 能力章 | 一局对局要遵守的约定 | 对局规则 | 落子规则、胜负判定、对局演示、自测问题、本章回顾 | 总览 |
+| `content/tictactoe/index.qmd` | 散文页 | 井字棋这一部分的阅读顺序 | 井字棋 | 章节目录 | 总览 |
+| `content/tictactoe/01-rules.qmd` | 能力章 | 一局对局要遵守的约定 | 对局规则 | 落子规则、胜负判定、对局演示、常见错误、自测问题、本章回顾 | 总览 |
 | `content/tictactoe/02-mapping-layout.qmd` | 能力章 | 工程结构的组织 | 工程结构 | 目录分工、文件位置、常见错误、自测问题、本章回顾 | 总览 |
 | `content/tictactoe/viewing-program.qmd` | 散文页 | 程序的整体形状 | 程序结构 | 结构总览、分块明细、常见错误、自测问题、本章回顾 | 总览 |
 | `content/tictactoe/03-board.qmd` | 类章 | `Board` | 棋盘 | 类型与坐标、成员与接口、写入与清空、终局判定、常见错误、自测问题、本章回顾 | 对象 |
@@ -15,7 +15,7 @@
 | `content/tictactoe/05-ai.qmd` | 类章 | `Ai` | 电脑落子 | 落子强度、选择接口、派生选择、创建选择对象、常见错误、自测问题、本章回顾 | 对象 |
 | `content/tictactoe/06-writing-terminal.qmd` | 能力章 | `RunMatch` 驱动的终端对局 | 终端程序 | 输入与输出、对局循环、常见错误、自测问题、本章回顾 | 对象 |
 | `content/tictactoe/07-main.qmd` | 能力章 | `main` 的最小动态库调用 | 程序入口 | 调用动态库、退出码、常见错误、自测问题、本章回顾 | 对象 |
-| `content/tictactoe/08-tests.qmd` | 能力章 | 14 条棋盘用例 | 测试 | 测试用例结构、测试运行、常见错误、自测问题、本章回顾 | 对象 |
+| `content/tictactoe/08-tests.qmd` | 能力章 | 15 条棋盘用例 | 测试 | 测试用例结构、测试运行、常见错误、自测问题、本章回顾 | 对象 |
 | `content/tictactoe/09-running-build.qmd` | 能力章 | 配置、编译、测试与运行的三步流程 | 构建与运行 | 构建脚本、构建规则、验收结果、常见错误、自测问题、本章回顾 | 对象 |
 | `content/tictactoe/10-defining-snapshot.qmd` | 能力章 | 终端层 `WriteSnapshot` 的快照设计 | 局面快照 | 快照字段、棋盘还原、常见错误、自测问题、本章回顾 | 对象 |
 

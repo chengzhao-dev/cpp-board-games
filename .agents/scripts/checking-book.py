@@ -90,7 +90,10 @@ def headings(lines):
             in_fence = not in_fence
             continue
         if not in_fence and line.startswith("## "):
-            found.append(line[3:].strip())
+            title = line[3:].strip()
+            if " {" in title:
+                title = title.split(" {", 1)[0].strip()
+            found.append(title)
     return found
 
 
